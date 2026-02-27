@@ -74,7 +74,7 @@ export function Kart({ lat, lon, onKlikkKart }: Props) {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full min-h-[400px] rounded-xl overflow-hidden"
+      className="w-full h-full"
     />
   );
 }
