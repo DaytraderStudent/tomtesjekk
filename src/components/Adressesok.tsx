@@ -20,6 +20,19 @@ export function Adressesok({ onVelgAdresse, disabled }: Props) {
   const listeRef = useRef<HTMLUListElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
 
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setErApen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const sokAdresser = useCallback(async (tekst: string) => {
     if (tekst.length < 2) {
       setResultater([]);
@@ -81,7 +94,7 @@ export function Adressesok({ onVelgAdresse, disabled }: Props) {
   };
 
   return (
-    <div className="relative w-full">
+    <div ref={wrapperRef} className="relative w-full">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
@@ -97,6 +110,7 @@ export function Adressesok({ onVelgAdresse, disabled }: Props) {
           onChange={(e) => setSok(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => resultater.length > 0 && setErApen(true)}
+          onBlur={() => setTimeout(() => setErApen(false), 200)}
           disabled={disabled}
           className={cn(
             "w-full pl-10 pr-10 py-3.5 rounded-xl border-2 border-gray-200",
