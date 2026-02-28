@@ -23,10 +23,20 @@ Analysedata:
 ${JSON.stringify(analysedata, null, 2)}
 
 Skriv en oppsummering med følgende struktur:
-1. **Helhetsvurdering** (1-2 setninger om totalbildet)
-2. **Positive funn** (bullet points med grønne flagg)
-3. **Ting å være oppmerksom på** (bullet points med gule/røde flagg, hvis noen)
-4. **Anbefaling** (1-2 setninger med konkret råd)
+
+Helhetsvurdering
+1-2 setninger om totalbildet.
+
+Positive funn
+- Kulepunkt med positive funn (bruk vanlig bindestrek, ikke markdown)
+
+Ting å være oppmerksom på
+- Kulepunkt med gule/røde flagg, hvis noen
+
+Anbefaling
+1-2 setninger med konkret råd.
+
+VIKTIG: Skriv kun ren tekst. IKKE bruk markdown-formatering som #, ##, **, *, ✓ eller lignende. Bruk vanlig bindestrek (-) for kulepunkter. Overskrifter skal bare være tekst på egen linje uten noen formatering.
 
 Hold oppsummeringen kortfattet (maks 200 ord). Ikke gjenta rådataene — fokuser på å tolke og forklare hva funnene betyr i praksis for en potensiell tomtekjøper.`;
 

@@ -6,6 +6,16 @@ import { PDFEksport } from "./PDFEksport";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 import type { Rapport as RapportType } from "@/types";
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/^#{1,6}\s+/gm, "")     // headings
+    .replace(/\*\*(.+?)\*\*/g, "$1")  // bold
+    .replace(/\*(.+?)\*/g, "$1")      // italic
+    .replace(/[✓✗⚠△▲●]/g, "")        // special symbols
+    .replace(/^\s*[-*]\s+/gm, "- ")   // normalize bullets
+    .replace(/\n{3,}/g, "\n\n");      // collapse extra newlines
+}
+
 interface Props {
   rapport: RapportType;
 }
@@ -36,8 +46,8 @@ export function Rapport({ rapport }: Props) {
               AI-oppsummering
             </h3>
           </div>
-          <div className="text-sm text-fjord-800 leading-relaxed whitespace-pre-line prose prose-sm max-w-none">
-            {rapport.aiOppsummering.tekst}
+          <div className="text-sm text-fjord-800 leading-relaxed whitespace-pre-line max-w-none">
+            {stripMarkdown(rapport.aiOppsummering.tekst)}
           </div>
           <p className="text-xs text-fjord-400 mt-3">
             Generert {new Date(rapport.aiOppsummering.generert).toLocaleString("nb-NO")}
