@@ -3,20 +3,41 @@ import { fetchWithTimeout, buildWmsGetFeatureInfoUrl } from "@/lib/api-helpers";
 import { API_URLS } from "@/lib/constants";
 import type { NguRadonResultat } from "@/types";
 
-function parseRadonResponse(text: string): NguRadonResultat {
-  const lower = text.toLowerCase();
+function parseRadonGml(text: string): NguRadonResultat {
+  // GML response contains fields like:
+  // <aktsomhetgrad>2</aktsomhetgrad>
+  // <aktsomhetgrad_besk>Hoy aktsomhet</aktsomhetgrad_besk>
 
-  if (lower.includes("høy") || lower.includes("hoy") || lower.includes("high")) {
-    return { nivaaTekst: "Høy", nivaa: "hoy", detaljer: text.trim() };
-  }
-  if (lower.includes("moderat") || lower.includes("moderate") || lower.includes("middels")) {
-    return { nivaaTekst: "Moderat", nivaa: "moderat", detaljer: text.trim() };
-  }
-  if (lower.includes("lav") || lower.includes("low") || lower.includes("usannsynlig")) {
-    return { nivaaTekst: "Lav", nivaa: "lav", detaljer: text.trim() };
+  if (text.includes("Search returned no results") || !text.includes("aktsomhetgrad")) {
+    return { nivaaTekst: "Ukjent", nivaa: "ukjent", detaljer: "Ingen radondata for dette området" };
   }
 
-  return { nivaaTekst: "Ukjent", nivaa: "ukjent", detaljer: text.trim() || "Ingen data funnet" };
+  const gradMatch = text.match(/<aktsomhetgrad>(\d+)<\/aktsomhetgrad>/);
+  const beskMatch = text.match(/<aktsomhetgrad_besk>([^<]+)<\/aktsomhetgrad_besk>/);
+
+  const grad = gradMatch ? parseInt(gradMatch[1]) : -1;
+  const beskrivelse = beskMatch ? beskMatch[1].trim() : "";
+
+  if (grad >= 2) {
+    return { nivaaTekst: "Høy", nivaa: "hoy", detaljer: beskrivelse || "Høy aktsomhet for radon" };
+  }
+  if (grad === 1) {
+    return { nivaaTekst: "Moderat til lav", nivaa: "moderat", detaljer: beskrivelse || "Moderat til lav aktsomhet for radon" };
+  }
+  if (grad === 0) {
+    return { nivaaTekst: "Usikker", nivaa: "ukjent", detaljer: beskrivelse || "Usikker aktsomhet for radon" };
+  }
+
+  // Fallback: try to parse from description text
+  const lower = (beskrivelse || text).toLowerCase();
+  if (lower.includes("hoy") || lower.includes("høy") || lower.includes("high")) {
+    return { nivaaTekst: "Høy", nivaa: "hoy", detaljer: beskrivelse };
+  }
+  if (lower.includes("moderat") || lower.includes("lav")) {
+    return { nivaaTekst: "Moderat til lav", nivaa: "lav", detaljer: beskrivelse };
+  }
+
+  return { nivaaTekst: "Ukjent", nivaa: "ukjent", detaljer: beskrivelse || "Kunne ikke tolke radondata" };
 }
 
 export async function GET(request: NextRequest) {
@@ -47,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     const text = await response.text();
-    const resultat = parseRadonResponse(text);
+    const resultat = parseRadonGml(text);
 
     return NextResponse.json(resultat);
   } catch (error: any) {

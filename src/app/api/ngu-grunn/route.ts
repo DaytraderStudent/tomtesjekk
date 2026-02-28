@@ -3,55 +3,37 @@ import { fetchWithTimeout, buildWmsGetFeatureInfoUrl } from "@/lib/api-helpers";
 import { API_URLS } from "@/lib/constants";
 import type { NguGrunnResultat } from "@/types";
 
-function parseGrunnResponse(text: string): NguGrunnResultat {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+function parseGrunnGml(text: string): NguGrunnResultat {
+  // GML response contains fields like:
+  // <losmassetypeNavn>Forvitringsmateriale</losmassetypeNavn>
+  // <losmassetypeBesk>Forvitringsmateriale, ikke inndelt etter mektighet</losmassetypeBesk>
 
-  // Look for jordart/løsmasse type in the response
-  let jordart = "Ukjent";
-  let beskrivelse = "";
-
-  for (const line of lines) {
-    const lower = line.toLowerCase();
-    // Common patterns in NGU WMS text/plain responses
-    if (lower.includes("jordart") || lower.includes("løsmasse") || lower.includes("losmasse")) {
-      const parts = line.split(/[=:]/);
-      if (parts.length > 1) {
-        jordart = parts[1].trim().replace(/^'|'$/g, "");
-      }
-    }
-    if (lower.includes("beskrivelse") || lower.includes("navn")) {
-      const parts = line.split(/[=:]/);
-      if (parts.length > 1) {
-        beskrivelse = parts[1].trim().replace(/^'|'$/g, "");
-      }
-    }
+  if (text.includes("Search returned no results") || (!text.includes("massetype") && !text.includes("Losmasse") && !text.includes("LøsmasseFlate"))) {
+    return {
+      jordart: "Ukjent",
+      beskrivelse: "Ingen løsmassedata for dette området",
+      detaljer: "Ingen data funnet i NGU løsmassedatabasen",
+    };
   }
 
-  // If no specific field found, try to extract from first meaningful line
-  if (jordart === "Ukjent" && lines.length > 0) {
-    for (const line of lines) {
-      if (!line.startsWith("GetFeatureInfo") && !line.startsWith("Layer") && line.length > 2) {
-        // Check if it contains a known soil type
-        const knownTypes = [
-          "Marin", "Hav", "Morene", "Fjell", "Torv", "Leire", "Sand", "Grus",
-          "Elveavsetning", "Breelv", "Forvitring", "Fyllmasse", "Innsjø", "Strandsediment",
-        ];
-        for (const type of knownTypes) {
-          if (line.includes(type)) {
-            jordart = line.includes("=") ? line.split("=")[1].trim() : line;
-            break;
-          }
-        }
-        if (jordart !== "Ukjent") break;
-      }
-    }
+  // Field names may use ø (løsmassetype) or o (losmassetype)
+  const navnMatch = text.match(/<l[oø]smassetypeNavn>([^<]+)<\/l[oø]smassetypeNavn>/);
+  const beskMatch = text.match(/<l[oø]smassetypeBesk>([^<]+)<\/l[oø]smassetypeBesk>/);
+  const infiltrasjonMatch = text.match(/<infiltrasjonPotensialNavn>([^<]+)<\/infiltrasjonPotensialNavn>/);
+  const grunnvannMatch = text.match(/<grunnvannPotensialNavn>([^<]+)<\/grunnvannPotensialNavn>/);
+
+  const jordart = navnMatch ? navnMatch[1].trim() : "Ukjent";
+  const beskrivelse = beskMatch ? beskMatch[1].trim() : jordart;
+
+  let detaljer = `Løsmassetype: ${beskrivelse}`;
+  if (infiltrasjonMatch) {
+    detaljer += `. Infiltrasjon: ${infiltrasjonMatch[1].trim()}`;
+  }
+  if (grunnvannMatch) {
+    detaljer += `. Grunnvannpotensial: ${grunnvannMatch[1].trim()}`;
   }
 
-  return {
-    jordart,
-    beskrivelse: beskrivelse || jordart,
-    detaljer: text.trim() || "Ingen data funnet",
-  };
+  return { jordart, beskrivelse, detaljer };
 }
 
 export async function GET(request: NextRequest) {
@@ -68,7 +50,7 @@ export async function GET(request: NextRequest) {
   try {
     const url = buildWmsGetFeatureInfoUrl(
       API_URLS.nguLosmasser,
-      "Losmasse_flate",
+      "Losmasser_temakart_sammenstilt",
       lat,
       lon
     );
@@ -84,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     const text = await response.text();
-    const resultat = parseGrunnResponse(text);
+    const resultat = parseGrunnGml(text);
 
     return NextResponse.json(resultat);
   } catch (error: any) {

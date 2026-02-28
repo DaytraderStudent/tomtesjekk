@@ -45,23 +45,23 @@ export function buildWmsGetFeatureInfoUrl(
   lat: number,
   lon: number
 ): string {
-  // WMS 1.3.0 with EPSG:4326 uses lat,lon order for BBOX
-  const delta = 0.0001;
-  const bbox = `${lat - delta},${lon - delta},${lat + delta},${lon + delta}`;
+  // WMS 1.1.1 with EPSG:4326 uses lon,lat (x,y) order for BBOX
+  const delta = 0.01;
+  const bbox = `${lon - delta},${lat - delta},${lon + delta},${lat + delta}`;
 
   const params = new URLSearchParams({
     SERVICE: "WMS",
-    VERSION: "1.3.0",
+    VERSION: "1.1.1",
     REQUEST: "GetFeatureInfo",
     LAYERS: layers,
     QUERY_LAYERS: layers,
-    CRS: "EPSG:4326",
+    SRS: "EPSG:4326",
     BBOX: bbox,
-    WIDTH: "101",
-    HEIGHT: "101",
-    I: "50",
-    J: "50",
-    INFO_FORMAT: "text/plain",
+    WIDTH: "256",
+    HEIGHT: "256",
+    X: "128",
+    Y: "128",
+    INFO_FORMAT: "application/vnd.ogc.gml",
   });
 
   return `${baseUrl}?${params.toString()}`;

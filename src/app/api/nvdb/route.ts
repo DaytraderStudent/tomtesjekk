@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
       lat: lat.toString(),
       lon: lon.toString(),
       maks_avstand: "200",
-      srid: "4326",
     });
 
     const response = await fetchWithTimeout(
@@ -27,6 +26,7 @@ export async function GET(request: NextRequest) {
       {
         headers: {
           Accept: "application/vnd.vegvesen.nvdb-v3-rev1+json",
+          "User-Agent": "Mozilla/5.0 (compatible; Tomtesjekk/1.0; +https://tomtesjekk.vercel.app)",
         },
       }
     );
@@ -49,20 +49,42 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
 
-    const vegkategori = data.vegkategori || data.vegsystemreferanse?.vegsystem?.vegkategori || "Ukjent";
-    const vegstatus = data.vegstatus || data.vegsystemreferanse?.vegsystem?.fase || "Ukjent";
-    const avstand = data.avstand || 0;
+    // Response can be an array — pick the first (nearest) result
+    const hit = Array.isArray(data) ? data[0] : data;
+
+    if (!hit) {
+      return NextResponse.json({
+        vegkategori: "Ukjent",
+        vegstatus: "Ukjent",
+        vegreferanse: "Ingen vei funnet",
+        avstand: 200,
+        detaljer: "Ingen offentlig vei funnet i nærheten",
+      } as NvdbResultat);
+    }
+
+    const vegkategori =
+      hit.vegsystemreferanse?.vegsystem?.vegkategori || "Ukjent";
+    const vegstatus =
+      hit.vegsystemreferanse?.vegsystem?.fase || "Ukjent";
+    const avstand = hit.avstand || 0;
     const vegreferanse =
-      data.vegsystemreferanse?.kortform ||
-      data.vegreferanse ||
-      `${vegkategori}-vei`;
+      hit.vegsystemreferanse?.kortform || `${vegkategori}-vei`;
+
+    const vegkategoriNavn: Record<string, string> = {
+      E: "Europavei",
+      R: "Riksvei",
+      F: "Fylkesvei",
+      K: "Kommunal vei",
+      P: "Privat vei",
+      S: "Skogsbilvei",
+    };
 
     const resultat: NvdbResultat = {
       vegkategori,
       vegstatus,
       vegreferanse,
       avstand,
-      detaljer: `Nærmeste vei: ${vegreferanse} (${Math.round(avstand)}m). Kategori: ${vegkategori}.`,
+      detaljer: `Nærmeste vei: ${vegreferanse} (${Math.round(avstand)}m). Type: ${vegkategoriNavn[vegkategori] || vegkategori}.`,
     };
 
     return NextResponse.json(resultat);

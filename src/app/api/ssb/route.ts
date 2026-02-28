@@ -5,14 +5,29 @@ import type { SsbResultat } from "@/types";
 
 export async function GET() {
   try {
-    // SSB table 08651: Building cost index for residential buildings
+    // SSB table 08651: Byggekostnadsindeks for bustader i alt (2015=100)
+    // Variables: Arbeidstype, ContentsCode, Tid
     const query = {
       query: [
         {
-          code: "Bygningstype",
+          code: "Arbeidstype",
           selection: {
             filter: "item",
-            values: ["00"], // All building types
+            values: ["01"], // I alt
+          },
+        },
+        {
+          code: "ContentsCode",
+          selection: {
+            filter: "item",
+            values: ["Byggindeks"],
+          },
+        },
+        {
+          code: "Tid",
+          selection: {
+            filter: "top",
+            values: ["2"], // Last 2 periods
           },
         },
       ],
@@ -38,7 +53,7 @@ export async function GET() {
 
     // Parse json-stat2 format
     const values = data.value || [];
-    const tidDimension = data.dimension?.Tid || data.dimension?.tid;
+    const tidDimension = data.dimension?.Tid;
     const tidKategorier = tidDimension?.category?.index
       ? Object.keys(tidDimension.category.index)
       : [];

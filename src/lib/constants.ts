@@ -5,10 +5,10 @@ export const API_URLS = {
   nveFlom: "https://gis3.nve.no/arcgis/rest/services/FlomAktsomhet/MapServer/identify",
   nveSkred: "https://gis3.nve.no/arcgis/rest/services/SkredAktsomhet/MapServer/identify",
   nveKvikkleire: "https://gis3.nve.no/arcgis/rest/services/Kvikkleire4/MapServer/identify",
-  nguRadon: "https://geo.ngu.no/mapserver/RadonWMS",
-  nguLosmasser: "https://geo.ngu.no/mapserver/LosijordWMS",
+  nguRadon: "https://geo.ngu.no/mapserver/RadonWMS2",
+  nguLosmasser: "https://geo.ngu.no/mapserver/LosmasserWMS3",
   ssb: "https://data.ssb.no/api/v0/no/table/08651",
-  nvdb: "https://nvdbapiles-v3.atlas.vegvesen.no/veg",
+  nvdb: "https://nvdbapiles-v3.atlas.vegvesen.no/posisjon",
 } as const;
 
 export const STEG_NAVN: Record<string, string> = {
