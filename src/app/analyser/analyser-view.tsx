@@ -16,6 +16,7 @@ import {
   radonStatus,
   grunnStatus,
   nvdbStatus,
+  eiendomStatus,
 } from "@/lib/trafikklys";
 import type {
   KartverketAdresse,
@@ -27,6 +28,7 @@ import type {
   NguGrunnResultat,
   SsbResultat,
   NvdbResultat,
+  EiendomResultat,
 } from "@/types";
 
 function lagInitielleSteg(): AnalyseSteg[] {
@@ -44,6 +46,7 @@ export default function AnalyserView() {
   const [prosent, setProsent] = useState(0);
   const [erAktiv, setErAktiv] = useState(false);
   const [panelApen, setPanelApen] = useState(true);
+  const [tomtegrense, setTomtegrense] = useState<GeoJSON.Feature | null>(null);
 
   const oppdaterSteg = (id: string, status: AnalyseSteg["status"], feilmelding?: string) => {
     setSteg((prev) =>
@@ -55,6 +58,7 @@ export default function AnalyserView() {
     setErAktiv(true);
     setRapport(null);
     setPanelApen(true);
+    setTomtegrense(null);
     setSteg(lagInitielleSteg());
     setProsent(0);
 
@@ -65,7 +69,38 @@ export default function AnalyserView() {
     setProsent(5);
     await new Promise((r) => setTimeout(r, 300));
     oppdaterSteg("adresse", "ferdig");
-    setProsent(15);
+    setProsent(10);
+
+    // Eiendom step: cadastral info + boundary polygon
+    oppdaterSteg("eiendom", "aktiv");
+    try {
+      const eiendomRes = await fetch(`/api/eiendom?lat=${lat}&lon=${lon}`);
+      const eiendom: EiendomResultat = await eiendomRes.json();
+      if (eiendom.matrikkelnummertekst) {
+        const es = eiendomStatus(eiendom);
+        kort.push({
+          id: "eiendom",
+          tittel: "Eiendom",
+          beskrivelse: es.tekst,
+          detaljer: eiendom.arealKvm
+            ? `Matrikkel: ${eiendom.matrikkelnummertekst}. Beregnet tomteareal: ${Math.round(eiendom.arealKvm)} m².`
+            : `Matrikkel: ${eiendom.matrikkelnummertekst}. Areal ikke tilgjengelig.`,
+          status: es.status,
+          statusTekst: es.tekst,
+          kilde: "Geonorge Eiendom",
+          kildeUrl: "https://ws.geonorge.no/eiendom/v1",
+        });
+        if (eiendom.grenseGeoJson) {
+          setTomtegrense(eiendom.grenseGeoJson);
+        }
+        oppdaterSteg("eiendom", "ferdig");
+      } else {
+        oppdaterSteg("eiendom", "feil", "Ingen eiendom funnet");
+      }
+    } catch {
+      oppdaterSteg("eiendom", "feil", "Kunne ikke hente eiendomsdata");
+    }
+    setProsent(18);
 
     oppdaterSteg("nve", "aktiv");
     try {
@@ -100,7 +135,7 @@ export default function AnalyserView() {
     } catch {
       oppdaterSteg("nve", "feil", "Kunne ikke hente NVE-data");
     }
-    setProsent(30);
+    setProsent(35);
 
     oppdaterSteg("radon", "aktiv");
     oppdaterSteg("grunn", "aktiv");
@@ -126,7 +161,7 @@ export default function AnalyserView() {
     } else {
       oppdaterSteg("radon", "feil", "Kunne ikke hente radondata");
     }
-    setProsent(50);
+    setProsent(52);
 
     if (grunnRes.status === "fulfilled" && !grunnRes.value.error) {
       const data: NguGrunnResultat = grunnRes.value;
@@ -243,6 +278,7 @@ export default function AnalyserView() {
         <Kart
           lat={valgtAdresse?.representasjonspunkt.lat}
           lon={valgtAdresse?.representasjonspunkt.lon}
+          grense={tomtegrense}
           onKlikkKart={handleKlikkKart}
         />
       </div>

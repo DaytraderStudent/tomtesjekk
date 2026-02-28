@@ -95,3 +95,12 @@ export interface NvdbResultat {
   avstand: number;
   detaljer?: string;
 }
+
+export interface EiendomResultat {
+  kommunenummer: string;
+  gardsnummer: number;
+  bruksnummer: number;
+  matrikkelnummertekst: string;
+  arealKvm: number | null;
+  grenseGeoJson: GeoJSON.Feature | null;
+}

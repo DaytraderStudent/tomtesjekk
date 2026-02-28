@@ -2,6 +2,8 @@ export const API_TIMEOUT = 10000;
 
 export const API_URLS = {
   kartverket: "https://ws.geonorge.no/adresser/v1/sok",
+  eiendomPunkt: "https://ws.geonorge.no/eiendom/v1/punkt",
+  eiendomOmrader: "https://ws.geonorge.no/eiendom/v1/punkt/omrader",
   nveFlom: "https://gis3.nve.no/arcgis/rest/services/FlomAktsomhet/MapServer/identify",
   nveSkred: "https://gis3.nve.no/arcgis/rest/services/SkredAktsomhet/MapServer/identify",
   nveKvikkleire: "https://gis3.nve.no/arcgis/rest/services/Kvikkleire4/MapServer/identify",
@@ -13,6 +15,7 @@ export const API_URLS = {
 
 export const STEG_NAVN: Record<string, string> = {
   adresse: "Slår opp adresse",
+  eiendom: "Henter tomtegrenser og matrikkelinfo",
   nve: "Sjekker flom, skred og kvikkleire (NVE)",
   radon: "Sjekker radonnivå (NGU)",
   grunn: "Sjekker grunnforhold (NGU)",
@@ -28,6 +31,7 @@ export const DISCLAIMER_TEXT =
 
 export const DATAKILDER = [
   { navn: "Kartverket", url: "https://kartverket.no" },
+  { navn: "Geonorge Eiendom", url: "https://ws.geonorge.no/eiendom/v1" },
   { navn: "NVE", url: "https://nve.no" },
   { navn: "NGU", url: "https://ngu.no" },
   { navn: "SSB", url: "https://ssb.no" },

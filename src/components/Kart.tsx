@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 interface Props {
   lat?: number;
   lon?: number;
+  grense?: GeoJSON.Feature | null;
   onKlikkKart?: (lat: number, lon: number) => void;
 }
 
@@ -21,9 +22,11 @@ const markerIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-export function Kart({ lat, lon, onKlikkKart }: Props) {
+export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const polygonRef = useRef<L.GeoJSON | null>(null);
+  const wmsRef = useRef<L.TileLayer.WMS | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize map
@@ -41,6 +44,31 @@ export function Kart({ lat, lon, onKlikkKart }: Props) {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
     }).addTo(map);
+
+    // WMS layer for cadastral boundaries — visible at zoom >= 15
+    const wmsLayer = L.tileLayer.wms(
+      "https://wms.geonorge.no/skwms1/wms.matrikkelkart",
+      {
+        layers: "eiendomsgrense",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.6,
+        minZoom: 15,
+        maxZoom: 19,
+      }
+    );
+    wmsRef.current = wmsLayer;
+
+    // Add/remove WMS based on zoom
+    const updateWms = () => {
+      const z = map.getZoom();
+      if (z >= 15 && !map.hasLayer(wmsLayer)) {
+        wmsLayer.addTo(map);
+      } else if (z < 15 && map.hasLayer(wmsLayer)) {
+        map.removeLayer(wmsLayer);
+      }
+    };
+    map.on("zoomend", updateWms);
 
     if (onKlikkKart) {
       map.on("click", (e: L.LeafletMouseEvent) => {
@@ -68,8 +96,42 @@ export function Kart({ lat, lon, onKlikkKart }: Props) {
       mapRef.current
     );
 
-    mapRef.current.flyTo([lat, lon], 15, { duration: 1.5 });
-  }, [lat, lon]);
+    // Only flyTo if there's no polygon (polygon handles fitBounds)
+    if (!grense) {
+      mapRef.current.flyTo([lat, lon], 15, { duration: 1.5 });
+    }
+  }, [lat, lon, grense]);
+
+  // Render property boundary polygon
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove previous polygon
+    if (polygonRef.current) {
+      polygonRef.current.remove();
+      polygonRef.current = null;
+    }
+
+    if (!grense) return;
+
+    const layer = L.geoJSON(grense, {
+      style: {
+        color: "#2563eb",     // blue border
+        weight: 3,
+        fillColor: "#f97316", // orange fill
+        fillOpacity: 0.2,
+        dashArray: "6 4",
+      },
+    }).addTo(mapRef.current);
+
+    polygonRef.current = layer;
+
+    // Fit map to polygon bounds with padding
+    const bounds = layer.getBounds();
+    if (bounds.isValid()) {
+      mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 17 });
+    }
+  }, [grense]);
 
   return (
     <div

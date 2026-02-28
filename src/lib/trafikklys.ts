@@ -1,4 +1,4 @@
-import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat } from "@/types";
+import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat } from "@/types";
 
 export function flomStatus(data: NveResultat["flom"]): { status: TrafikklysStatus; tekst: string } {
   if (!data.aktsomhetsomrade) return { status: "gronn", tekst: "Ikke i flomaktsomhetsområde" };
@@ -39,6 +39,12 @@ export function grunnStatus(data: NguGrunnResultat): { status: TrafikklysStatus;
     return { status: "rod", tekst: `Problematisk grunn: ${data.jordart}` };
   }
   return { status: "gronn", tekst: data.jordart };
+}
+
+export function eiendomStatus(data: EiendomResultat): { status: TrafikklysStatus; tekst: string } {
+  if (!data.matrikkelnummertekst) return { status: "gra", tekst: "Eiendomsdata ikke tilgjengelig" };
+  const arealTekst = data.arealKvm ? `${Math.round(data.arealKvm)} m²` : "ukjent areal";
+  return { status: "gronn", tekst: `${data.matrikkelnummertekst} — ${arealTekst}` };
 }
 
 export function nvdbStatus(data: NvdbResultat): { status: TrafikklysStatus; tekst: string } {
