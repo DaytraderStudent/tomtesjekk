@@ -79,12 +79,21 @@ export async function GET(request: NextRequest) {
       S: "Skogsbilvei",
     };
 
+    const vegkontekst: Record<string, string> = {
+      E: "Europavei med god standard og offentlig vedlikehold.",
+      R: "Riksvei med offentlig vedlikehold og god fremkommelighet.",
+      F: "Fylkesvei med offentlig vedlikehold.",
+      K: "Kommunal vei med offentlig vedlikehold og brøyting.",
+      P: "Privat vei — eier/beboere har ansvar for vedlikehold, brøyting og kostnadsdeling. Avklar rettigheter og avtaler med veilaget før kjøp.",
+      S: "Skogsbilvei — begrenset standard og vedlikehold. Kan ha begrensninger for helårs bruk og tungtrafikk.",
+    };
+
     const resultat: NvdbResultat = {
       vegkategori,
       vegstatus,
       vegreferanse,
       avstand,
-      detaljer: `Nærmeste vei: ${vegreferanse} (${Math.round(avstand)}m). Type: ${vegkategoriNavn[vegkategori] || vegkategori}.`,
+      detaljer: `Nærmeste vei: ${vegreferanse} (${Math.round(avstand)}m). Type: ${vegkategoriNavn[vegkategori] || vegkategori}. ${vegkontekst[vegkategori] || ""}`,
     };
 
     return NextResponse.json(resultat);

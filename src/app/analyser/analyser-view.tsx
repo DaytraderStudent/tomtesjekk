@@ -180,13 +180,25 @@ export default function AnalyserView() {
     if (ssbRes.status === "fulfilled" && !ssbRes.value.error) {
       const data: SsbResultat = ssbRes.value;
       const trend = data.endringProsent > 2 ? "gul" as const : "gronn" as const;
+      const periodeLabel = data.periode.replace(/(\d{4})M(\d{2})/, (_, y, m) => {
+        const mnd = ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"];
+        return `${mnd[parseInt(m, 10) - 1]} ${y}`;
+      });
+      const endringTekst = data.endringProsent > 0
+        ? `opp ${data.endringProsent}% siste måned`
+        : data.endringProsent < 0
+          ? `ned ${Math.abs(data.endringProsent)}% siste måned`
+          : "uendret siste måned";
       kort.push({
         id: "ssb", tittel: "Byggekostnader",
-        beskrivelse: `Indeks: ${data.indeksverdi} (${data.periode})`,
-        detaljer: data.detaljer || "", status: trend,
-        statusTekst: data.endringProsent > 2
+        beskrivelse: trend === "gul"
+          ? `Stigende byggekostnader — ${endringTekst}`
+          : `Stabile byggekostnader — ${endringTekst}`,
+        detaljer: `SSBs byggekostnadsindeks for boliger ligger på ${data.indeksverdi} per ${periodeLabel}. Indeksen måler prisutviklingen på materialer og arbeid for boligbygging i Norge. En endring på ${data.endringProsent > 0 ? "+" : ""}${data.endringProsent}% tyder på ${data.endringProsent > 2 ? "økende kostnadspress — vurder å innhente tilbud raskt" : "et stabilt kostnadsnivå for byggeprosjekter"}.`,
+        status: trend,
+        statusTekst: trend === "gul"
           ? `Stigende kostnader (+${data.endringProsent}%)`
-          : `Stabile kostnader (${data.endringProsent > 0 ? "+" : ""}${data.endringProsent}%)`,
+          : `Stabile kostnader (${endringTekst})`,
         kilde: "SSB", kildeUrl: "https://ssb.no",
       });
       oppdaterSteg("ssb", "ferdig");

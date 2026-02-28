@@ -21,15 +21,27 @@ function stripMarkdown(text: string): string {
     .replace(/\n{3,}/g, "\n\n");
 }
 
-function sanitizeText(text: string): string {
-  // Strip markdown, then replace Norwegian characters that jsPDF default font can't render
-  return stripMarkdown(text)
-    .replace(/æ/g, "ae")
-    .replace(/Æ/g, "Ae")
-    .replace(/ø/g, "o")
-    .replace(/Ø/g, "O")
-    .replace(/å/g, "aa")
-    .replace(/Å/g, "Aa");
+let cachedFontBase64: string | null = null;
+
+async function loadUnicodeFont(): Promise<string | null> {
+  if (cachedFontBase64) return cachedFontBase64;
+  try {
+    // Inter Latin Extended — supports æøå and other European chars
+    const res = await fetch(
+      "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf"
+    );
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    cachedFontBase64 = btoa(binary);
+    return cachedFontBase64;
+  } catch {
+    return null;
+  }
 }
 
 export function PDFEksport({ rapport }: Props) {
@@ -45,25 +57,42 @@ export function PDFEksport({ rapport }: Props) {
       const maxWidth = pageWidth - margin * 2;
       let y = 20;
 
+      // Try to load Unicode font for proper æøå support
+      const fontData = await loadUnicodeFont();
+      if (fontData) {
+        doc.addFileToVFS("Inter-Regular.ttf", fontData);
+        doc.addFont("Inter-Regular.ttf", "Inter", "normal");
+        doc.setFont("Inter");
+      }
+
+      const clean = (text: string) => {
+        const stripped = stripMarkdown(text);
+        // If we have a Unicode font, keep Norwegian chars. Otherwise fallback.
+        if (fontData) return stripped;
+        return stripped
+          .replace(/æ/g, "ae").replace(/Æ/g, "Ae")
+          .replace(/ø/g, "o").replace(/Ø/g, "O")
+          .replace(/å/g, "aa").replace(/Å/g, "Aa");
+      };
+
       // Title
       doc.setFontSize(22);
-      doc.setTextColor(27, 63, 110); // fjord-500
+      doc.setTextColor(27, 63, 110);
       doc.text("Tomtesjekk Rapport", margin, y);
       y += 12;
 
       // Address
       doc.setFontSize(11);
       doc.setTextColor(100, 100, 100);
-      const adresseTekst = sanitizeText(
-        `${rapport.adresse.adressetekst}, ${rapport.adresse.postnummer} ${rapport.adresse.poststed}`
+      doc.text(
+        clean(`${rapport.adresse.adressetekst}, ${rapport.adresse.postnummer} ${rapport.adresse.poststed}`),
+        margin, y
       );
-      doc.text(adresseTekst, margin, y);
       y += 6;
 
       doc.text(
         `Generert: ${new Date(rapport.tidspunkt).toLocaleString("nb-NO")}`,
-        margin,
-        y
+        margin, y
       );
       y += 10;
 
@@ -82,14 +111,11 @@ export function PDFEksport({ rapport }: Props) {
         doc.setFontSize(10);
         doc.setTextColor(60, 60, 60);
         const aiLines = doc.splitTextToSize(
-          sanitizeText(rapport.aiOppsummering.tekst),
+          clean(rapport.aiOppsummering.tekst),
           maxWidth
         );
         for (const line of aiLines) {
-          if (y > 270) {
-            doc.addPage();
-            y = 20;
-          }
+          if (y > 270) { doc.addPage(); y = 20; }
           doc.text(line, margin, y);
           y += 5;
         }
@@ -103,70 +129,47 @@ export function PDFEksport({ rapport }: Props) {
       y += 10;
 
       for (const kort of rapport.kort) {
-        if (y > 250) {
-          doc.addPage();
-          y = 20;
-        }
+        if (y > 250) { doc.addPage(); y = 20; }
 
-        // Card title with status
         doc.setFontSize(11);
         doc.setTextColor(30, 30, 30);
         doc.text(
-          sanitizeText(`${kort.tittel} — ${statusLabel(kort.status)}`),
-          margin,
-          y
+          clean(`${kort.tittel} \u2014 ${statusLabel(kort.status)}`),
+          margin, y
         );
         y += 6;
 
-        // Description
         doc.setFontSize(9);
         doc.setTextColor(80, 80, 80);
-        const descLines = doc.splitTextToSize(
-          sanitizeText(kort.beskrivelse),
-          maxWidth
-        );
+        const descLines = doc.splitTextToSize(clean(kort.beskrivelse), maxWidth);
         for (const line of descLines) {
           doc.text(line, margin, y);
           y += 4.5;
         }
 
-        // Details
         if (kort.detaljer) {
-          const detailLines = doc.splitTextToSize(
-            sanitizeText(kort.detaljer),
-            maxWidth
-          );
+          const detailLines = doc.splitTextToSize(clean(kort.detaljer), maxWidth);
           for (const line of detailLines) {
-            if (y > 270) {
-              doc.addPage();
-              y = 20;
-            }
+            if (y > 270) { doc.addPage(); y = 20; }
             doc.text(line, margin, y);
             y += 4.5;
           }
         }
 
-        // Source
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text(sanitizeText(`Kilde: ${kort.kilde}`), margin, y);
+        doc.text(clean(`Kilde: ${kort.kilde}`), margin, y);
         y += 8;
       }
 
       // Disclaimer
-      if (y > 250) {
-        doc.addPage();
-        y = 20;
-      }
+      if (y > 250) { doc.addPage(); y = 20; }
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, y, pageWidth - margin, y);
       y += 6;
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
-      const disclaimerLines = doc.splitTextToSize(
-        sanitizeText(DISCLAIMER_TEXT),
-        maxWidth
-      );
+      const disclaimerLines = doc.splitTextToSize(clean(DISCLAIMER_TEXT), maxWidth);
       for (const line of disclaimerLines) {
         doc.text(line, margin, y);
         y += 4;

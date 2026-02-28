@@ -26,15 +26,16 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const polygonRef = useRef<L.GeoJSON | null>(null);
-  const wmsRef = useRef<L.TileLayer.WMS | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const clickRef = useRef(onKlikkKart);
+  clickRef.current = onKlikkKart;
 
-  // Initialize map
+  // Initialize map — runs once
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [65.0, 13.0], // Center of Norway
+      center: [65.0, 13.0],
       zoom: 5,
       zoomControl: true,
     });
@@ -45,7 +46,7 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
       maxZoom: 19,
     }).addTo(map);
 
-    // WMS layer for cadastral boundaries — visible at zoom >= 15
+    // WMS cadastral boundaries — visible at zoom >= 15
     const wmsLayer = L.tileLayer.wms(
       "https://wms.geonorge.no/skwms1/wms.matrikkelkart",
       {
@@ -57,9 +58,7 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
         maxZoom: 19,
       }
     );
-    wmsRef.current = wmsLayer;
 
-    // Add/remove WMS based on zoom
     const updateWms = () => {
       const z = map.getZoom();
       if (z >= 15 && !map.hasLayer(wmsLayer)) {
@@ -70,11 +69,9 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
     };
     map.on("zoomend", updateWms);
 
-    if (onKlikkKart) {
-      map.on("click", (e: L.LeafletMouseEvent) => {
-        onKlikkKart(e.latlng.lat, e.latlng.lng);
-      });
-    }
+    map.on("click", (e: L.LeafletMouseEvent) => {
+      clickRef.current?.(e.latlng.lat, e.latlng.lng);
+    });
 
     mapRef.current = map;
 
@@ -82,9 +79,9 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
       map.remove();
       mapRef.current = null;
     };
-  }, [onKlikkKart]);
+  }, []);
 
-  // Update marker and view when coordinates change
+  // Update marker and fly to coordinates
   useEffect(() => {
     if (!mapRef.current || !lat || !lon) return;
 
@@ -96,17 +93,13 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
       mapRef.current
     );
 
-    // Only flyTo if there's no polygon (polygon handles fitBounds)
-    if (!grense) {
-      mapRef.current.flyTo([lat, lon], 15, { duration: 1.5 });
-    }
-  }, [lat, lon, grense]);
+    mapRef.current.flyTo([lat, lon], 15, { duration: 1.5 });
+  }, [lat, lon]);
 
   // Render property boundary polygon
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove previous polygon
     if (polygonRef.current) {
       polygonRef.current.remove();
       polygonRef.current = null;
@@ -116,9 +109,9 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
 
     const layer = L.geoJSON(grense, {
       style: {
-        color: "#2563eb",     // blue border
+        color: "#2563eb",
         weight: 3,
-        fillColor: "#f97316", // orange fill
+        fillColor: "#f97316",
         fillOpacity: 0.2,
         dashArray: "6 4",
       },
@@ -126,7 +119,6 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
 
     polygonRef.current = layer;
 
-    // Fit map to polygon bounds with padding
     const bounds = layer.getBounds();
     if (bounds.isValid()) {
       mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 17 });
