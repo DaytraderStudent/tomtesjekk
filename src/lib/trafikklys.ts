@@ -1,4 +1,4 @@
-import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat } from "@/types";
+import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat, StoyResultat, BoligprisResultat } from "@/types";
 
 export function flomStatus(data: NveResultat["flom"]): { status: TrafikklysStatus; tekst: string } {
   if (!data.aktsomhetsomrade) return { status: "gronn", tekst: "Ikke i flomaktsomhetsområde" };
@@ -51,6 +51,26 @@ export function nvdbStatus(data: NvdbResultat): { status: TrafikklysStatus; teks
   if (data.avstand <= 50) return { status: "gronn", tekst: `${Math.round(data.avstand)}m til nærmeste vei` };
   if (data.avstand <= 150) return { status: "gul", tekst: `${Math.round(data.avstand)}m til nærmeste vei` };
   return { status: "rod", tekst: `${Math.round(data.avstand)}m til nærmeste vei (lang avstand)` };
+}
+
+export function stoyStatus(data: StoyResultat): { status: TrafikklysStatus; tekst: string } {
+  if (!data.harStoy || data.nivaDb === null) return { status: "gronn", tekst: "Under 55 dB — stille område" };
+  if (data.nivaDb <= 55) return { status: "gronn", tekst: "55 dB — lite støy" };
+  if (data.nivaDb <= 65) return { status: "gul", tekst: `${data.nivaDb} dB — merkbar veitrafikkstøy` };
+  return { status: "rod", tekst: `${data.nivaDb} dB — høy veitrafikkstøy` };
+}
+
+export function boligprisStatus(data: BoligprisResultat): { status: TrafikklysStatus; tekst: string } {
+  const priser: { type: string; pris: number }[] = [];
+  if (data.enebolig !== null) priser.push({ type: "eneboliger", pris: data.enebolig });
+  if (data.smahus !== null) priser.push({ type: "småhus", pris: data.smahus });
+  if (data.blokk !== null) priser.push({ type: "blokk", pris: data.blokk });
+
+  if (priser.length === 0) return { status: "gra", tekst: "Prisdata ikke tilgjengelig" };
+
+  const hoyest = priser.reduce((a, b) => (b.pris > a.pris ? b : a));
+  const formatert = Math.round(hoyest.pris).toLocaleString("nb-NO");
+  return { status: "gronn", tekst: `ca. ${formatert} kr/m² for ${hoyest.type} (${data.aar})` };
 }
 
 export function statusFarge(status: TrafikklysStatus): string {

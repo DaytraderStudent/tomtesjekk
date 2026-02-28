@@ -104,3 +104,20 @@ export interface EiendomResultat {
   arealKvm: number | null;
   grenseGeoJson: GeoJSON.Feature | null;
 }
+
+export interface StoyResultat {
+  harStoy: boolean;
+  nivaDb: number | null;
+  enhet: string;
+  kilde: string;
+  detaljer?: string;
+}
+
+export interface BoligprisResultat {
+  kommunenavn: string;
+  aar: string;
+  enebolig: number | null;
+  smahus: number | null;
+  blokk: number | null;
+  detaljer?: string;
+}

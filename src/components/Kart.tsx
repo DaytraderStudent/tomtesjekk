@@ -8,6 +8,7 @@ interface Props {
   lat?: number;
   lon?: number;
   grense?: GeoJSON.Feature | null;
+  visStoy?: boolean;
   onKlikkKart?: (lat: number, lon: number) => void;
 }
 
@@ -22,10 +23,11 @@ const markerIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
+export function Kart({ lat, lon, grense, visStoy, onKlikkKart }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const polygonRef = useRef<L.GeoJSON | null>(null);
+  const stoyLayerRef = useRef<L.TileLayer.WMS | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const clickRef = useRef(onKlikkKart);
   clickRef.current = onKlikkKart;
@@ -124,6 +126,55 @@ export function Kart({ lat, lon, grense, onKlikkKart }: Props) {
       mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 17 });
     }
   }, [grense]);
+
+  // Noise WMS overlay — Stoyvarselkart (red/yellow noise zones)
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (visStoy && !stoyLayerRef.current) {
+      const stoyLayer = L.tileLayer.wms(
+        "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows",
+        {
+          layers: "Stoyvarselkart",
+          format: "image/png",
+          transparent: true,
+          opacity: 0.4,
+          minZoom: 13,
+          maxZoom: 19,
+        }
+      );
+
+      const map = mapRef.current;
+      const updateStoy = () => {
+        const z = map.getZoom();
+        if (z >= 13 && !map.hasLayer(stoyLayer)) {
+          stoyLayer.addTo(map);
+        } else if (z < 13 && map.hasLayer(stoyLayer)) {
+          map.removeLayer(stoyLayer);
+        }
+      };
+
+      map.on("zoomend", updateStoy);
+      updateStoy();
+      stoyLayerRef.current = stoyLayer;
+
+      return () => {
+        map.off("zoomend", updateStoy);
+        if (map.hasLayer(stoyLayer)) {
+          map.removeLayer(stoyLayer);
+        }
+        stoyLayerRef.current = null;
+      };
+    }
+
+    if (!visStoy && stoyLayerRef.current) {
+      const map = mapRef.current;
+      if (map.hasLayer(stoyLayerRef.current)) {
+        map.removeLayer(stoyLayerRef.current);
+      }
+      stoyLayerRef.current = null;
+    }
+  }, [visStoy]);
 
   return (
     <div

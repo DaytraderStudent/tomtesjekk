@@ -11,6 +11,8 @@ export const API_URLS = {
   nguLosmasser: "https://geo.ngu.no/mapserver/LosmasserWMS3",
   ssb: "https://data.ssb.no/api/v0/no/table/08651",
   nvdb: "https://nvdbapiles-v3.atlas.vegvesen.no/posisjon",
+  stoyVegvesen: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows",
+  boligpris: "https://data.ssb.no/api/v0/no/table/06035",
 } as const;
 
 export const STEG_NAVN: Record<string, string> = {
@@ -21,6 +23,8 @@ export const STEG_NAVN: Record<string, string> = {
   grunn: "Sjekker grunnforhold (NGU)",
   ssb: "Henter byggekostnadsindeks (SSB)",
   nvdb: "Sjekker veitilgang (NVDB)",
+  stoy: "Sjekker støynivå (Statens vegvesen)",
+  boligpris: "Henter boligpriser (SSB)",
   ai: "Genererer AI-oppsummering",
 };
 
@@ -36,4 +40,5 @@ export const DATAKILDER = [
   { navn: "NGU", url: "https://ngu.no" },
   { navn: "SSB", url: "https://ssb.no" },
   { navn: "Statens vegvesen (NVDB)", url: "https://nvdbapiles-v3.atlas.vegvesen.no" },
+  { navn: "Statens vegvesen (Støy)", url: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows" },
 ];

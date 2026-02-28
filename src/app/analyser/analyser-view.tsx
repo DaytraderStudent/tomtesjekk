@@ -17,6 +17,8 @@ import {
   grunnStatus,
   nvdbStatus,
   eiendomStatus,
+  stoyStatus,
+  boligprisStatus,
 } from "@/lib/trafikklys";
 import type {
   KartverketAdresse,
@@ -29,6 +31,8 @@ import type {
   SsbResultat,
   NvdbResultat,
   EiendomResultat,
+  StoyResultat,
+  BoligprisResultat,
 } from "@/types";
 
 function lagInitielleSteg(): AnalyseSteg[] {
@@ -66,10 +70,10 @@ export default function AnalyserView() {
     const kort: AnalyseKort[] = [];
 
     oppdaterSteg("adresse", "aktiv");
-    setProsent(5);
+    setProsent(3);
     await new Promise((r) => setTimeout(r, 300));
     oppdaterSteg("adresse", "ferdig");
-    setProsent(10);
+    setProsent(5);
 
     // Eiendom step: cadastral info + boundary polygon
     oppdaterSteg("eiendom", "aktiv");
@@ -100,7 +104,7 @@ export default function AnalyserView() {
     } catch {
       oppdaterSteg("eiendom", "feil", "Kunne ikke hente eiendomsdata");
     }
-    setProsent(18);
+    setProsent(12);
 
     oppdaterSteg("nve", "aktiv");
     try {
@@ -135,18 +139,22 @@ export default function AnalyserView() {
     } catch {
       oppdaterSteg("nve", "feil", "Kunne ikke hente NVE-data");
     }
-    setProsent(35);
+    setProsent(28);
 
     oppdaterSteg("radon", "aktiv");
     oppdaterSteg("grunn", "aktiv");
     oppdaterSteg("ssb", "aktiv");
     oppdaterSteg("nvdb", "aktiv");
+    oppdaterSteg("stoy", "aktiv");
+    oppdaterSteg("boligpris", "aktiv");
 
-    const [radonRes, grunnRes, ssbRes, nvdbRes] = await Promise.allSettled([
+    const [radonRes, grunnRes, ssbRes, nvdbRes, stoyRes, boligprisRes] = await Promise.allSettled([
       fetch(`/api/ngu-radon?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch(`/api/ngu-grunn?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch("/api/ssb").then((r) => r.json()),
       fetch(`/api/nvdb?lat=${lat}&lon=${lon}`).then((r) => r.json()),
+      fetch(`/api/stoy?lat=${lat}&lon=${lon}`).then((r) => r.json()),
+      fetch(`/api/boligpris?kommunenummer=${adresse.kommunenummer}`).then((r) => r.json()),
     ]);
 
     if (radonRes.status === "fulfilled" && !radonRes.value.error) {
@@ -161,7 +169,6 @@ export default function AnalyserView() {
     } else {
       oppdaterSteg("radon", "feil", "Kunne ikke hente radondata");
     }
-    setProsent(52);
 
     if (grunnRes.status === "fulfilled" && !grunnRes.value.error) {
       const data: NguGrunnResultat = grunnRes.value;
@@ -175,12 +182,11 @@ export default function AnalyserView() {
     } else {
       oppdaterSteg("grunn", "feil", "Kunne ikke hente grunndata");
     }
-    setProsent(65);
 
     if (ssbRes.status === "fulfilled" && !ssbRes.value.error) {
       const data: SsbResultat = ssbRes.value;
       const trend = data.endringProsent > 2 ? "gul" as const : "gronn" as const;
-      const periodeLabel = data.periode.replace(/(\d{4})M(\d{2})/, (_, y, m) => {
+      const periodeLabel = data.periode.replace(/(\d{4})M(\d{2})/, (_, y: string, m: string) => {
         const mnd = ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"];
         return `${mnd[parseInt(m, 10) - 1]} ${y}`;
       });
@@ -205,7 +211,6 @@ export default function AnalyserView() {
     } else {
       oppdaterSteg("ssb", "feil", "Kunne ikke hente SSB-data");
     }
-    setProsent(75);
 
     if (nvdbRes.status === "fulfilled" && !nvdbRes.value.error) {
       const data: NvdbResultat = nvdbRes.value;
@@ -220,7 +225,39 @@ export default function AnalyserView() {
     } else {
       oppdaterSteg("nvdb", "feil", "Kunne ikke hente NVDB-data");
     }
-    setProsent(85);
+
+    if (stoyRes.status === "fulfilled" && !stoyRes.value.error) {
+      const data: StoyResultat = stoyRes.value;
+      const ss = stoyStatus(data);
+      kort.push({
+        id: "stoy", tittel: "Støy", beskrivelse: ss.tekst,
+        detaljer: data.detaljer || "", status: ss.status,
+        statusTekst: ss.tekst, kilde: "Statens vegvesen (Støy)",
+        kildeUrl: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows",
+      });
+      oppdaterSteg("stoy", "ferdig");
+    } else {
+      oppdaterSteg("stoy", "feil", "Kunne ikke hente støydata");
+    }
+
+    if (boligprisRes.status === "fulfilled" && !boligprisRes.value.error) {
+      const data: BoligprisResultat = boligprisRes.value;
+      if (data.kommunenavn === "" && adresse.kommunenavn) {
+        data.kommunenavn = adresse.kommunenavn;
+      }
+      const bs = boligprisStatus(data);
+      kort.push({
+        id: "boligpris", tittel: "Boligpriser", beskrivelse: bs.tekst,
+        detaljer: data.detaljer || "", status: bs.status,
+        statusTekst: bs.tekst, kilde: "SSB",
+        kildeUrl: "https://ssb.no",
+      });
+      oppdaterSteg("boligpris", "ferdig");
+    } else {
+      oppdaterSteg("boligpris", "feil", "Kunne ikke hente boligprisdata");
+    }
+
+    setProsent(75);
 
     oppdaterSteg("ai", "aktiv");
     let aiOppsummering = null;
@@ -291,6 +328,7 @@ export default function AnalyserView() {
           lat={valgtAdresse?.representasjonspunkt.lat}
           lon={valgtAdresse?.representasjonspunkt.lon}
           grense={tomtegrense}
+          visStoy={!!rapport}
           onKlikkKart={handleKlikkKart}
         />
       </div>
