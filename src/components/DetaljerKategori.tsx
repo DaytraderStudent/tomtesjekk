@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Info } from "lucide-react";
+import { ExternalLink, Info, Building2, Ruler, Layers, BadgePercent } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statusFarge, statusLabel } from "@/lib/trafikklys";
 import { hentKortIkon } from "@/lib/kort-ikoner";
@@ -32,9 +32,11 @@ const FORKLARINGER: Record<string, string> = {
     "fra Kartverkets eiendomsregister. Arealet er beregnet fra digitale grensepunkt " +
     "og kan avvike noe fra tinglyste mål.",
   regulering:
-    "Reguleringsplanen viser hva tomten er regulert til (bolig, næring, friområde etc.). " +
-    "Uregulerte tomter kan kreve egen reguleringsplan før bygging tillates. " +
-    "Sjekk kommunens planinnsyn for detaljer om utnyttelsesgrad og byggehøyde.",
+    "Reguleringsplanen viser hva tomten er regulert til (bolig, næring, friområde etc.) og " +
+    "eventuell tillatt utnyttelsesgrad (BYA%), byggehøyde og antall etasjer. " +
+    "Verdier merket «fra plandata» er hentet fra DiBK. Verdier merket «veiledende» er " +
+    "TEK17-referanseverdier basert på arealformål — de faktiske bestemmelsene kan avvike. " +
+    "Sjekk alltid kommunens planinnsyn for bindende reguleringsbestemmelser.",
   ssb:
     "Byggekostnadsindeksen fra SSB måler prisutviklingen på materialer og arbeid for boligbygging. " +
     "En stigende indeks betyr høyere byggepriser. Den estimerte kr/m²-prisen er et landsgjennomsnitt " +
@@ -109,14 +111,95 @@ export function DetaljerKategori({ kort }: Props) {
         {/* Details */}
         {kort.detaljer && (
           <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
               {kort.detaljer}
             </p>
           </div>
         )}
 
-        {/* Raw data */}
-        {kort.raadata && Object.keys(kort.raadata).length > 0 && (
+        {/* Structured BYA subsection for regulering */}
+        {kort.id === "regulering" && kort.raadata?.utnyttingsgrad != null && (
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Utnyttelse og byggehøyde
+              </p>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
+                  kort.raadata.utnyttelseKilde === "plan"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-amber-100 text-amber-700"
+                )}
+              >
+                {kort.raadata.utnyttelseKilde === "plan"
+                  ? "Fra plandata"
+                  : "Veiledende"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {kort.raadata.utnyttingsgrad != null && (
+                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <BadgePercent className="w-3.5 h-3.5 text-fjord-500" />
+                    <span className="text-xs text-gray-500">Maks BYA</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {kort.raadata.utnyttingsgrad}%
+                  </p>
+                </div>
+              )}
+
+              {kort.raadata.maksBebyggetAreal != null && (
+                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Building2 className="w-3.5 h-3.5 text-fjord-500" />
+                    <span className="text-xs text-gray-500">Maks bebygd</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {kort.raadata.maksBebyggetAreal} m²
+                  </p>
+                </div>
+              )}
+
+              {kort.raadata.maksHoyde != null && (
+                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Ruler className="w-3.5 h-3.5 text-fjord-500" />
+                    <span className="text-xs text-gray-500">Maks høyde</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {kort.raadata.maksHoyde} m
+                  </p>
+                </div>
+              )}
+
+              {kort.raadata.maksEtasjer != null && (
+                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Layers className="w-3.5 h-3.5 text-fjord-500" />
+                    <span className="text-xs text-gray-500">Maks etasjer</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {kort.raadata.maksEtasjer}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {kort.raadata.utnyttelseKilde === "tek17" && (
+              <p className="text-xs text-amber-600 leading-relaxed">
+                Verdiene er veiledende TEK17-referanser basert på arealformålet og er ikke bindende.
+                Faktisk tillatt utnyttelse kan avvike — sjekk kommunens reguleringsbestemmelser.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Raw data — hide for regulering when structured BYA data is shown */}
+        {kort.raadata && Object.keys(kort.raadata).length > 0 &&
+          !(kort.id === "regulering" && kort.raadata.utnyttingsgrad != null) && (
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
               Rådata

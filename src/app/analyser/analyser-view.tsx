@@ -83,6 +83,7 @@ export default function AnalyserView() {
 
     const { lat, lon } = adresse.representasjonspunkt;
     const kort: AnalyseKort[] = [];
+    let eiendomArealKvm: number | null = null;
 
     oppdaterSteg("adresse", "aktiv");
     setProsent(3);
@@ -97,6 +98,7 @@ export default function AnalyserView() {
       const eiendomRes = await fetch(`/api/eiendom?lat=${lat}&lon=${lon}`);
       const eiendom: EiendomResultat = await eiendomRes.json();
       if (eiendom.matrikkelnummertekst) {
+        eiendomArealKvm = eiendom.arealKvm ?? null;
         const es = eiendomStatus(eiendom);
         kort.push({
           id: "eiendom",
@@ -144,6 +146,30 @@ export default function AnalyserView() {
         let regKildeUrl: string;
         if (regPlan.harPlan) {
           regDetaljer = regPlan.detaljer || `${regPlan.planType || "Reguleringsplan"}: ${regPlan.planNavn || "Navn ikke tilgjengelig"}${regPlan.arealformaal ? `. Arealformål: ${regPlan.arealformaal}` : ""}`;
+
+          // Append BYA/height info if available
+          if (regPlan.utnyttingsgrad || regPlan.maksHoyde || regPlan.maksEtasjer) {
+            const kildeTekst = regPlan.utnyttelseKilde === "plan"
+              ? "fra plandata"
+              : "veiledende TEK17-referanse";
+            regDetaljer += `\n\nUtnyttelse (${kildeTekst}):`;
+            if (regPlan.utnyttingsgrad) {
+              const maksBebygget = eiendomArealKvm
+                ? Math.round((regPlan.utnyttingsgrad / 100) * eiendomArealKvm)
+                : null;
+              regDetaljer += `\n• Maks BYA: ${regPlan.utnyttingsgrad}%`;
+              if (maksBebygget) {
+                regDetaljer += ` (ca. ${maksBebygget} m² på denne tomten)`;
+              }
+            }
+            if (regPlan.maksHoyde) {
+              regDetaljer += `\n• Maks byggehøyde: ${regPlan.maksHoyde} m`;
+            }
+            if (regPlan.maksEtasjer) {
+              regDetaljer += `\n• Maks etasjer: ${regPlan.maksEtasjer}`;
+            }
+          }
+
           regKilde = "DiBK / Geonorge";
           regKildeUrl = "https://nap.ft.dibk.no/services/wms/reguleringsplaner/";
         } else if (regPlan.harPlan === null) {
@@ -155,6 +181,22 @@ export default function AnalyserView() {
           regKilde = `Planinnsyn ${adresse.kommunenavn || ""}`;
           regKildeUrl = planinnsynUrl;
         }
+
+        // Build raadata with structured BYA values
+        const maksBebyggetAreal = regPlan.utnyttingsgrad && eiendomArealKvm
+          ? Math.round((regPlan.utnyttingsgrad / 100) * eiendomArealKvm)
+          : null;
+        const regRaadata = (regPlan.utnyttingsgrad || regPlan.maksHoyde || regPlan.maksEtasjer)
+          ? {
+              utnyttingsgrad: regPlan.utnyttingsgrad,
+              maksHoyde: regPlan.maksHoyde,
+              maksEtasjer: regPlan.maksEtasjer,
+              utnyttelseKilde: regPlan.utnyttelseKilde,
+              arealKvm: eiendomArealKvm,
+              maksBebyggetAreal,
+            }
+          : undefined;
+
         kort.push({
           id: "regulering",
           tittel: "Reguleringsplan",
@@ -164,6 +206,7 @@ export default function AnalyserView() {
           statusTekst: rs.tekst,
           kilde: regKilde,
           kildeUrl: regKildeUrl,
+          raadata: regRaadata,
         });
         oppdaterSteg("regulering", "ferdig");
       } else {

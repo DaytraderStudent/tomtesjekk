@@ -132,4 +132,8 @@ export interface ReguleringsplanResultat {
   planStatus: string | null;
   planId: string | null;
   detaljer?: string;
+  utnyttingsgrad?: number | null;
+  maksHoyde?: number | null;
+  maksEtasjer?: number | null;
+  utnyttelseKilde?: "plan" | "tek17";
 }
