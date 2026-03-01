@@ -6,6 +6,10 @@ import type L from "leaflet";
  *
  * This avoids html2canvas which mishandles Leaflet's CSS translate3d
  * transforms, causing polygon/marker to appear shifted.
+ *
+ * All coordinate mapping goes through Leaflet's latLngToContainerPoint
+ * so tiles, polygon, and marker are guaranteed to be aligned, even at
+ * fractional zoom levels.
  */
 export async function taKartbilde(
   map: L.Map,
@@ -13,64 +17,59 @@ export async function taKartbilde(
   grense?: GeoJSON.Feature | null
 ): Promise<string | null> {
   try {
-    const bounds = map.getBounds();
-    const zoom = map.getZoom();
     const size = map.getSize();
+    const zoom = Math.round(map.getZoom());
 
-    // Canvas dimensions (2x for retina)
+    // Canvas dimensions (2x for retina sharpness)
     const scale = 2;
-    const w = size.x * scale;
-    const h = size.y * scale;
-
     const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = size.x * scale;
+    canvas.height = size.y * scale;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-
     ctx.scale(scale, scale);
 
     // --- 1. Draw OSM tiles ---
-    const tileSize = 256;
+    const bounds = map.getBounds();
     const nw = bounds.getNorthWest();
     const se = bounds.getSouthEast();
 
-    // Convert lat/lon to tile coordinates
-    const xMin = lonToTileX(nw.lng, zoom);
-    const xMax = lonToTileX(se.lng, zoom);
-    const yMin = latToTileY(nw.lat, zoom);
-    const yMax = latToTileY(se.lat, zoom);
+    // Which tiles cover the visible area at this integer zoom?
+    const tileXMin = Math.floor(lonToTileX(nw.lng, zoom));
+    const tileXMax = Math.floor(lonToTileX(se.lng, zoom));
+    const tileYMin = Math.floor(latToTileY(nw.lat, zoom));
+    const tileYMax = Math.floor(latToTileY(se.lat, zoom));
 
-    const tileXMin = Math.floor(xMin);
-    const tileXMax = Math.floor(xMax);
-    const tileYMin = Math.floor(yMin);
-    const tileYMax = Math.floor(yMax);
-
-    // Pixel offset of the top-left tile corner relative to the canvas
-    const offsetX = (tileXMin - xMin) * tileSize;
-    const offsetY = (tileYMin - yMin) * tileSize;
-
-    // Load all tiles in parallel
-    const tilePromises: Promise<void>[] = [];
+    // Load all tile images in parallel
+    const tileJobs: { img: Promise<HTMLImageElement>; tx: number; ty: number }[] = [];
     for (let tx = tileXMin; tx <= tileXMax; tx++) {
       for (let ty = tileYMin; ty <= tileYMax; ty++) {
-        const px = offsetX + (tx - tileXMin) * tileSize;
-        const py = offsetY + (ty - tileYMin) * tileSize;
-        const url = `https://a.tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
-
-        tilePromises.push(
-          loadImage(url).then((img) => {
-            ctx.drawImage(img, px, py, tileSize, tileSize);
-          }).catch(() => {
-            // Fill with light gray if tile fails
-            ctx.fillStyle = "#e5e5e5";
-            ctx.fillRect(px, py, tileSize, tileSize);
-          })
-        );
+        const sub = ["a", "b", "c"][(tx + ty) % 3];
+        const url = `https://${sub}.tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
+        tileJobs.push({ img: loadImage(url), tx, ty });
       }
     }
 
-    await Promise.all(tilePromises);
+    // Draw each tile at the correct position by converting tile corners
+    // to container pixels via Leaflet (handles fractional zoom correctly)
+    const settled = await Promise.allSettled(tileJobs.map((j) => j.img));
+    for (let i = 0; i < tileJobs.length; i++) {
+      const result = settled[i];
+      if (result.status !== "fulfilled") continue;
+
+      const { tx, ty } = tileJobs[i];
+      const tileNW = tileToLatLon(tx, ty, zoom);
+      const tileSE = tileToLatLon(tx + 1, ty + 1, zoom);
+
+      const pxNW = map.latLngToContainerPoint(tileNW);
+      const pxSE = map.latLngToContainerPoint(tileSE);
+
+      ctx.drawImage(
+        result.value,
+        pxNW.x, pxNW.y,
+        pxSE.x - pxNW.x, pxSE.y - pxNW.y
+      );
+    }
 
     // --- 2. Draw property boundary polygon ---
     if (grense?.geometry) {
@@ -79,27 +78,25 @@ export async function taKartbilde(
       ctx.setLineDash([6, 4]);
       ctx.fillStyle = "rgba(249, 115, 22, 0.2)";
 
-      const coords = extractCoords(grense.geometry);
-      for (const ring of coords) {
+      const rings = extractCoords(grense.geometry);
+      for (const ring of rings) {
         if (ring.length === 0) continue;
         ctx.beginPath();
-        const first = latLonToPixel(ring[0][1], ring[0][0], map, size);
+        // GeoJSON coords are [lon, lat]
+        const first = map.latLngToContainerPoint([ring[0][1], ring[0][0]]);
         ctx.moveTo(first.x, first.y);
         for (let i = 1; i < ring.length; i++) {
-          const pt = latLonToPixel(ring[i][1], ring[i][0], map, size);
+          const pt = map.latLngToContainerPoint([ring[i][1], ring[i][0]]);
           ctx.lineTo(pt.x, pt.y);
         }
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
       }
-
       ctx.setLineDash([]);
     }
 
     // --- 3. Draw marker pin ---
-    const center = map.getCenter();
-    // Find the marker position — use the first marker on the map
     let markerLatLng: L.LatLng | null = null;
     map.eachLayer((layer: any) => {
       if (layer.getLatLng && !markerLatLng) {
@@ -107,24 +104,15 @@ export async function taKartbilde(
       }
     });
 
-    if (markerLatLng) {
-      const mp = latLonToPixel(
-        (markerLatLng as any).lat,
-        (markerLatLng as any).lng,
-        map,
-        size
-      );
-      drawMarkerPin(ctx, mp.x, mp.y);
-    } else {
-      // Fallback: draw at map center
-      const cp = latLonToPixel(center.lat, center.lng, map, size);
-      drawMarkerPin(ctx, cp.x, cp.y);
-    }
+    const pinPos = markerLatLng
+      ? map.latLngToContainerPoint(markerLatLng)
+      : map.latLngToContainerPoint(map.getCenter());
+    drawMarkerPin(ctx, pinPos.x, pinPos.y);
 
     // --- 4. Attribution ---
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillText("© OpenStreetMap", size.x - 110, size.y - 6);
+    ctx.fillText("\u00A9 OpenStreetMap", size.x - 110, size.y - 6);
 
     return canvas.toDataURL("image/png");
   } catch (e) {
@@ -147,14 +135,13 @@ function latToTileY(lat: number, zoom: number): number {
   );
 }
 
-function latLonToPixel(
-  lat: number,
-  lon: number,
-  map: L.Map,
-  size: L.Point
-): { x: number; y: number } {
-  const point = map.latLngToContainerPoint([lat, lon]);
-  return { x: point.x, y: point.y };
+/** Convert tile coordinates back to lat/lon (NW corner of the tile) */
+function tileToLatLon(tx: number, ty: number, zoom: number): [number, number] {
+  const n = Math.pow(2, zoom);
+  const lon = (tx / n) * 360 - 180;
+  const latRad = Math.atan(Math.sinh(Math.PI * (1 - (2 * ty) / n)));
+  const lat = (latRad * 180) / Math.PI;
+  return [lat, lon];
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -178,7 +165,6 @@ function extractCoords(geometry: GeoJSON.Geometry): number[][][] {
 }
 
 function drawMarkerPin(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  // Draw a map pin: teardrop shape with white circle
   const pinHeight = 36;
   const pinRadius = 12;
 
@@ -193,7 +179,7 @@ function drawMarkerPin(ctx: CanvasRenderingContext2D, x: number, y: number) {
   // Pin body (teardrop)
   ctx.beginPath();
   ctx.fillStyle = "#2563eb";
-  ctx.moveTo(x, y); // bottom point
+  ctx.moveTo(x, y); // bottom tip
   ctx.bezierCurveTo(
     x - pinRadius * 1.2, y - pinHeight * 0.5,
     x - pinRadius, y - pinHeight * 0.85,
@@ -208,7 +194,7 @@ function drawMarkerPin(ctx: CanvasRenderingContext2D, x: number, y: number) {
 
   ctx.shadowColor = "transparent";
 
-  // White circle inside
+  // White dot inside
   ctx.beginPath();
   ctx.fillStyle = "white";
   ctx.arc(x, y - pinHeight * 0.68, pinRadius * 0.45, 0, Math.PI * 2);
