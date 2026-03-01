@@ -88,6 +88,7 @@ export default function AnalyserView() {
     setProsent(5);
 
     // Eiendom step: cadastral info + boundary polygon
+    let grenseGeoJson: GeoJSON.Feature | null = null;
     oppdaterSteg("eiendom", "aktiv");
     try {
       const eiendomRes = await fetch(`/api/eiendom?lat=${lat}&lon=${lon}`);
@@ -107,6 +108,7 @@ export default function AnalyserView() {
           kildeUrl: "https://ws.geonorge.no/eiendom/v1",
         });
         if (eiendom.grenseGeoJson) {
+          grenseGeoJson = eiendom.grenseGeoJson;
           setTomtegrense(eiendom.grenseGeoJson);
         }
         oppdaterSteg("eiendom", "ferdig");
@@ -353,11 +355,11 @@ export default function AnalyserView() {
     // Fetch elevation data
     const hoyde = await hentHoyde(lat, lon);
 
-    // Capture map image — wait for tiles to finish loading after fitBounds
+    // Capture map image — wait for map to settle after fitBounds
     let kartBilde: string | null = null;
     if (kartMapRef.current && kartContainerRef.current) {
       await new Promise((r) => setTimeout(r, 1500));
-      kartBilde = await taKartbilde(kartMapRef.current, kartContainerRef.current);
+      kartBilde = await taKartbilde(kartMapRef.current, kartContainerRef.current, grenseGeoJson);
     }
 
     setProsent(100);
