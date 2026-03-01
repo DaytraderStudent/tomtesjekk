@@ -2,7 +2,9 @@
 
 import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { MapPin, Search, X, ChevronUp, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { MapPin, Search, X, ChevronUp, ChevronDown, FileText } from "lucide-react";
+import { lagreRapport } from "@/lib/rapport-storage";
 import L from "leaflet";
 import { Adressesok } from "@/components/Adressesok";
 import { Kart } from "@/components/Kart";
@@ -367,10 +369,12 @@ export default function AnalyserView() {
 
     setProsent(100);
 
-    setRapport({
+    const nyttRapport: RapportType = {
       adresse, kort, aiOppsummering, hoydeOverHavet: hoyde, kartBilde,
       tidspunkt: new Date().toISOString(),
-    });
+    };
+    setRapport(nyttRapport);
+    lagreRapport(nyttRapport);
 
     setErAktiv(false);
     toast.success("Analyse ferdig!");
@@ -529,7 +533,18 @@ export default function AnalyserView() {
                     <Fremdriftslinje steg={steg} prosent={prosent} />
                   </div>
                 )}
-                {rapport && !erAktiv && <Rapport rapport={rapport} />}
+                {rapport && !erAktiv && (
+                  <>
+                    <Rapport rapport={rapport} />
+                    <Link
+                      href="/analyser/detaljer"
+                      className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-3 bg-fjord-500 text-white rounded-xl font-semibold hover:bg-fjord-600 transition-colors text-sm"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Se full rapport
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -71,3 +71,32 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #a0a0a0;
 }
+
+/* Print styles */
+@media print {
+  nav,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+
+  section,
+  .print\:break-inside-avoid {
+    break-inside: avoid;
+  }
+
+  img {
+    max-width: 300px;
+    max-height: 200px;
+    object-fit: contain;
+  }
+}
