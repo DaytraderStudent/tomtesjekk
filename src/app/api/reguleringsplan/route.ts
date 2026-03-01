@@ -53,17 +53,9 @@ const FALLBACK_RESULT: ReguleringsplanResultat = {
     "Kontakt kommunen eller sjekk kommunens planinnsyn for gjeldende reguleringsplan.",
 };
 
-function parseJsonFeatures(data: any): ReguleringsplanResultat {
+function parseJsonFeatures(data: any): ReguleringsplanResultat | null {
   if (!data?.features || data.features.length === 0) {
-    return {
-      harPlan: false,
-      planNavn: null,
-      planType: null,
-      arealformaal: null,
-      planStatus: null,
-      planId: null,
-      detaljer: "Ingen reguleringsplan funnet for dette punktet",
-    };
+    return null;
   }
 
   const props = data.features[0].properties || {};
@@ -111,9 +103,7 @@ async function queryWms(
     if (!response.ok) return null;
 
     const data = await response.json();
-    const result = parseJsonFeatures(data);
-    if (result.harPlan) return result;
-    return result; // might be harPlan: false — let caller decide
+    return parseJsonFeatures(data);
   } catch {
     return null;
   }
@@ -154,11 +144,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(kpResult);
   }
 
-  // If we got explicit "no plan" from at least one successful query, report that
-  if (regResult?.harPlan === false || kpResult?.harPlan === false) {
-    return NextResponse.json(regResult || kpResult);
-  }
-
-  // Both queries failed — service unavailable
+  // Neither service returned features — service data not yet available
   return NextResponse.json(FALLBACK_RESULT);
 }
