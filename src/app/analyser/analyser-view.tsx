@@ -126,16 +126,29 @@ export default function AnalyserView() {
       if (regRes.ok && !regData.error) {
         const regPlan: ReguleringsplanResultat = regData;
         const rs = reguleringsplanStatus(regPlan);
-        const kommuneDomain = adresse.kommunenavn
-          ? `${adresse.kommunenavn.toLowerCase().replace(/\s+/g, "")}.kommune.no`
+        // Build link to municipality plan viewer (arealplaner.no)
+        const kommuneSlug = adresse.kommunenavn
+          ? `${adresse.kommunenavn.toLowerCase().replace(/\s+/g, "")}${adresse.kommunenummer}`
           : null;
+        const planinnsynUrl = kommuneSlug
+          ? `https://arealplaner.no/${kommuneSlug}/arealplaner`
+          : "https://arealplaner.no";
+
         let regDetaljer: string;
+        let regKilde: string;
+        let regKildeUrl: string;
         if (regPlan.harPlan) {
           regDetaljer = regPlan.detaljer || `${regPlan.planType || "Reguleringsplan"}: ${regPlan.planNavn || "Navn ikke tilgjengelig"}${regPlan.arealformaal ? `. Arealformål: ${regPlan.arealformaal}` : ""}`;
+          regKilde = "DiBK / Geonorge";
+          regKildeUrl = "https://nap.ft.dibk.no/services/wms/reguleringsplaner/";
         } else if (regPlan.harPlan === null) {
-          regDetaljer = `Nasjonal plandata-API (DiBK) er under oppbygging og har ikke fullstendige data ennå. Sjekk kommunens planinnsyn${kommuneDomain ? ` på ${kommuneDomain}` : ""} for gjeldende reguleringsplan.`;
+          regDetaljer = `Nasjonal plandata-API (DiBK) er under oppbygging og har ikke fullstendige data ennå. Sjekk kommunens planinnsyn for gjeldende reguleringsplan.`;
+          regKilde = `Planinnsyn ${adresse.kommunenavn || ""}`;
+          regKildeUrl = planinnsynUrl;
         } else {
           regDetaljer = "Ingen reguleringsplan registrert. Området kan være uregulert — kontakt kommunen for å avklare gjeldende plansituasjon.";
+          regKilde = `Planinnsyn ${adresse.kommunenavn || ""}`;
+          regKildeUrl = planinnsynUrl;
         }
         kort.push({
           id: "regulering",
@@ -144,8 +157,8 @@ export default function AnalyserView() {
           detaljer: regDetaljer,
           status: rs.status,
           statusTekst: rs.tekst,
-          kilde: "DiBK / Geonorge",
-          kildeUrl: "https://nap.ft.dibk.no/services/wms/reguleringsplaner/",
+          kilde: regKilde,
+          kildeUrl: regKildeUrl,
         });
         oppdaterSteg("regulering", "ferdig");
       } else {
