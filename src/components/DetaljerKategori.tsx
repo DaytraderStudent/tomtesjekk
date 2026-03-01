@@ -66,7 +66,7 @@ export function DetaljerKategori({ kort }: Props) {
   return (
     <section
       id={`kategori-${kort.id}`}
-      className="scroll-mt-24 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:break-inside-avoid"
+      className="scroll-mt-32 lg:scroll-mt-24 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:break-inside-avoid"
     >
       {/* Colored top line */}
       <div className="h-1.5" style={{ backgroundColor: farge }} />

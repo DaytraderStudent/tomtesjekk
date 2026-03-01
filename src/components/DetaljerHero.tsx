@@ -134,15 +134,16 @@ export function DetaljerHero({ rapport }: Props) {
           {/* Right: map image */}
           <div className="lg:col-span-2 flex justify-center lg:justify-end">
             {rapport.kartBilde ? (
-              <div className="w-full max-w-sm rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl">
+              <div className="w-full rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl">
                 <img
                   src={rapport.kartBilde}
                   alt={`Kart over ${rapport.adresse.adressetekst}`}
                   className="w-full h-auto"
+                  style={{ imageRendering: "auto" }}
                 />
               </div>
             ) : (
-              <div className="w-full max-w-sm aspect-[4/3] rounded-xl bg-white/10 border-2 border-white/10 flex items-center justify-center">
+              <div className="w-full aspect-[4/3] rounded-xl bg-white/10 border-2 border-white/10 flex items-center justify-center">
                 <MapPin className="w-12 h-12 text-white/30" />
               </div>
             )}
