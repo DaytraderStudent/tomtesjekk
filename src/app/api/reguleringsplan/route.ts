@@ -53,6 +53,48 @@ const FALLBACK_RESULT: ReguleringsplanResultat = {
     "Kontakt kommunen eller sjekk kommunens planinnsyn for gjeldende reguleringsplan.",
 };
 
+// --- SOSI arealformål code mapping ---
+
+const SOSI_AREALFORMAAL: Record<string, string> = {
+  "1": "Bebyggelse og anlegg",
+  "1001": "Bebyggelse og anlegg",
+  "1100": "Boligbebyggelse",
+  "1110": "Boligbebyggelse – frittliggende småhusbebyggelse",
+  "1120": "Boligbebyggelse – konsentrert småhusbebyggelse",
+  "1130": "Boligbebyggelse – blokkbebyggelse",
+  "1140": "Næringsbebyggelse",
+  "1150": "Fritidsbebyggelse",
+  "1160": "Sentrumsformål",
+  "1170": "Offentlig eller privat tjenesteyting",
+  "1300": "Fritids- og turistformål",
+  "2": "Samferdselsanlegg og teknisk infrastruktur",
+  "2010": "Veg",
+  "2020": "Bane",
+  "2030": "Lufthavn",
+  "2040": "Havn",
+  "2080": "Samferdselsanlegg",
+  "2081": "Kjøreveg",
+  "2082": "Gang- og sykkelveg",
+  "2083": "Annen veggrunn",
+  "3": "Grønnstruktur",
+  "3001": "Grønnstruktur",
+  "4": "Forsvaret",
+  "5": "Landbruks-, natur- og friluftsformål",
+  "5100": "Landbruk",
+  "5200": "Naturformål",
+  "5300": "Friluftsformål",
+  "6": "Bruk og vern av sjø og vassdrag",
+};
+
+function resolveArealformaal(val: string | null): string | null {
+  if (!val) return null;
+  // If it looks like a SOSI code, map it; otherwise return as-is
+  if (/^\d+$/.test(val.trim())) {
+    return SOSI_AREALFORMAAL[val.trim()] || `Arealformaal (kode ${val.trim()})`;
+  }
+  return val;
+}
+
 // --- BYA/height parsing from WMS feature properties ---
 
 interface UtnyttelseData {
@@ -61,8 +103,10 @@ interface UtnyttelseData {
   maksEtasjer: number | null;
 }
 
-const BYA_PATTERNS = /^(utnyttingsgrad|bya|bebygd_areal|%-bya|prosent_bya|utnytting)/i;
-const HOYDE_PATTERNS = /^(maks_hoyde|makshøyde|makshoyde|byggehoyde|byggehøyde|max_height|gesimsh)/i;
+// DiBK WMS often double-encodes UTF-8, so "å" → "Ã¥", "ø" → "Ã¸" etc.
+// Match both correct and mangled forms
+const BYA_PATTERNS = /^(utnyttingsgrad|utnytting\.utnyttingstall|bya|bebygd_areal|%-bya|prosent_bya)/i;
+const HOYDE_PATTERNS = /^(maks_hoyde|maksh.yde|byggehoyde|byggeh.yde|max_height|gesimsh)/i;
 const ETASJE_PATTERNS = /^(maks_etasjer|maksetasjer|antall_etasjer|etasjer|max_etasjer)/i;
 
 function parseNumeric(val: unknown): number | null {
@@ -95,26 +139,44 @@ function parseUtnyttelse(features: any[]): UtnyttelseData {
   return { utnyttingsgrad, maksHoyde, maksEtasjer };
 }
 
+// Find a property value by trying multiple key variants (handles double-encoded UTF-8)
+function findProp(props: Record<string, any>, ...keys: string[]): string | null {
+  for (const key of keys) {
+    if (props[key] != null && props[key] !== "") return String(props[key]);
+  }
+  // Also scan all keys for partial matches (handles Ã¥ → å etc.)
+  const propKeys = Object.keys(props);
+  for (const key of keys) {
+    const lower = key.toLowerCase();
+    const found = propKeys.find((k) => k.toLowerCase().includes(lower));
+    if (found && props[found] != null && props[found] !== "") return String(props[found]);
+  }
+  return null;
+}
+
 function parseJsonFeatures(data: any): ReguleringsplanResultat | null {
   if (!data?.features || data.features.length === 0) {
     return null;
   }
 
-  const props = data.features[0].properties || {};
+  // Scan ALL features for plan info (rpomrade + arealformal may be separate features)
+  let planNavn: string | null = null;
+  let planType: string | null = null;
+  let rawArealformaal: string | null = null;
+  let planStatus: string | null = null;
+  let planId: string | null = null;
 
-  // DiBK WMS field names (may vary)
-  const planNavn =
-    props.plannavn || props.planNavn || props.PLANNAVN || null;
-  const planType =
-    props.plantype || props.planType || props.PLANTYPE || null;
-  const arealformaal =
-    props.arealformaal || props.arealformål || props.AREALFORMAAL ||
-    props.formaal || props.FORMAAL || null;
-  const planStatus =
-    props.planstatus || props.planStatus || props.PLANSTATUS || null;
-  const planId =
-    props.planid || props.planId || props.PLANID ||
-    props.nasjonalarealplanid || props.nasjonalArealplanId || null;
+  for (const feature of data.features) {
+    const props = feature.properties || {};
+    if (!planNavn) planNavn = findProp(props, "plannavn", "planNavn", "PLANNAVN");
+    if (!planType) planType = findProp(props, "plantype", "planType", "PLANTYPE");
+    if (!rawArealformaal) rawArealformaal = findProp(props, "arealformaal", "arealformål", "AREALFORMAAL", "formaal", "FORMAAL");
+    if (!planStatus) planStatus = findProp(props, "planstatus", "planStatus", "PLANSTATUS");
+    if (!planId) planId = findProp(props, "planid", "planId", "PLANID", "nasjonalarealplanid", "nasjonalArealplanId", "planidentifikasjon");
+  }
+
+  // Resolve SOSI codes to readable names
+  const arealformaal = resolveArealformaal(rawArealformaal);
 
   // Parse BYA/height from all features
   const utnyttelse = parseUtnyttelse(data.features);
@@ -176,23 +238,29 @@ function tek17Referanse(arealformaal: string | null): UtnyttelseData & { kilde: 
 
   const lower = arealformaal.toLowerCase();
 
-  if (/frittliggende/.test(lower) || /enebolig/.test(lower)) {
+  if (/frittliggende/.test(lower) || /enebolig/.test(lower) || /småhus/.test(lower)) {
     return { utnyttingsgrad: 25, maksHoyde: 8, maksEtasjer: 2, kilde: "tek17" };
   }
   if (/konsentrert/.test(lower) || /rekkehus/.test(lower) || /tomannsbolig/.test(lower)) {
     return { utnyttingsgrad: 35, maksHoyde: 9, maksEtasjer: 3, kilde: "tek17" };
   }
+  if (/blokk/.test(lower)) {
+    return { utnyttingsgrad: 50, maksHoyde: 15, maksEtasjer: 5, kilde: "tek17" };
+  }
   if (/bolig/.test(lower)) {
     return { utnyttingsgrad: 30, maksHoyde: 9, maksEtasjer: 3, kilde: "tek17" };
   }
-  if (/sentrum/.test(lower) || /blandet/.test(lower) || /forretning/.test(lower)) {
+  if (/sentrum/.test(lower) || /blandet/.test(lower) || /forretning/.test(lower) || /tjenesteyting/.test(lower)) {
     return { utnyttingsgrad: 50, maksHoyde: 15, maksEtasjer: 5, kilde: "tek17" };
   }
   if (/næring/.test(lower) || /industri/.test(lower) || /lager/.test(lower)) {
     return { utnyttingsgrad: 60, maksHoyde: 12, maksEtasjer: 4, kilde: "tek17" };
   }
-  if (/fritid/.test(lower) || /hytte/.test(lower)) {
+  if (/fritid/.test(lower) || /hytte/.test(lower) || /turistform/.test(lower)) {
     return { utnyttingsgrad: 15, maksHoyde: 6, maksEtasjer: 2, kilde: "tek17" };
+  }
+  if (/bebyggelse og anlegg/.test(lower)) {
+    return { utnyttingsgrad: 30, maksHoyde: 9, maksEtasjer: 3, kilde: "tek17" };
   }
 
   // Unknown formål — don't return misleading values
@@ -268,16 +336,34 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(regResult);
   }
 
-  // Fallback: try kommuneplan
-  const kpResult = await queryWms(
-    DIBK_WMS_KP,
-    "kpomrade,arealformal_kp",
-    lat,
-    lon
-  );
+  // Fallback: try kommuneplan (query omrade + arealformal separately to get arealformål)
+  const [kpResult, kpArealResult] = await Promise.all([
+    queryWms(DIBK_WMS_KP, "kpomrade", lat, lon),
+    queryWms(DIBK_WMS_KP, "arealformal_kp", lat, lon),
+  ]);
 
+  // Merge arealformål from separate layer if main query didn't have it
   if (kpResult?.harPlan) {
-    // Apply TEK17 reference for kommuneplan (rarely has BYA data)
+    if (!kpResult.arealformaal && kpArealResult?.arealformaal) {
+      kpResult.arealformaal = kpArealResult.arealformaal;
+      // Rebuild detaljer with new arealformål
+      let detaljer = "";
+      if (kpResult.planNavn) detaljer += `Plan: ${kpResult.planNavn}`;
+      if (kpResult.planType) detaljer += detaljer ? `. Type: ${kpResult.planType}` : `Type: ${kpResult.planType}`;
+      detaljer += detaljer ? `. Formål: ${kpResult.arealformaal}` : `Formål: ${kpResult.arealformaal}`;
+      if (kpResult.planStatus) detaljer += `. Status: ${kpResult.planStatus}`;
+      kpResult.detaljer = detaljer;
+    }
+
+    // Merge any BYA data from arealformål layer
+    if (!harUtnyttelseData(kpResult) && kpArealResult && harUtnyttelseData(kpArealResult)) {
+      kpResult.utnyttingsgrad = kpArealResult.utnyttingsgrad;
+      kpResult.maksHoyde = kpArealResult.maksHoyde;
+      kpResult.maksEtasjer = kpArealResult.maksEtasjer;
+      kpResult.utnyttelseKilde = "plan";
+    }
+
+    // Apply TEK17 reference if still no BYA data
     if (!harUtnyttelseData(kpResult)) {
       const tek = tek17Referanse(kpResult.arealformaal);
       if (tek) {
