@@ -13,11 +13,13 @@ export const API_URLS = {
   nvdb: "https://nvdbapiles-v3.atlas.vegvesen.no/posisjon",
   stoyVegvesen: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows",
   boligpris: "https://data.ssb.no/api/v0/no/table/06035",
+  planomraade: "https://wms.geonorge.no/skwms1/wms.planomraade",
 } as const;
 
 export const STEG_NAVN: Record<string, string> = {
   adresse: "Slår opp adresse",
   eiendom: "Henter tomtegrenser og matrikkelinfo",
+  regulering: "Sjekker reguleringsplan (Geonorge)",
   nve: "Sjekker flom, skred og kvikkleire (NVE)",
   radon: "Sjekker radonnivå (NGU)",
   grunn: "Sjekker grunnforhold (NGU)",
@@ -41,4 +43,5 @@ export const DATAKILDER = [
   { navn: "SSB", url: "https://ssb.no" },
   { navn: "Statens vegvesen (NVDB)", url: "https://nvdbapiles-v3.atlas.vegvesen.no" },
   { navn: "Statens vegvesen (Støy)", url: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows" },
+  { navn: "Geonorge Plandata", url: "https://wms.geonorge.no/skwms1/wms.planomraade" },
 ];

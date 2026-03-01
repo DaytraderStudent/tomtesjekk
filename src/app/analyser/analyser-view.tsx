@@ -22,6 +22,7 @@ import {
   eiendomStatus,
   stoyStatus,
   boligprisStatus,
+  reguleringsplanStatus,
 } from "@/lib/trafikklys";
 import type {
   KartverketAdresse,
@@ -36,6 +37,7 @@ import type {
   EiendomResultat,
   StoyResultat,
   BoligprisResultat,
+  ReguleringsplanResultat,
 } from "@/types";
 
 function lagInitielleSteg(): AnalyseSteg[] {
@@ -115,6 +117,35 @@ export default function AnalyserView() {
       oppdaterSteg("eiendom", "feil", "Kunne ikke hente eiendomsdata");
     }
     setProsent(12);
+
+    // Reguleringsplan step
+    oppdaterSteg("regulering", "aktiv");
+    try {
+      const regRes = await fetch(`/api/reguleringsplan?lat=${lat}&lon=${lon}`);
+      const regData = await regRes.json();
+      if (regRes.ok && !regData.error) {
+        const regPlan: ReguleringsplanResultat = regData;
+        const rs = reguleringsplanStatus(regPlan);
+        kort.push({
+          id: "regulering",
+          tittel: "Reguleringsplan",
+          beskrivelse: rs.tekst,
+          detaljer: regPlan.detaljer || (regPlan.harPlan
+            ? `${regPlan.planType || "Reguleringsplan"}: ${regPlan.planNavn || "Navn ikke tilgjengelig"}${regPlan.arealformaal ? `. Arealformål: ${regPlan.arealformaal}` : ""}`
+            : "Ingen reguleringsplan registrert. Området kan være uregulert — kontakt kommunen for å avklare gjeldende plansituasjon."),
+          status: rs.status,
+          statusTekst: rs.tekst,
+          kilde: "Geonorge Plandata",
+          kildeUrl: "https://wms.geonorge.no/skwms1/wms.planomraade",
+        });
+        oppdaterSteg("regulering", "ferdig");
+      } else {
+        oppdaterSteg("regulering", "feil", "Kunne ikke hente plandata");
+      }
+    } catch {
+      oppdaterSteg("regulering", "feil", "Kunne ikke hente reguleringsplan");
+    }
+    setProsent(18);
 
     oppdaterSteg("nve", "aktiv");
     try {
@@ -376,7 +407,12 @@ export default function AnalyserView() {
           {/* Search + button */}
           <div className="pointer-events-auto flex-1 flex flex-col sm:flex-row gap-2">
             <div className="flex-1 bg-white rounded-xl shadow-lg border border-gray-200">
-              <Adressesok onVelgAdresse={handleVelgAdresse} disabled={erAktiv} />
+              <Adressesok
+                onVelgAdresse={handleVelgAdresse}
+                onSubmit={() => valgtAdresse && startAnalyse(valgtAdresse)}
+                eksternAdresseTekst={valgtAdresse?.adressetekst}
+                disabled={erAktiv}
+              />
             </div>
             <button
               onClick={() => valgtAdresse && startAnalyse(valgtAdresse)}

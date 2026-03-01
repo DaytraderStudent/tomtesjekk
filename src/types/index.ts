@@ -123,3 +123,13 @@ export interface BoligprisResultat {
   blokk: number | null;
   detaljer?: string;
 }
+
+export interface ReguleringsplanResultat {
+  harPlan: boolean;
+  planNavn: string | null;
+  planType: string | null;
+  arealformaal: string | null;
+  planStatus: string | null;
+  planId: string | null;
+  detaljer?: string;
+}

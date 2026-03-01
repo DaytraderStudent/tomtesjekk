@@ -7,10 +7,12 @@ import type { KartverketAdresse } from "@/types";
 
 interface Props {
   onVelgAdresse: (adresse: KartverketAdresse) => void;
+  onSubmit?: () => void;
+  eksternAdresseTekst?: string;
   disabled?: boolean;
 }
 
-export function Adressesok({ onVelgAdresse, disabled }: Props) {
+export function Adressesok({ onVelgAdresse, onSubmit, eksternAdresseTekst, disabled }: Props) {
   const [sok, setSok] = useState("");
   const [resultater, setResultater] = useState<KartverketAdresse[]>([]);
   const [erApen, setErApen] = useState(false);
@@ -21,6 +23,17 @@ export function Adressesok({ onVelgAdresse, disabled }: Props) {
   const debounceRef = useRef<NodeJS.Timeout>();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Sync search field when address is set externally (e.g. map click)
+  useEffect(() => {
+    if (eksternAdresseTekst !== undefined && eksternAdresseTekst !== sok) {
+      setSok(eksternAdresseTekst);
+      setErApen(false);
+      setResultater([]);
+    }
+    // Only react to external changes, not internal sok changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eksternAdresseTekst]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -70,6 +83,16 @@ export function Adressesok({ onVelgAdresse, disabled }: Props) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (erApen && aktivIndex >= 0 && aktivIndex < resultater.length) {
+        velg(resultater[aktivIndex]);
+      } else if (!erApen && onSubmit) {
+        onSubmit();
+      }
+      return;
+    }
+
     if (!erApen) return;
 
     switch (e.key) {
@@ -80,12 +103,6 @@ export function Adressesok({ onVelgAdresse, disabled }: Props) {
       case "ArrowUp":
         e.preventDefault();
         setAktivIndex((prev) => Math.max(prev - 1, 0));
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (aktivIndex >= 0 && aktivIndex < resultater.length) {
-          velg(resultater[aktivIndex]);
-        }
         break;
       case "Escape":
         setErApen(false);

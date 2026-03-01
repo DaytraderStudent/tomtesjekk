@@ -3,11 +3,38 @@ import { fetchWithTimeout, buildWmsGetFeatureInfoUrl } from "@/lib/api-helpers";
 import { API_URLS } from "@/lib/constants";
 import type { NguGrunnResultat } from "@/types";
 
-function parseGrunnGml(text: string): NguGrunnResultat {
-  // GML response contains fields like:
-  // <losmassetypeNavn>Forvitringsmateriale</losmassetypeNavn>
-  // <losmassetypeBesk>Forvitringsmateriale, ikke inndelt etter mektighet</losmassetypeBesk>
+const JORDART_PRAKTISK: Record<string, string> = {
+  "hav- og fjordavsetning": "Leirerik grunn — kan kreve peling eller forsterket fundament",
+  "marin avsetning": "Leirerik grunn — kan kreve peling eller forsterket fundament",
+  "havavsetning": "Leirerik grunn — kan kreve peling eller forsterket fundament",
+  "fjordavsetning": "Leirerik grunn — kan kreve peling eller forsterket fundament",
+  "strandavsetning": "Sandholdig grunn — normalt gode grunnforhold",
+  "elveavsetning": "Sand/grus fra elv — normalt gode grunnforhold, men sjekk flomfare",
+  "breelvavsetning": "Sand/grus — normalt god bæreevne",
+  "innsjøavsetning": "Finkornig grunn — kan ha begrenset bæreevne",
+  "torv og myr": "Myk grunn — krever trolig masseutskifting",
+  "torv": "Myk grunn — krever trolig masseutskifting",
+  "myr": "Myk grunn — krever trolig masseutskifting",
+  "morene": "Fast grunn — normalt enkel fundamentering",
+  "morenemateriale": "Fast grunn — normalt enkel fundamentering",
+  "tynn morene": "Tynt løsmassedekke over fjell — kan kreve tilpasning",
+  "bart fjell": "Fjell i dagen — god bæreevne, kan kreve sprengning",
+  "tynt løsmassedekke": "Tynt jordlag over fjell — god bæreevne, kan kreve sprengning",
+  "forvitringsmateriale": "Forvitret fjell — variabel bæreevne, bør undersøkes nærmere",
+  "fyllmasse": "Menneskeskapt oppfylling — usikker bæreevne, bør undersøkes",
+  "skredmateriale": "Avsatt av skred — variabel kvalitet, bør undersøkes",
+  "verdi ikke registrert": "Grunntype ikke kartlagt — bør undersøkes lokalt",
+};
 
+function praktiskBeskrivelse(jordart: string): string | null {
+  const lower = jordart.toLowerCase();
+  for (const [nøkkel, tekst] of Object.entries(JORDART_PRAKTISK)) {
+    if (lower.includes(nøkkel)) return tekst;
+  }
+  return null;
+}
+
+function parseGrunnGml(text: string): NguGrunnResultat {
   if (text.includes("Search returned no results") || (!text.includes("massetype") && !text.includes("Losmasse") && !text.includes("LøsmasseFlate"))) {
     return {
       jordart: "Ukjent",
@@ -23,9 +50,13 @@ function parseGrunnGml(text: string): NguGrunnResultat {
   const grunnvannMatch = text.match(/<grunnvannPotensialNavn>([^<]+)<\/grunnvannPotensialNavn>/);
 
   const jordart = navnMatch ? navnMatch[1].trim() : "Ukjent";
-  const beskrivelse = beskMatch ? beskMatch[1].trim() : jordart;
+  const tekniskBeskrivelse = beskMatch ? beskMatch[1].trim() : jordart;
+  const praktisk = praktiskBeskrivelse(jordart);
+  const beskrivelse = praktisk || tekniskBeskrivelse;
 
-  let detaljer = `Løsmassetype: ${beskrivelse}`;
+  let detaljer = praktisk
+    ? `${praktisk}. Teknisk: ${tekniskBeskrivelse}`
+    : `Løsmassetype: ${tekniskBeskrivelse}`;
   if (infiltrasjonMatch) {
     detaljer += `. Infiltrasjon: ${infiltrasjonMatch[1].trim()}`;
   }

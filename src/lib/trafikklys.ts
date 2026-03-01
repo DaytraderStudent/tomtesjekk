@@ -1,4 +1,4 @@
-import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat, StoyResultat, BoligprisResultat } from "@/types";
+import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat, StoyResultat, BoligprisResultat, ReguleringsplanResultat } from "@/types";
 
 export function flomStatus(data: NveResultat["flom"]): { status: TrafikklysStatus; tekst: string } {
   if (!data.aktsomhetsomrade) return { status: "gronn", tekst: "Ikke i flomaktsomhetsområde" };
@@ -71,6 +71,23 @@ export function boligprisStatus(data: BoligprisResultat): { status: TrafikklysSt
   const hoyest = priser.reduce((a, b) => (b.pris > a.pris ? b : a));
   const formatert = Math.round(hoyest.pris).toLocaleString("nb-NO");
   return { status: "gronn", tekst: `ca. ${formatert} kr/m² for ${hoyest.type} (${data.aar})` };
+}
+
+export function reguleringsplanStatus(data: ReguleringsplanResultat): { status: TrafikklysStatus; tekst: string } {
+  if (!data.harPlan) {
+    return { status: "rod", tekst: "Ingen reguleringsplan funnet — uregulert område" };
+  }
+  const formaal = (data.arealformaal || "").toLowerCase();
+  if (formaal.includes("bolig")) {
+    return { status: "gronn", tekst: `Regulert til ${data.arealformaal}` };
+  }
+  if (formaal.includes("sentrum") || formaal.includes("blandet")) {
+    return { status: "gronn", tekst: `Regulert til ${data.arealformaal}` };
+  }
+  if (data.arealformaal) {
+    return { status: "gul", tekst: `Regulert til ${data.arealformaal}` };
+  }
+  return { status: "gronn", tekst: `Reguleringsplan: ${data.planNavn || "Ja"}` };
 }
 
 export function statusFarge(status: TrafikklysStatus): string {
