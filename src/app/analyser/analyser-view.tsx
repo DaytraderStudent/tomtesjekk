@@ -126,13 +126,22 @@ export default function AnalyserView() {
       if (regRes.ok && !regData.error) {
         const regPlan: ReguleringsplanResultat = regData;
         const rs = reguleringsplanStatus(regPlan);
+        const kommuneDomain = adresse.kommunenavn
+          ? `${adresse.kommunenavn.toLowerCase().replace(/\s+/g, "")}.kommune.no`
+          : null;
+        let regDetaljer: string;
+        if (regPlan.harPlan) {
+          regDetaljer = regPlan.detaljer || `${regPlan.planType || "Reguleringsplan"}: ${regPlan.planNavn || "Navn ikke tilgjengelig"}${regPlan.arealformaal ? `. Arealformål: ${regPlan.arealformaal}` : ""}`;
+        } else if (regPlan.harPlan === null) {
+          regDetaljer = `Nasjonal plandata-API (DiBK) er under oppbygging og har ikke fullstendige data ennå. Sjekk kommunens planinnsyn${kommuneDomain ? ` på ${kommuneDomain}` : ""} for gjeldende reguleringsplan.`;
+        } else {
+          regDetaljer = "Ingen reguleringsplan registrert. Området kan være uregulert — kontakt kommunen for å avklare gjeldende plansituasjon.";
+        }
         kort.push({
           id: "regulering",
           tittel: "Reguleringsplan",
           beskrivelse: rs.tekst,
-          detaljer: regPlan.detaljer || (regPlan.harPlan
-            ? `${regPlan.planType || "Reguleringsplan"}: ${regPlan.planNavn || "Navn ikke tilgjengelig"}${regPlan.arealformaal ? `. Arealformål: ${regPlan.arealformaal}` : ""}`
-            : "Ingen reguleringsplan registrert. Området kan være uregulert — kontakt kommunen for å avklare gjeldende plansituasjon."),
+          detaljer: regDetaljer,
           status: rs.status,
           statusTekst: rs.tekst,
           kilde: "DiBK / Geonorge",
@@ -236,12 +245,15 @@ export default function AnalyserView() {
         : data.endringProsent < 0
           ? `ned ${Math.abs(data.endringProsent)}% siste måned`
           : "uendret siste måned";
+      // SSB index base: ~30 000 kr/m² in 2015 (index=100) for average Norwegian house
+      const krPerKvm = Math.round((data.indeksverdi / 100) * 30000);
+      const krFormatert = krPerKvm.toLocaleString("nb-NO");
       kort.push({
         id: "ssb", tittel: "Byggekostnader",
         beskrivelse: trend === "gul"
-          ? `Stigende byggekostnader — ${endringTekst}`
-          : `Stabile byggekostnader — ${endringTekst}`,
-        detaljer: `SSBs byggekostnadsindeks for boliger ligger på ${data.indeksverdi} per ${periodeLabel}. Indeksen måler prisutviklingen på materialer og arbeid for boligbygging i Norge. En endring på ${data.endringProsent > 0 ? "+" : ""}${data.endringProsent}% tyder på ${data.endringProsent > 2 ? "økende kostnadspress — vurder å innhente tilbud raskt" : "et stabilt kostnadsnivå for byggeprosjekter"}.`,
+          ? `ca. ${krFormatert} kr/m² — ${endringTekst}`
+          : `ca. ${krFormatert} kr/m² — ${endringTekst}`,
+        detaljer: `Estimert byggekostnad: ca. ${krFormatert} kr/m² (basert på SSBs byggekostnadsindeks ${data.indeksverdi} per ${periodeLabel}). Indeksen måler prisutviklingen på materialer og arbeid for boligbygging i Norge. En endring på ${data.endringProsent > 0 ? "+" : ""}${data.endringProsent}% tyder på ${data.endringProsent > 2 ? "økende kostnadspress — vurder å innhente tilbud raskt" : "et stabilt kostnadsnivå for byggeprosjekter"}. Merk: Faktisk kostnad varierer med tomteforhold, størrelse og standard.`,
         status: trend,
         statusTekst: trend === "gul"
           ? `Stigende kostnader (+${data.endringProsent}%)`

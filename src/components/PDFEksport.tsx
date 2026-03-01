@@ -93,7 +93,7 @@ export function PDFEksport({ rapport }: Props) {
       // Elevation
       if (rapport.hoydeOverHavet !== null) {
         doc.text(
-          clean(`Hoyde over havet: ${rapport.hoydeOverHavet} m`),
+          clean(`Høyde over havet: ${rapport.hoydeOverHavet} m`),
           margin, y
         );
         y += 6;
