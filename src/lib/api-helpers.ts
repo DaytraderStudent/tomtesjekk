@@ -70,3 +70,22 @@ export function buildWmsGetFeatureInfoUrl(
 export function isValidUuid(str: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 }
+
+export async function hentHoyde(lat: number, lon: number): Promise<number | null> {
+  try {
+    const res = await fetchWithTimeout(
+      `https://ws.geonorge.no/hoydedata/v1/punkt?nord=${lat}&ost=${lon}&koordsys=4258`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (typeof data.punkter?.[0]?.z === "number") {
+      return Math.round(data.punkter[0].z);
+    }
+    if (typeof data.z === "number") {
+      return Math.round(data.z);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}

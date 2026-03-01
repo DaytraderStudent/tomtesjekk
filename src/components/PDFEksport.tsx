@@ -90,11 +90,33 @@ export function PDFEksport({ rapport }: Props) {
       );
       y += 6;
 
+      // Elevation
+      if (rapport.hoydeOverHavet !== null) {
+        doc.text(
+          clean(`Hoyde over havet: ${rapport.hoydeOverHavet} m`),
+          margin, y
+        );
+        y += 6;
+      }
+
       doc.text(
         `Generert: ${new Date(rapport.tidspunkt).toLocaleString("nb-NO")}`,
         margin, y
       );
       y += 10;
+
+      // Map image
+      if (rapport.kartBilde) {
+        const imgWidth = maxWidth;
+        const imgHeight = imgWidth * 0.6; // ~170×100mm aspect ratio
+        if (y + imgHeight > 270) { doc.addPage(); y = 20; }
+        doc.addImage(rapport.kartBilde, "PNG", margin, y, imgWidth, imgHeight);
+        y += imgHeight + 3;
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        doc.text("Kartdata: OpenStreetMap", margin, y);
+        y += 8;
+      }
 
       // Divider
       doc.setDrawColor(200, 200, 200);

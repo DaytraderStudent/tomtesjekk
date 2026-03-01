@@ -10,6 +10,7 @@ interface Props {
   grense?: GeoJSON.Feature | null;
   visStoy?: boolean;
   onKlikkKart?: (lat: number, lon: number) => void;
+  onMapReady?: (map: L.Map, container: HTMLDivElement) => void;
 }
 
 // Fix default marker icon issue in Next.js
@@ -23,7 +24,7 @@ const markerIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-export function Kart({ lat, lon, grense, visStoy, onKlikkKart }: Props) {
+export function Kart({ lat, lon, grense, visStoy, onKlikkKart, onMapReady }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const polygonRef = useRef<L.GeoJSON | null>(null);
@@ -31,6 +32,8 @@ export function Kart({ lat, lon, grense, visStoy, onKlikkKart }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const clickRef = useRef(onKlikkKart);
   clickRef.current = onKlikkKart;
+  const mapReadyRef = useRef(onMapReady);
+  mapReadyRef.current = onMapReady;
 
   // Initialize map — runs once
   useEffect(() => {
@@ -76,6 +79,10 @@ export function Kart({ lat, lon, grense, visStoy, onKlikkKart }: Props) {
     });
 
     mapRef.current = map;
+
+    if (containerRef.current) {
+      mapReadyRef.current?.(map, containerRef.current);
+    }
 
     return () => {
       map.remove();

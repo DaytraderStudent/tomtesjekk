@@ -32,6 +32,11 @@ export function Rapport({ rapport }: Props) {
           <p className="text-sm text-gray-500 mt-0.5">
             {rapport.adresse.adressetekst}, {rapport.adresse.postnummer}{" "}
             {rapport.adresse.poststed}
+            {rapport.hoydeOverHavet !== null && (
+              <span className="ml-1 text-fjord-400">
+                ({rapport.hoydeOverHavet} moh.)
+              </span>
+            )}
           </p>
         </div>
         <PDFEksport rapport={rapport} />

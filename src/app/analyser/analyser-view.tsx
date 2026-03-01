@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { MapPin, Search, X, ChevronUp, ChevronDown } from "lucide-react";
+import L from "leaflet";
 import { Adressesok } from "@/components/Adressesok";
 import { Kart } from "@/components/Kart";
 import { Fremdriftslinje } from "@/components/Fremdriftslinje";
 import { Rapport } from "@/components/Rapport";
 import { STEG_NAVN } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { hentHoyde } from "@/lib/api-helpers";
+import { taKartbilde } from "@/lib/kart-capture";
 import {
   flomStatus,
   skredStatus,
@@ -51,6 +54,13 @@ export default function AnalyserView() {
   const [erAktiv, setErAktiv] = useState(false);
   const [panelApen, setPanelApen] = useState(true);
   const [tomtegrense, setTomtegrense] = useState<GeoJSON.Feature | null>(null);
+  const kartMapRef = useRef<L.Map | null>(null);
+  const kartContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const handleMapReady = useCallback((map: L.Map, container: HTMLDivElement) => {
+    kartMapRef.current = map;
+    kartContainerRef.current = container;
+  }, []);
 
   const oppdaterSteg = (id: string, status: AnalyseSteg["status"], feilmelding?: string) => {
     setSteg((prev) =>
@@ -282,10 +292,23 @@ export default function AnalyserView() {
     } catch {
       oppdaterSteg("ai", "feil", "Kunne ikke generere AI-oppsummering");
     }
+    setProsent(90);
+
+    // Fetch elevation data
+    const hoyde = await hentHoyde(lat, lon);
+
+    // Capture map image — wait for tiles to finish loading after fitBounds
+    let kartBilde: string | null = null;
+    if (kartMapRef.current && kartContainerRef.current) {
+      await new Promise((r) => setTimeout(r, 1500));
+      kartBilde = await taKartbilde(kartMapRef.current, kartContainerRef.current);
+    }
+
     setProsent(100);
 
     setRapport({
-      adresse, kort, aiOppsummering, tidspunkt: new Date().toISOString(),
+      adresse, kort, aiOppsummering, hoydeOverHavet: hoyde, kartBilde,
+      tidspunkt: new Date().toISOString(),
     });
 
     setErAktiv(false);
@@ -330,6 +353,7 @@ export default function AnalyserView() {
           grense={tomtegrense}
           visStoy={!!rapport}
           onKlikkKart={handleKlikkKart}
+          onMapReady={handleMapReady}
         />
       </div>
 

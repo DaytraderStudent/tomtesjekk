@@ -33,6 +33,8 @@ export interface Rapport {
   adresse: KartverketAdresse;
   kort: AnalyseKort[];
   aiOppsummering: AiOppsummering | null;
+  hoydeOverHavet: number | null;
+  kartBilde: string | null;
   tidspunkt: string;
 }
 
