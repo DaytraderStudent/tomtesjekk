@@ -363,24 +363,31 @@ export default function AnalyserView() {
   };
 
   const handleKlikkKart = async (lat: number, lon: number) => {
+    const fallback: KartverketAdresse = {
+      adressetekst: `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+      poststed: "", postnummer: "", kommunenavn: "", kommunenummer: "",
+      representasjonspunkt: { lat, lon },
+    };
     try {
-      const res = await fetch(`/api/adresse?sok=${lat},${lon}`);
+      const res = await fetch(
+        `https://ws.geonorge.no/adresser/v1/punktsok?lat=${lat}&lon=${lon}&radius=200&treffPerSide=1`
+      );
       const data = await res.json();
       if (data.adresser && data.adresser.length > 0) {
-        setValgtAdresse(data.adresser[0]);
-      } else {
+        const a = data.adresser[0];
         setValgtAdresse({
-          adressetekst: `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
-          poststed: "", postnummer: "", kommunenavn: "", kommunenummer: "",
+          adressetekst: a.adressetekst || fallback.adressetekst,
+          poststed: a.poststed || "",
+          postnummer: a.postnummer || "",
+          kommunenavn: a.kommunenavn || "",
+          kommunenummer: a.kommunenummer || "",
           representasjonspunkt: { lat, lon },
         });
+      } else {
+        setValgtAdresse(fallback);
       }
     } catch {
-      setValgtAdresse({
-        adressetekst: `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
-        poststed: "", postnummer: "", kommunenavn: "", kommunenummer: "",
-        representasjonspunkt: { lat, lon },
-      });
+      setValgtAdresse(fallback);
     }
   };
 
