@@ -1,8 +1,13 @@
 import type L from "leaflet";
 
+interface CaptureOptions {
+  grense?: GeoJSON.Feature | null;
+  visStoy?: boolean;
+}
+
 /**
  * Captures the current Leaflet map view as a PNG data-URL by drawing
- * OSM tiles + polygon + marker directly onto a canvas.
+ * OSM tiles + WMS overlays + polygon + marker directly onto a canvas.
  *
  * This avoids html2canvas which mishandles Leaflet's CSS translate3d
  * transforms, causing polygon/marker to appear shifted.
@@ -14,11 +19,13 @@ import type L from "leaflet";
 export async function taKartbilde(
   map: L.Map,
   _container: HTMLDivElement,
-  grense?: GeoJSON.Feature | null
+  opts?: CaptureOptions
 ): Promise<string | null> {
   try {
     const size = map.getSize();
     const zoom = Math.round(map.getZoom());
+    const grense = opts?.grense;
+    const visStoy = opts?.visStoy ?? false;
 
     // Canvas dimensions (2x for retina sharpness)
     const scale = 2;
@@ -29,18 +36,17 @@ export async function taKartbilde(
     if (!ctx) return null;
     ctx.scale(scale, scale);
 
-    // --- 1. Draw OSM tiles ---
+    // --- 1. Draw OSM base tiles ---
     const bounds = map.getBounds();
     const nw = bounds.getNorthWest();
     const se = bounds.getSouthEast();
 
-    // Which tiles cover the visible area at this integer zoom?
     const tileXMin = Math.floor(lonToTileX(nw.lng, zoom));
     const tileXMax = Math.floor(lonToTileX(se.lng, zoom));
     const tileYMin = Math.floor(latToTileY(nw.lat, zoom));
     const tileYMax = Math.floor(latToTileY(se.lat, zoom));
 
-    // Load all tile images in parallel
+    // Load all OSM tile images in parallel
     const tileJobs: { img: Promise<HTMLImageElement>; tx: number; ty: number }[] = [];
     for (let tx = tileXMin; tx <= tileXMax; tx++) {
       for (let ty = tileYMin; ty <= tileYMax; ty++) {
@@ -50,8 +56,6 @@ export async function taKartbilde(
       }
     }
 
-    // Draw each tile at the correct position by converting tile corners
-    // to container pixels via Leaflet (handles fractional zoom correctly)
     const settled = await Promise.allSettled(tileJobs.map((j) => j.img));
     for (let i = 0; i < tileJobs.length; i++) {
       const result = settled[i];
@@ -71,7 +75,25 @@ export async function taKartbilde(
       );
     }
 
-    // --- 2. Draw property boundary polygon ---
+    // --- 2. Draw WMS overlays (støy, matrikkelgrenser) ---
+    if (visStoy && zoom >= 13) {
+      await drawWmsOverlay(ctx, map, {
+        baseUrl: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows",
+        layers: "Stoyvarselkart",
+        opacity: 0.4,
+      });
+    }
+
+    // Matrikkelgrenser at high zoom
+    if (zoom >= 15) {
+      await drawWmsOverlay(ctx, map, {
+        baseUrl: "https://wms.geonorge.no/skwms1/wms.matrikkelkart",
+        layers: "eiendomsgrense",
+        opacity: 0.6,
+      });
+    }
+
+    // --- 3. Draw property boundary polygon ---
     if (grense?.geometry) {
       ctx.strokeStyle = "#2563eb";
       ctx.lineWidth = 3;
@@ -82,7 +104,6 @@ export async function taKartbilde(
       for (const ring of rings) {
         if (ring.length === 0) continue;
         ctx.beginPath();
-        // GeoJSON coords are [lon, lat]
         const first = map.latLngToContainerPoint([ring[0][1], ring[0][0]]);
         ctx.moveTo(first.x, first.y);
         for (let i = 1; i < ring.length; i++) {
@@ -96,7 +117,7 @@ export async function taKartbilde(
       ctx.setLineDash([]);
     }
 
-    // --- 3. Draw marker pin ---
+    // --- 4. Draw marker pin ---
     let markerLatLng: L.LatLng | null = null;
     map.eachLayer((layer: any) => {
       if (layer.getLatLng && !markerLatLng) {
@@ -109,7 +130,7 @@ export async function taKartbilde(
       : map.latLngToContainerPoint(map.getCenter());
     drawMarkerPin(ctx, pinPos.x, pinPos.y);
 
-    // --- 4. Attribution ---
+    // --- 5. Attribution ---
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "rgba(0,0,0,0.5)";
     ctx.fillText("\u00A9 OpenStreetMap", size.x - 110, size.y - 6);
@@ -121,7 +142,64 @@ export async function taKartbilde(
   }
 }
 
-// --- Helpers ---
+// --- WMS overlay drawing ---
+
+interface WmsOverlayOptions {
+  baseUrl: string;
+  layers: string;
+  opacity: number;
+}
+
+async function drawWmsOverlay(
+  ctx: CanvasRenderingContext2D,
+  map: L.Map,
+  opts: WmsOverlayOptions
+) {
+  try {
+    const size = map.getSize();
+    const bounds = map.getBounds();
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+
+    // Convert to EPSG:3857 for WMS request
+    const swM = toEpsg3857(sw.lat, sw.lng);
+    const neM = toEpsg3857(ne.lat, ne.lng);
+
+    const params = new URLSearchParams({
+      SERVICE: "WMS",
+      VERSION: "1.1.1",
+      REQUEST: "GetMap",
+      LAYERS: opts.layers,
+      SRS: "EPSG:3857",
+      BBOX: `${swM.x},${swM.y},${neM.x},${neM.y}`,
+      WIDTH: String(size.x),
+      HEIGHT: String(size.y),
+      FORMAT: "image/png",
+      TRANSPARENT: "true",
+    });
+
+    const wmsUrl = `${opts.baseUrl}?${params.toString()}`;
+    // Proxy through our API to bypass CORS
+    const proxyUrl = `/api/wms-tile?url=${encodeURIComponent(wmsUrl)}`;
+
+    const img = await loadImage(proxyUrl);
+    ctx.globalAlpha = opts.opacity;
+    ctx.drawImage(img, 0, 0, size.x, size.y);
+    ctx.globalAlpha = 1;
+  } catch {
+    // WMS overlay failed — continue without it
+  }
+}
+
+function toEpsg3857(lat: number, lon: number): { x: number; y: number } {
+  const x = (lon * 20037508.34) / 180;
+  const latRad = (lat * Math.PI) / 180;
+  const y =
+    (Math.log(Math.tan(Math.PI / 4 + latRad / 2)) * 20037508.34) / Math.PI;
+  return { x, y };
+}
+
+// --- Tile math ---
 
 function lonToTileX(lon: number, zoom: number): number {
   return ((lon + 180) / 360) * Math.pow(2, zoom);
@@ -135,7 +213,6 @@ function latToTileY(lat: number, zoom: number): number {
   );
 }
 
-/** Convert tile coordinates back to lat/lon (NW corner of the tile) */
 function tileToLatLon(tx: number, ty: number, zoom: number): [number, number] {
   const n = Math.pow(2, zoom);
   const lon = (tx / n) * 360 - 180;
@@ -170,16 +247,15 @@ function drawMarkerPin(ctx: CanvasRenderingContext2D, x: number, y: number) {
 
   ctx.save();
 
-  // Shadow
   ctx.shadowColor = "rgba(0,0,0,0.3)";
   ctx.shadowBlur = 4;
   ctx.shadowOffsetX = 1;
   ctx.shadowOffsetY = 2;
 
-  // Pin body (teardrop)
+  // Teardrop pin
   ctx.beginPath();
   ctx.fillStyle = "#2563eb";
-  ctx.moveTo(x, y); // bottom tip
+  ctx.moveTo(x, y);
   ctx.bezierCurveTo(
     x - pinRadius * 1.2, y - pinHeight * 0.5,
     x - pinRadius, y - pinHeight * 0.85,
@@ -194,7 +270,7 @@ function drawMarkerPin(ctx: CanvasRenderingContext2D, x: number, y: number) {
 
   ctx.shadowColor = "transparent";
 
-  // White dot inside
+  // White dot
   ctx.beginPath();
   ctx.fillStyle = "white";
   ctx.arc(x, y - pinHeight * 0.68, pinRadius * 0.45, 0, Math.PI * 2);

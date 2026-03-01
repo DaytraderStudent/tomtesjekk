@@ -359,7 +359,10 @@ export default function AnalyserView() {
     let kartBilde: string | null = null;
     if (kartMapRef.current && kartContainerRef.current) {
       await new Promise((r) => setTimeout(r, 1500));
-      kartBilde = await taKartbilde(kartMapRef.current, kartContainerRef.current, grenseGeoJson);
+      kartBilde = await taKartbilde(kartMapRef.current, kartContainerRef.current, {
+        grense: grenseGeoJson,
+        visStoy: true,
+      });
     }
 
     setProsent(100);
