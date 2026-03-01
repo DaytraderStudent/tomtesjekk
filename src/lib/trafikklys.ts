@@ -74,6 +74,9 @@ export function boligprisStatus(data: BoligprisResultat): { status: TrafikklysSt
 }
 
 export function reguleringsplanStatus(data: ReguleringsplanResultat): { status: TrafikklysStatus; tekst: string } {
+  if (data.harPlan === null) {
+    return { status: "gra", tekst: "Planstatus kunne ikke sjekkes — kontakt kommunen" };
+  }
   if (!data.harPlan) {
     return { status: "rod", tekst: "Ingen reguleringsplan funnet — uregulert område" };
   }

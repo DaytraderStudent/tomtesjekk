@@ -125,7 +125,7 @@ export interface BoligprisResultat {
 }
 
 export interface ReguleringsplanResultat {
-  harPlan: boolean;
+  harPlan: boolean | null;
   planNavn: string | null;
   planType: string | null;
   arealformaal: string | null;

@@ -135,8 +135,8 @@ export default function AnalyserView() {
             : "Ingen reguleringsplan registrert. Området kan være uregulert — kontakt kommunen for å avklare gjeldende plansituasjon."),
           status: rs.status,
           statusTekst: rs.tekst,
-          kilde: "Geonorge Plandata",
-          kildeUrl: "https://wms.geonorge.no/skwms1/wms.planomraade",
+          kilde: "DiBK / Geonorge",
+          kildeUrl: "https://nap.ft.dibk.no/services/wms/reguleringsplaner/",
         });
         oppdaterSteg("regulering", "ferdig");
       } else {

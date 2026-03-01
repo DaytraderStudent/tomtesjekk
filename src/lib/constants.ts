@@ -13,7 +13,7 @@ export const API_URLS = {
   nvdb: "https://nvdbapiles-v3.atlas.vegvesen.no/posisjon",
   stoyVegvesen: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows",
   boligpris: "https://data.ssb.no/api/v0/no/table/06035",
-  planomraade: "https://wms.geonorge.no/skwms1/wms.planomraade",
+  dibkRegplan: "https://nap.ft.dibk.no/services/wms/reguleringsplaner/",
 } as const;
 
 export const STEG_NAVN: Record<string, string> = {
@@ -43,5 +43,5 @@ export const DATAKILDER = [
   { navn: "SSB", url: "https://ssb.no" },
   { navn: "Statens vegvesen (NVDB)", url: "https://nvdbapiles-v3.atlas.vegvesen.no" },
   { navn: "Statens vegvesen (Støy)", url: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows" },
-  { navn: "Geonorge Plandata", url: "https://wms.geonorge.no/skwms1/wms.planomraade" },
+  { navn: "DiBK Plandata", url: "https://nap.ft.dibk.no/services/wms/reguleringsplaner/" },
 ];
