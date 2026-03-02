@@ -1,6 +1,7 @@
 "use client";
 
-import { Sparkles, MapPin, Mountain, Clock, Download } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, MapPin, Mountain, Clock, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Rapport, TrafikklysStatus } from "@/types";
 
@@ -50,6 +51,7 @@ interface Props {
 }
 
 export function DetaljerHero({ rapport }: Props) {
+  const [aiUtvidet, setAiUtvidet] = useState(false);
   const risiko = samletRisiko(rapport.kort);
   const dato = new Date(rapport.tidspunkt).toLocaleDateString("nb-NO", {
     day: "numeric",
@@ -126,16 +128,37 @@ export function DetaljerHero({ rapport }: Props) {
               Last ned PDF
             </button>
 
-            {/* AI summary (truncated) */}
+            {/* AI summary (expandable) */}
             {rapport.aiOppsummering && (
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-2 mb-2 text-fjord-100">
                   <Sparkles className="w-4 h-4" />
                   <span className="text-sm font-semibold">AI-oppsummering</span>
                 </div>
-                <p className="text-sm text-fjord-100 leading-relaxed line-clamp-4">
+                <p
+                  className={cn(
+                    "text-sm text-fjord-100 leading-relaxed whitespace-pre-line",
+                    !aiUtvidet && "line-clamp-4"
+                  )}
+                >
                   {stripMarkdown(rapport.aiOppsummering.tekst)}
                 </p>
+                <button
+                  onClick={() => setAiUtvidet(!aiUtvidet)}
+                  className="flex items-center gap-1 mt-2 text-xs font-semibold text-white/70 hover:text-white transition-colors"
+                >
+                  {aiUtvidet ? (
+                    <>
+                      <ChevronUp className="w-3.5 h-3.5" />
+                      Se mindre
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                      Se mer
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>
