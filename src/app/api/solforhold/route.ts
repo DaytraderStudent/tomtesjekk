@@ -54,6 +54,27 @@ function beregnSesong(dato: Date, lat: number, lon: number) {
   const sunrise = tider.sunrise;
   const sunset = tider.sunset;
 
+  const solhoyde12 = beregnSolhoyde(dato, 12, lat, lon);
+
+  // Handle polar cases: SunCalc returns NaN for sunrise/sunset
+  // when sun never rises (polar night) or never sets (midnight sun)
+  const sunriseValid = sunrise instanceof Date && !isNaN(sunrise.getTime());
+  const sunsetValid = sunset instanceof Date && !isNaN(sunset.getTime());
+
+  if (!sunriseValid || !sunsetValid) {
+    // Midnight sun: noon altitude > 0 → 24h daylight
+    // Polar night: noon altitude <= 0 → 0h daylight
+    const erMidnattssol = solhoyde12 > 0;
+    return {
+      soloppgang: erMidnattssol ? "Midnattssol" : "Solen står ikke opp",
+      solnedgang: erMidnattssol ? "Midnattssol" : "Solen står ikke opp",
+      daglengdeTimer: erMidnattssol ? 24 : 0,
+      solhoyde09: beregnSolhoyde(dato, 9, lat, lon),
+      solhoyde12,
+      solhoyde15: beregnSolhoyde(dato, 15, lat, lon),
+    };
+  }
+
   const daglengdeMs = sunset.getTime() - sunrise.getTime();
   const daglengdeTimer = Math.round((daglengdeMs / (1000 * 60 * 60)) * 10) / 10;
 
@@ -62,7 +83,7 @@ function beregnSesong(dato: Date, lat: number, lon: number) {
     solnedgang: formatTid(sunset),
     daglengdeTimer: Math.max(0, daglengdeTimer),
     solhoyde09: beregnSolhoyde(dato, 9, lat, lon),
-    solhoyde12: beregnSolhoyde(dato, 12, lat, lon),
+    solhoyde12,
     solhoyde15: beregnSolhoyde(dato, 15, lat, lon),
   };
 }
