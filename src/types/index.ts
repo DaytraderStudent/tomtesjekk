@@ -124,6 +124,41 @@ export interface BoligprisResultat {
   detaljer?: string;
 }
 
+export interface KulturminneResultat {
+  harKulturminner: boolean;
+  minner: Array<{
+    navn: string;
+    kategori: string;
+    vernetype: string;
+    avstandMeter: number;
+    lenke: string | null;
+  }>;
+  naermesteAvstandMeter: number | null;
+  harFredning: boolean;
+  detaljer?: string;
+}
+
+export interface SolforholdResultat {
+  sommer: {
+    soloppgang: string;
+    solnedgang: string;
+    daglengdeTimer: number;
+    solhoyde09: number;
+    solhoyde12: number;
+    solhoyde15: number;
+  };
+  vinter: {
+    soloppgang: string;
+    solnedgang: string;
+    daglengdeTimer: number;
+    solhoyde09: number;
+    solhoyde12: number;
+    solhoyde15: number;
+  };
+  hovedretning: string;
+  detaljer?: string;
+}
+
 export interface ReguleringsplanResultat {
   harPlan: boolean | null;
   planNavn: string | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Info, Building2, Ruler, Layers, BadgePercent } from "lucide-react";
+import { ExternalLink, Info, Building2, Ruler, Layers, BadgePercent, MapPin, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statusFarge, statusLabel } from "@/lib/trafikklys";
 import { hentKortIkon } from "@/lib/kort-ikoner";
@@ -53,6 +53,15 @@ const FORKLARINGER: Record<string, string> = {
     "Boligpriser fra SSB viser gjennomsnittlig kvadratmeterpris for ulike boligtyper i kommunen. " +
     "Prisene gir en indikasjon på boligmarkedets verdi i området, men varierer " +
     "betydelig med beliggenhet, standard og tomteforhold innad i kommunen.",
+  kulturminner:
+    "Kulturminner er bygninger, anlegg og områder registrert i Riksantikvarens Askeladden-database. " +
+    "Fredede kulturminner har strengt juridisk vern — tiltak som berører et fredet kulturminne krever " +
+    "dispensasjon fra Riksantikvaren. Kulturminner i nærheten kan påvirke byggesaken gjennom " +
+    "hensynssoner i reguleringsplanen.",
+  solforhold:
+    "Solforhold beregnes astronomisk ut fra koordinater og viser teoretisk daglengde og solhøyde " +
+    "gjennom året. Beregningen tar ikke hensyn til terreng, bygninger eller vegetasjon som kan skygge. " +
+    "For nøyaktig solanalyse bør det gjøres en skyggestudie med 3D-terrengmodell.",
 };
 
 interface Props {
@@ -197,9 +206,148 @@ export function DetaljerKategori({ kort }: Props) {
           </div>
         )}
 
-        {/* Raw data — hide for regulering when structured BYA data is shown */}
+        {/* Structured kulturminner view */}
+        {kort.id === "kulturminner" && kort.raadata?.minner && (
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Registrerte kulturminner
+            </p>
+            <div className="space-y-2">
+              {(kort.raadata.minner as Array<{ navn: string; kategori: string; vernetype: string; avstandMeter: number; lenke: string | null }>).map(
+                (m, i) => {
+                  const vLow = (m.vernetype || "").toLowerCase();
+                  const erFredet =
+                    vLow.includes("vedtaksfredet") ||
+                    vLow.includes("forskriftsfredet") ||
+                    vLow.includes("automatisk fredet");
+                  const erListefort = vLow.includes("listeført") || vLow.includes("kommunalt");
+
+                  return (
+                    <div
+                      key={i}
+                      className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3"
+                    >
+                      <MapPin className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {m.navn}
+                          </span>
+                          {m.vernetype && (
+                            <span
+                              className={cn(
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold",
+                                erFredet
+                                  ? "bg-red-100 text-red-700"
+                                  : erListefort
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-gray-100 text-gray-600"
+                              )}
+                            >
+                              {m.vernetype}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                          {m.kategori && <span>{m.kategori}</span>}
+                          <span>{m.avstandMeter} m unna</span>
+                        </div>
+                        {m.lenke && (
+                          <a
+                            href={m.lenke}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-1 text-xs text-fjord-500 hover:text-fjord-700 transition-colors"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            Se i Kulturminnesøk
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Structured solforhold view */}
+        {kort.id === "solforhold" && kort.raadata?.sommer && kort.raadata?.vinter && (
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Solforhold sommer vs. vinter
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Sommer */}
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-amber-700">Sommer (21. juni)</p>
+                <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Soloppgang</span>
+                    <span className="font-semibold text-gray-900">{kort.raadata.sommer.soloppgang}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Solnedgang</span>
+                    <span className="font-semibold text-gray-900">{kort.raadata.sommer.solnedgang}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Daglengde</span>
+                    <span className="font-semibold text-gray-900">{kort.raadata.sommer.daglengdeTimer} t</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500 flex items-center gap-1">
+                      <Sun className="w-3.5 h-3.5 text-amber-500" />
+                      Solhøyde kl 12
+                    </span>
+                    <span className="font-semibold text-gray-900">{kort.raadata.sommer.solhoyde12}°</span>
+                  </div>
+                </div>
+              </div>
+              {/* Vinter */}
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-blue-700">Vinter (21. des)</p>
+                <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Soloppgang</span>
+                    <span className="font-semibold text-gray-900">{kort.raadata.vinter.soloppgang}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Solnedgang</span>
+                    <span className="font-semibold text-gray-900">{kort.raadata.vinter.solnedgang}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Daglengde</span>
+                    <span className="font-semibold text-gray-900">{kort.raadata.vinter.daglengdeTimer} t</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500 flex items-center gap-1">
+                      <Sun className="w-3.5 h-3.5 text-blue-400" />
+                      Solhøyde kl 12
+                    </span>
+                    <span className="font-semibold text-gray-900">{kort.raadata.vinter.solhoyde12}°</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Hovedretning badge */}
+            {kort.raadata.hovedretning && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Hovedsolretning:</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
+                  <Sun className="w-3 h-3" />
+                  {kort.raadata.hovedretning}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Raw data — hide for regulering when structured BYA data is shown, and hide for kulturminner */}
         {kort.raadata && Object.keys(kort.raadata).length > 0 &&
-          !(kort.id === "regulering" && kort.raadata.utnyttingsgrad != null) && (
+          !(kort.id === "regulering" && kort.raadata.utnyttingsgrad != null) &&
+          kort.id !== "kulturminner" &&
+          kort.id !== "solforhold" && (
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
               Rådata

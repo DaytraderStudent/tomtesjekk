@@ -26,6 +26,8 @@ import {
   stoyStatus,
   boligprisStatus,
   reguleringsplanStatus,
+  kulturminnerStatus,
+  solforholdStatus,
 } from "@/lib/trafikklys";
 import type {
   KartverketAdresse,
@@ -41,6 +43,8 @@ import type {
   StoyResultat,
   BoligprisResultat,
   ReguleringsplanResultat,
+  KulturminneResultat,
+  SolforholdResultat,
 } from "@/types";
 
 function lagInitielleSteg(): AnalyseSteg[] {
@@ -217,6 +221,50 @@ export default function AnalyserView() {
     }
     setProsent(18);
 
+    // Kulturminner step
+    oppdaterSteg("kulturminner", "aktiv");
+    try {
+      const kmRes = await fetch(`/api/kulturminner?lat=${lat}&lon=${lon}`);
+      const kmData: KulturminneResultat = await kmRes.json();
+      if (kmRes.ok && !("error" in kmData)) {
+        const ks = kulturminnerStatus(kmData);
+
+        let kmDetaljer: string;
+        if (!kmData.harKulturminner) {
+          kmDetaljer = "Ingen registrerte kulturminner innen 200 m fra tomtepunktet.";
+        } else {
+          const linjer = kmData.minner.map((m) => {
+            const vern = m.vernetype ? ` (${m.vernetype})` : "";
+            return `• ${m.navn}${vern} — ${m.avstandMeter} m`;
+          });
+          kmDetaljer = `${kmData.minner.length} kulturminne${kmData.minner.length > 1 ? "r" : ""} funnet innen 200 m:\n${linjer.join("\n")}`;
+          if (kmData.harFredning) {
+            kmDetaljer += "\n\nOBS: Fredet kulturminne i nærheten — dispensasjon fra Riksantikvaren kan kreves.";
+          }
+        }
+
+        kort.push({
+          id: "kulturminner",
+          tittel: "Kulturminner",
+          beskrivelse: ks.tekst,
+          detaljer: kmDetaljer,
+          status: ks.status,
+          statusTekst: ks.tekst,
+          kilde: "Riksantikvaren",
+          kildeUrl: "https://kulturminnesok.no",
+          raadata: kmData.harKulturminner
+            ? { minner: kmData.minner, harFredning: kmData.harFredning, naermesteAvstandMeter: kmData.naermesteAvstandMeter }
+            : undefined,
+        });
+        oppdaterSteg("kulturminner", "ferdig");
+      } else {
+        oppdaterSteg("kulturminner", "feil", "Kunne ikke hente kulturminnedata");
+      }
+    } catch {
+      oppdaterSteg("kulturminner", "feil", "Kunne ikke hente kulturminnedata");
+    }
+    setProsent(22);
+
     oppdaterSteg("nve", "aktiv");
     try {
       const res = await fetch(`/api/nve?lat=${lat}&lon=${lon}`);
@@ -258,14 +306,16 @@ export default function AnalyserView() {
     oppdaterSteg("nvdb", "aktiv");
     oppdaterSteg("stoy", "aktiv");
     oppdaterSteg("boligpris", "aktiv");
+    oppdaterSteg("solforhold", "aktiv");
 
-    const [radonRes, grunnRes, ssbRes, nvdbRes, stoyRes, boligprisRes] = await Promise.allSettled([
+    const [radonRes, grunnRes, ssbRes, nvdbRes, stoyRes, boligprisRes, solforholdRes] = await Promise.allSettled([
       fetch(`/api/ngu-radon?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch(`/api/ngu-grunn?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch("/api/ssb").then((r) => r.json()),
       fetch(`/api/nvdb?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch(`/api/stoy?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch(`/api/boligpris?kommunenummer=${adresse.kommunenummer}`).then((r) => r.json()),
+      fetch(`/api/solforhold?lat=${lat}&lon=${lon}`).then((r) => r.json()),
     ]);
 
     if (radonRes.status === "fulfilled" && !radonRes.value.error) {
@@ -369,6 +419,31 @@ export default function AnalyserView() {
       oppdaterSteg("boligpris", "ferdig");
     } else {
       oppdaterSteg("boligpris", "feil", "Kunne ikke hente boligprisdata");
+    }
+
+    if (solforholdRes.status === "fulfilled" && !solforholdRes.value.error) {
+      const data: SolforholdResultat = solforholdRes.value;
+      const ss = solforholdStatus(data);
+      const detaljerTekst =
+        `Sommer (21. juni): Soloppgang ${data.sommer.soloppgang}, solnedgang ${data.sommer.solnedgang}, ` +
+        `daglengde ${data.sommer.daglengdeTimer} t, solhøyde kl 12: ${data.sommer.solhoyde12}°\n` +
+        `Vinter (21. des): Soloppgang ${data.vinter.soloppgang}, solnedgang ${data.vinter.solnedgang}, ` +
+        `daglengde ${data.vinter.daglengdeTimer} t, solhøyde kl 12: ${data.vinter.solhoyde12}°\n` +
+        `Hovedsolretning: ${data.hovedretning}`;
+      kort.push({
+        id: "solforhold",
+        tittel: "Solforhold",
+        beskrivelse: ss.tekst,
+        detaljer: detaljerTekst,
+        status: ss.status,
+        statusTekst: ss.tekst,
+        kilde: "SunCalc",
+        kildeUrl: "https://github.com/mourner/suncalc",
+        raadata: { sommer: data.sommer, vinter: data.vinter, hovedretning: data.hovedretning },
+      });
+      oppdaterSteg("solforhold", "ferdig");
+    } else {
+      oppdaterSteg("solforhold", "feil", "Kunne ikke beregne solforhold");
     }
 
     setProsent(75);

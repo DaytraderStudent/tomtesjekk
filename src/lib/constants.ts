@@ -14,12 +14,14 @@ export const API_URLS = {
   stoyVegvesen: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows",
   boligpris: "https://data.ssb.no/api/v0/no/table/06035",
   dibkRegplan: "https://nap.ft.dibk.no/services/wms/reguleringsplaner/",
+  kulturminner: "https://kart.ra.no/arcgis/rest/services/Distribusjon/Kulturminner20180301/MapServer",
 } as const;
 
 export const STEG_NAVN: Record<string, string> = {
   adresse: "Slår opp adresse",
   eiendom: "Henter tomtegrenser og matrikkelinfo",
   regulering: "Sjekker reguleringsplan (Geonorge)",
+  kulturminner: "Sjekker kulturminner (Riksantikvaren)",
   nve: "Sjekker flom, skred og kvikkleire (NVE)",
   radon: "Sjekker radonnivå (NGU)",
   grunn: "Sjekker grunnforhold (NGU)",
@@ -27,6 +29,7 @@ export const STEG_NAVN: Record<string, string> = {
   nvdb: "Sjekker veitilgang (NVDB)",
   stoy: "Sjekker støynivå (Statens vegvesen)",
   boligpris: "Henter boligpriser (SSB)",
+  solforhold: "Beregner solforhold (SunCalc)",
   ai: "Genererer AI-oppsummering",
 };
 
@@ -44,4 +47,6 @@ export const DATAKILDER = [
   { navn: "Statens vegvesen (NVDB)", url: "https://nvdbapiles-v3.atlas.vegvesen.no" },
   { navn: "Statens vegvesen (Støy)", url: "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows" },
   { navn: "DiBK Plandata", url: "https://nap.ft.dibk.no/services/wms/reguleringsplaner/" },
+  { navn: "Riksantikvaren", url: "https://kulturminnesok.no" },
+  { navn: "SunCalc", url: "https://github.com/mourner/suncalc" },
 ];

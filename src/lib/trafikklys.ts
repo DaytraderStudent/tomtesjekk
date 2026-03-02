@@ -1,4 +1,4 @@
-import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat, StoyResultat, BoligprisResultat, ReguleringsplanResultat } from "@/types";
+import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat, StoyResultat, BoligprisResultat, ReguleringsplanResultat, KulturminneResultat, SolforholdResultat } from "@/types";
 
 export function flomStatus(data: NveResultat["flom"]): { status: TrafikklysStatus; tekst: string } {
   if (!data.aktsomhetsomrade) return { status: "gronn", tekst: "Ikke i flomaktsomhetsområde" };
@@ -73,6 +73,41 @@ export function boligprisStatus(data: BoligprisResultat): { status: TrafikklysSt
   return { status: "gronn", tekst: `ca. ${formatert} kr/m² for ${hoyest.type} (${data.aar})` };
 }
 
+export function kulturminnerStatus(data: KulturminneResultat): { status: TrafikklysStatus; tekst: string } {
+  if (!data.harKulturminner) {
+    return { status: "gronn", tekst: "Ingen kulturminner innen 200 m" };
+  }
+
+  const naermeste = data.naermesteAvstandMeter ?? 200;
+  const fredeteNaer = data.minner.filter(
+    (m) => erFredetVernetype(m.vernetype)
+  );
+  const naermestFredet = fredeteNaer.length > 0
+    ? Math.min(...fredeteNaer.map((m) => m.avstandMeter))
+    : Infinity;
+
+  // Rod: fredet innen 10m
+  if (naermestFredet <= 10) {
+    return { status: "rod", tekst: `Fredet kulturminne ${Math.round(naermestFredet)} m unna` };
+  }
+
+  // Gul: kulturminne innen 50m, ELLER fredning innen 200m
+  if (naermeste <= 50 || naermestFredet <= 200) {
+    const grunn = naermestFredet <= 200
+      ? `Fredning ${Math.round(naermestFredet)} m unna`
+      : `Kulturminne ${Math.round(naermeste)} m unna`;
+    return { status: "gul", tekst: grunn };
+  }
+
+  // Gronn: kun i 50-200m sonen uten fredning nær
+  return { status: "gronn", tekst: `Nærmeste kulturminne ${Math.round(naermeste)} m unna` };
+}
+
+function erFredetVernetype(vernetype: string): boolean {
+  const v = vernetype.toLowerCase();
+  return v.includes("fredet") || v.includes("fredning");
+}
+
 export function reguleringsplanStatus(data: ReguleringsplanResultat): { status: TrafikklysStatus; tekst: string } {
   if (data.harPlan === null) {
     return { status: "gra", tekst: "Planstatus kunne ikke sjekkes — kontakt kommunen" };
@@ -91,6 +126,19 @@ export function reguleringsplanStatus(data: ReguleringsplanResultat): { status: 
     return { status: "gul", tekst: `Regulert til ${data.arealformaal}` };
   }
   return { status: "gronn", tekst: `Reguleringsplan: ${data.planNavn || "Ja"}` };
+}
+
+export function solforholdStatus(data: SolforholdResultat): { status: TrafikklysStatus; tekst: string } {
+  const vinterDaglengde = data.vinter.daglengdeTimer;
+  const vinterSolhoyde12 = data.vinter.solhoyde12;
+
+  if (vinterDaglengde >= 6 && vinterSolhoyde12 >= 8) {
+    return { status: "gronn", tekst: "Gode solforhold" };
+  }
+  if (vinterDaglengde >= 4 && vinterSolhoyde12 >= 3) {
+    return { status: "gul", tekst: "Moderate solforhold" };
+  }
+  return { status: "rod", tekst: "Begrensede solforhold" };
 }
 
 export function statusFarge(status: TrafikklysStatus): string {

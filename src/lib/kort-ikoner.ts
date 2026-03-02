@@ -9,6 +9,8 @@ import {
   TrendingUp,
   Route,
   Volume2,
+  Landmark,
+  Sun,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +31,8 @@ const KORT_IKONER: Record<string, KortIkon> = {
   ssb: { icon: TrendingUp, farge: "#F97316" },
   nvdb: { icon: Route, farge: "#64748B" },
   stoy: { icon: Volume2, farge: "#A855F7" },
+  kulturminner: { icon: Landmark, farge: "#92400E" },
+  solforhold: { icon: Sun, farge: "#D97706" },
 };
 
 export function hentKortIkon(kortId: string): KortIkon {
