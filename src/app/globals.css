@@ -72,21 +72,125 @@ body {
   background: #a0a0a0;
 }
 
-/* Print styles */
+/* Print styles — A4 optimized for window.print() PDF export */
 @media print {
+  @page {
+    size: A4;
+    margin: 15mm 18mm;
+  }
+
+  /* Hide interactive elements */
   nav,
   footer,
   .print\:hidden {
     display: none !important;
   }
 
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
   body {
-    background: white;
-    color: black;
+    background: white !important;
+    color: #1a1a1a !important;
+    font-size: 11pt;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   * {
     box-shadow: none !important;
+  }
+
+  /* Cover page */
+  .print-cover {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    page-break-after: always;
+    text-align: center;
+    padding: 40mm 20mm;
+  }
+
+  .print-cover-logo {
+    width: 48px;
+    height: 48px;
+    background-color: #1B3F6E;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .print-cover h1 {
+    font-size: 28pt;
+    font-weight: 700;
+    color: #1B3F6E;
+    margin-bottom: 8px;
+  }
+
+  .print-cover h2 {
+    font-size: 16pt;
+    font-weight: 400;
+    color: #374151;
+    margin-bottom: 32px;
+  }
+
+  .print-cover .print-cover-meta {
+    font-size: 10pt;
+    color: #6B7280;
+    margin-top: 24px;
+  }
+
+  /* Hero section: simplified for print */
+  .detaljer-hero {
+    background: #1B3F6E !important;
+    color: white !important;
+    padding: 20px 24px !important;
+    page-break-after: avoid;
+  }
+
+  .detaljer-hero img {
+    max-width: 200px;
+    max-height: 150px;
+    object-fit: contain;
+  }
+
+  /* Category sections */
+  .detaljer-kategori {
+    break-before: page;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .detaljer-kategori .kategori-innhold {
+    background: white !important;
+  }
+
+  /* Remove background colors except risk badges */
+  .detaljer-kategori .bg-gray-50,
+  .detaljer-kategori .bg-fjord-50 {
+    background: #f9fafb !important;
+  }
+
+  /* Keep risk badge colors */
+  .detaljer-kategori [class*="bg-red-"],
+  .detaljer-kategori [class*="bg-amber-"],
+  .detaljer-kategori [class*="bg-emerald-"],
+  .detaljer-kategori [class*="bg-green-"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   section,
@@ -94,9 +198,31 @@ body {
     break-inside: avoid;
   }
 
+  /* Disclaimer footer */
+  .print-disclaimer {
+    display: block !important;
+    break-before: auto;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid #d1d5db;
+    font-size: 8pt;
+    color: #6B7280;
+    line-height: 1.4;
+  }
+
   img {
     max-width: 300px;
     max-height: 200px;
     object-fit: contain;
+  }
+
+  /* Tighter spacing for print */
+  .space-y-6 > * + * {
+    margin-top: 0 !important;
+  }
+
+  /* Ensure links show as text */
+  a[href]::after {
+    content: none;
   }
 }

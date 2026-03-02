@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Printer, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Printer, AlertTriangle, MapPin, Download } from "lucide-react";
 import { hentRapport } from "@/lib/rapport-storage";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -38,9 +38,35 @@ export default function DetaljerView() {
     );
   }
 
+  const dato = new Date(rapport.tidspunkt).toLocaleDateString("nb-NO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <div className="min-h-screen bg-surface">
       <Navigation />
+
+      {/* Print-only cover page */}
+      <div className="print-cover hidden">
+        <div className="print-cover-logo">
+          <MapPin className="w-7 h-7 text-white" />
+        </div>
+        <h1>Tomtesjekk</h1>
+        <h2>{rapport.adresse.adressetekst}</h2>
+        {rapport.adresse.kommunenavn && (
+          <p style={{ fontSize: "12pt", color: "#6B7280" }}>
+            {rapport.adresse.kommunenavn}
+            {rapport.adresse.postnummer && ` — ${rapport.adresse.postnummer} ${rapport.adresse.poststed}`}
+          </p>
+        )}
+        <div className="print-cover-meta">
+          <p>Generert {dato}</p>
+          <p style={{ marginTop: "8px" }}>tomtesjekk.no</p>
+        </div>
+      </div>
+
       <DetaljerHero rapport={rapport} />
 
       {/* Mobile navigation pills (hidden on desktop) */}
@@ -53,7 +79,7 @@ export default function DetaljerView() {
         <div className="flex gap-8">
           {/* Desktop sidebar nav (hidden on mobile) */}
           <div className="hidden lg:block">
-            <DetaljerNav kort={rapport.kort} />
+            <DetaljerNav kort={rapport.kort} onPrint={() => window.print()} />
           </div>
 
           {/* Categories */}
@@ -62,11 +88,20 @@ export default function DetaljerView() {
               <DetaljerKategori key={kort.id} kort={kort} />
             ))}
 
-            {/* Disclaimer */}
-            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 print:break-inside-avoid">
+            {/* Disclaimer (screen) */}
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 print:hidden">
               <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
               <p className="text-xs text-amber-800 leading-relaxed">
                 {DISCLAIMER_TEXT}
+              </p>
+            </div>
+
+            {/* Disclaimer (print-only) */}
+            <div className="print-disclaimer hidden">
+              <p><strong>Ansvarsfraskrivelse:</strong> {DISCLAIMER_TEXT}</p>
+              <p style={{ marginTop: "8px" }}>
+                Rapport generert {dato} av Tomtesjekk (tomtesjekk.no).
+                Datakilder: Kartverket, NVE, NGU, SSB, Statens vegvesen, DiBK, Riksantikvaren, SunCalc.
               </p>
             </div>
           </div>
@@ -87,7 +122,7 @@ export default function DetaljerView() {
         <button
           onClick={() => window.print()}
           className="w-12 h-12 bg-fjord-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fjord-600 transition-colors"
-          title="Skriv ut / PDF"
+          title="Last ned PDF"
         >
           <Printer className="w-5 h-5" />
         </button>

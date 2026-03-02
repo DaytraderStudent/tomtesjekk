@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, MapPin, Mountain, Clock } from "lucide-react";
+import { Sparkles, MapPin, Mountain, Clock, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Rapport, TrafikklysStatus } from "@/types";
 
@@ -58,7 +58,7 @@ export function DetaljerHero({ rapport }: Props) {
   });
 
   return (
-    <section className="relative bg-gradient-to-br from-fjord-500 via-fjord-600 to-fjord-800 text-white overflow-hidden">
+    <section className="detaljer-hero relative bg-gradient-to-br from-fjord-500 via-fjord-600 to-fjord-800 text-white overflow-hidden">
       {/* Decorative background circles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full" />
@@ -116,6 +116,15 @@ export function DetaljerHero({ rapport }: Props) {
               />
               Samlet vurdering: {risiko.label}
             </div>
+
+            {/* PDF download button */}
+            <button
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-sm font-semibold text-white transition-colors print:hidden"
+            >
+              <Download className="w-4 h-4" />
+              Last ned PDF
+            </button>
 
             {/* AI summary (truncated) */}
             {rapport.aiOppsummering && (

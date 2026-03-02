@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statusFarge } from "@/lib/trafikklys";
 import { hentKortIkon } from "@/lib/kort-ikoner";
@@ -8,9 +9,10 @@ import type { AnalyseKort } from "@/types";
 
 interface Props {
   kort: AnalyseKort[];
+  onPrint?: () => void;
 }
 
-export function DetaljerNav({ kort }: Props) {
+export function DetaljerNav({ kort, onPrint }: Props) {
   const [aktivId, setAktivId] = useState<string>(kort[0]?.id || "");
   const observerRef = useRef<IntersectionObserver | null>(null);
   const mobilRef = useRef<HTMLDivElement>(null);
@@ -85,6 +87,16 @@ export function DetaljerNav({ kort }: Props) {
             );
           })}
         </ul>
+
+        {onPrint && (
+          <button
+            onClick={onPrint}
+            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-fjord-500 text-white rounded-lg text-sm font-semibold hover:bg-fjord-600 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Last ned PDF
+          </button>
+        )}
       </nav>
 
       {/* Mobile: horizontal scrolling pills */}
