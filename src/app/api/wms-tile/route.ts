@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 const ALLOWED_HOSTS = [
   "www.vegvesen.no",
   "wms.geonorge.no",
+  "geo.ngu.no",
+  "nap.ft.dibk.no",
 ];
 
 export async function GET(request: NextRequest) {

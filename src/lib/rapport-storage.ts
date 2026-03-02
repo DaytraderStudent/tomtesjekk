@@ -6,7 +6,13 @@ export function lagreRapport(rapport: Rapport): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(rapport));
   } catch {
-    // sessionStorage may be unavailable in private browsing
+    // QuotaExceededError or private browsing — retry without kartBilder
+    try {
+      const { kartBilder, ...uten } = rapport;
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(uten));
+    } catch {
+      // sessionStorage completely unavailable
+    }
   }
 }
 

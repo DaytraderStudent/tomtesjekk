@@ -85,7 +85,11 @@ export default function DetaljerView() {
           {/* Categories */}
           <div className="flex-1 space-y-6 min-w-0">
             {rapport.kort.map((kort) => (
-              <DetaljerKategori key={kort.id} kort={kort} />
+              <DetaljerKategori
+                key={kort.id}
+                kort={kort}
+                kartBilde={rapport.kartBilder?.[kort.id]}
+              />
             ))}
 
             {/* Disclaimer (screen) */}

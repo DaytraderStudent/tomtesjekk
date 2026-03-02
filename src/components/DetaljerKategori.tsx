@@ -4,7 +4,89 @@ import { ExternalLink, Info, Building2, Ruler, Layers, BadgePercent, MapPin, Sun
 import { cn } from "@/lib/utils";
 import { statusFarge, statusLabel } from "@/lib/trafikklys";
 import { hentKortIkon } from "@/lib/kort-ikoner";
-import type { AnalyseKort } from "@/types";
+import type { AnalyseKort, SolbanePunkt } from "@/types";
+
+function SolbaneGraf({ sommerBane, vinterBane }: { sommerBane: SolbanePunkt[]; vinterBane: SolbanePunkt[] }) {
+  const W = 400;
+  const H = 180;
+  const padL = 32;
+  const padR = 12;
+  const padT = 16;
+  const padB = 28;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  // Find max altitude for y-scale (at least 10°)
+  const allAlts = [...sommerBane, ...vinterBane].map((p) => p.altitude);
+  const maxAlt = Math.max(10, Math.ceil(Math.max(...allAlts) / 10) * 10);
+  const minAlt = Math.min(0, Math.floor(Math.min(...allAlts) / 10) * 10);
+  const altRange = maxAlt - minAlt;
+
+  const x = (time: number) => padL + (time / 23) * chartW;
+  const y = (alt: number) => padT + chartH - ((alt - minAlt) / altRange) * chartH;
+
+  const toPath = (bane: SolbanePunkt[]) =>
+    bane.map((p, i) => `${i === 0 ? "M" : "L"}${x(p.time).toFixed(1)},${y(p.altitude).toFixed(1)}`).join(" ");
+
+  const sommerPath = toPath(sommerBane);
+  const vinterPath = toPath(vinterBane);
+
+  // Fill area above horizon for summer
+  const sommerFill = sommerPath +
+    ` L${x(23).toFixed(1)},${y(0).toFixed(1)} L${x(0).toFixed(1)},${y(0).toFixed(1)} Z`;
+
+  const horizonY = y(0);
+  const timeLabels = [0, 3, 6, 9, 12, 15, 18, 21];
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-100 p-3">
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        Solbane (høyde over horisonten)
+      </p>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" aria-label="Solbanediagram">
+        {/* Grid lines */}
+        {[0, 10, 20, 30, 40, 50, 60].filter((v) => v >= minAlt && v <= maxAlt).map((alt) => (
+          <g key={alt}>
+            <line
+              x1={padL} y1={y(alt)} x2={W - padR} y2={y(alt)}
+              stroke={alt === 0 ? "#9CA3AF" : "#E5E7EB"}
+              strokeWidth={alt === 0 ? 1 : 0.5}
+              strokeDasharray={alt === 0 ? undefined : "4 2"}
+            />
+            <text x={padL - 4} y={y(alt) + 3} textAnchor="end" fontSize="9" fill="#9CA3AF">
+              {alt}°
+            </text>
+          </g>
+        ))}
+
+        {/* Time labels */}
+        {timeLabels.map((t) => (
+          <text key={t} x={x(t)} y={H - 6} textAnchor="middle" fontSize="9" fill="#9CA3AF">
+            {String(t).padStart(2, "0")}
+          </text>
+        ))}
+
+        {/* Summer fill (above horizon only) */}
+        <clipPath id="above-horizon">
+          <rect x={padL} y={padT} width={chartW} height={horizonY - padT} />
+        </clipPath>
+        <path d={sommerFill} fill="#FCD34D" fillOpacity={0.15} clipPath="url(#above-horizon)" />
+
+        {/* Summer curve */}
+        <path d={sommerPath} fill="none" stroke="#D97706" strokeWidth={2} strokeLinejoin="round" />
+
+        {/* Winter curve */}
+        <path d={vinterPath} fill="none" stroke="#3B82F6" strokeWidth={2} strokeLinejoin="round" strokeDasharray="6 3" />
+
+        {/* Legend */}
+        <line x1={W - padR - 100} y1={padT + 2} x2={W - padR - 82} y2={padT + 2} stroke="#D97706" strokeWidth={2} />
+        <text x={W - padR - 78} y={padT + 5} fontSize="9" fill="#92400E">Sommer</text>
+        <line x1={W - padR - 100} y1={padT + 14} x2={W - padR - 82} y2={padT + 14} stroke="#3B82F6" strokeWidth={2} strokeDasharray="6 3" />
+        <text x={W - padR - 78} y={padT + 17} fontSize="9" fill="#1E40AF">Vinter</text>
+      </svg>
+    </div>
+  );
+}
 
 const FORKLARINGER: Record<string, string> = {
   flom:
@@ -66,9 +148,10 @@ const FORKLARINGER: Record<string, string> = {
 
 interface Props {
   kort: AnalyseKort;
+  kartBilde?: string | null;
 }
 
-export function DetaljerKategori({ kort }: Props) {
+export function DetaljerKategori({ kort, kartBilde }: Props) {
   const { icon: Icon, farge: ikonFarge } = hentKortIkon(kort.id);
   const farge = statusFarge(kort.status);
   const label = statusLabel(kort.status);
@@ -116,6 +199,18 @@ export function DetaljerKategori({ kort }: Props) {
             {label}
           </span>
         </div>
+
+        {/* Category map image */}
+        {kartBilde && (
+          <div className="rounded-lg overflow-hidden border border-gray-100">
+            <img
+              src={kartBilde}
+              alt={`Kart for ${kort.tittel}`}
+              className="w-full h-auto"
+              loading="lazy"
+            />
+          </div>
+        )}
 
         {/* Details */}
         {kort.detaljer && (
@@ -274,7 +369,7 @@ export function DetaljerKategori({ kort }: Props) {
 
         {/* Structured solforhold view */}
         {kort.id === "solforhold" && kort.raadata?.sommer && kort.raadata?.vinter && (
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
               Solforhold sommer vs. vinter
             </p>
@@ -285,11 +380,21 @@ export function DetaljerKategori({ kort }: Props) {
                 <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-1.5">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Soloppgang</span>
-                    <span className="font-semibold text-gray-900">{kort.raadata.sommer.soloppgang}</span>
+                    <span className="font-semibold text-gray-900">
+                      {kort.raadata.sommer.soloppgang}
+                      {kort.raadata.sommer.soloppgangRetning && kort.raadata.sommer.soloppgangRetning !== "—" && (
+                        <span className="text-xs text-gray-400 ml-1">({kort.raadata.sommer.soloppgangRetning})</span>
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Solnedgang</span>
-                    <span className="font-semibold text-gray-900">{kort.raadata.sommer.solnedgang}</span>
+                    <span className="font-semibold text-gray-900">
+                      {kort.raadata.sommer.solnedgang}
+                      {kort.raadata.sommer.solnedgangRetning && kort.raadata.sommer.solnedgangRetning !== "—" && (
+                        <span className="text-xs text-gray-400 ml-1">({kort.raadata.sommer.solnedgangRetning})</span>
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Daglengde</span>
@@ -310,11 +415,21 @@ export function DetaljerKategori({ kort }: Props) {
                 <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-1.5">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Soloppgang</span>
-                    <span className="font-semibold text-gray-900">{kort.raadata.vinter.soloppgang}</span>
+                    <span className="font-semibold text-gray-900">
+                      {kort.raadata.vinter.soloppgang}
+                      {kort.raadata.vinter.soloppgangRetning && kort.raadata.vinter.soloppgangRetning !== "—" && (
+                        <span className="text-xs text-gray-400 ml-1">({kort.raadata.vinter.soloppgangRetning})</span>
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Solnedgang</span>
-                    <span className="font-semibold text-gray-900">{kort.raadata.vinter.solnedgang}</span>
+                    <span className="font-semibold text-gray-900">
+                      {kort.raadata.vinter.solnedgang}
+                      {kort.raadata.vinter.solnedgangRetning && kort.raadata.vinter.solnedgangRetning !== "—" && (
+                        <span className="text-xs text-gray-400 ml-1">({kort.raadata.vinter.solnedgangRetning})</span>
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Daglengde</span>
@@ -330,6 +445,15 @@ export function DetaljerKategori({ kort }: Props) {
                 </div>
               </div>
             </div>
+
+            {/* Sun arc chart */}
+            {kort.raadata.sommer.bane && kort.raadata.vinter.bane && (
+              <SolbaneGraf
+                sommerBane={kort.raadata.sommer.bane}
+                vinterBane={kort.raadata.vinter.bane}
+              />
+            )}
+
             {/* Hovedretning badge */}
             {kort.raadata.hovedretning && (
               <div className="flex items-center gap-2">

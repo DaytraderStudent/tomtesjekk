@@ -153,6 +153,21 @@ export function PDFEksport({ rapport }: Props) {
       for (const kort of rapport.kort) {
         if (y > 250) { doc.addPage(); y = 20; }
 
+        // Per-category map image
+        const katBilde = rapport.kartBilder?.[kort.id];
+        if (katBilde) {
+          const katImgWidth = maxWidth * 0.8;
+          const katImgHeight = katImgWidth * 0.5;
+          if (y + katImgHeight + 20 > 270) { doc.addPage(); y = 20; }
+          const katImgX = margin + (maxWidth - katImgWidth) / 2;
+          try {
+            doc.addImage(katBilde, "JPEG", katImgX, y, katImgWidth, katImgHeight);
+            y += katImgHeight + 4;
+          } catch {
+            // Skip if image fails
+          }
+        }
+
         doc.setFontSize(11);
         doc.setTextColor(30, 30, 30);
         doc.text(

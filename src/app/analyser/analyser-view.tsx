@@ -9,12 +9,14 @@ import { PDFEksport } from "@/components/PDFEksport";
 import L from "leaflet";
 import { Adressesok } from "@/components/Adressesok";
 import { Kart } from "@/components/Kart";
+import { KartlagPanel } from "@/components/KartlagPanel";
 import { Fremdriftslinje } from "@/components/Fremdriftslinje";
 import { Rapport } from "@/components/Rapport";
 import { STEG_NAVN } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { hentHoyde } from "@/lib/api-helpers";
-import { taKartbilde } from "@/lib/kart-capture";
+import { taKartbilderBatch } from "@/lib/kart-capture";
+import type { KartlagId } from "@/types";
 import {
   flomStatus,
   skredStatus,
@@ -63,8 +65,19 @@ export default function AnalyserView() {
   const [erAktiv, setErAktiv] = useState(false);
   const [panelApen, setPanelApen] = useState(true);
   const [tomtegrense, setTomtegrense] = useState<GeoJSON.Feature | null>(null);
+  const [synligeKartlag, setSynligeKartlag] = useState<Record<KartlagId, boolean>>({
+    stoy: false,
+    matrikkel: false,
+    radon: false,
+    losmasser: false,
+    regulering: false,
+  });
   const kartMapRef = useRef<L.Map | null>(null);
   const kartContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const handleKartlagToggle = useCallback((id: KartlagId) => {
+    setSynligeKartlag((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
   const handleMapReady = useCallback((map: L.Map, container: HTMLDivElement) => {
     kartMapRef.current = map;
@@ -424,10 +437,16 @@ export default function AnalyserView() {
     if (solforholdRes.status === "fulfilled" && !solforholdRes.value.error) {
       const data: SolforholdResultat = solforholdRes.value;
       const ss = solforholdStatus(data);
+      const sommerRetning = data.sommer.soloppgangRetning !== "—"
+        ? ` (${data.sommer.soloppgangRetning} → ${data.sommer.solnedgangRetning})`
+        : "";
+      const vinterRetning = data.vinter.soloppgangRetning !== "—"
+        ? ` (${data.vinter.soloppgangRetning} → ${data.vinter.solnedgangRetning})`
+        : "";
       const detaljerTekst =
-        `Sommer (21. juni): Soloppgang ${data.sommer.soloppgang}, solnedgang ${data.sommer.solnedgang}, ` +
+        `Sommer (21. juni): Soloppgang ${data.sommer.soloppgang}, solnedgang ${data.sommer.solnedgang}${sommerRetning}, ` +
         `daglengde ${data.sommer.daglengdeTimer} t, solhøyde kl 12: ${data.sommer.solhoyde12}°\n` +
-        `Vinter (21. des): Soloppgang ${data.vinter.soloppgang}, solnedgang ${data.vinter.solnedgang}, ` +
+        `Vinter (21. des): Soloppgang ${data.vinter.soloppgang}, solnedgang ${data.vinter.solnedgang}${vinterRetning}, ` +
         `daglengde ${data.vinter.daglengdeTimer} t, solhøyde kl 12: ${data.vinter.solhoyde12}°\n` +
         `Hovedsolretning: ${data.hovedretning}`;
       kort.push({
@@ -476,20 +495,28 @@ export default function AnalyserView() {
     // Fetch elevation data
     const hoyde = await hentHoyde(lat, lon);
 
-    // Capture map image — wait for map to settle after fitBounds
+    // Capture map images — wait for map to settle after fitBounds
     let kartBilde: string | null = null;
+    let kartBilder: Record<string, string> = {};
     if (kartMapRef.current && kartContainerRef.current) {
       await new Promise((r) => setTimeout(r, 1500));
-      kartBilde = await taKartbilde(kartMapRef.current, kartContainerRef.current, {
-        grense: grenseGeoJson,
-        visStoy: true,
-      });
+      const aktivKategorier = kort.map((k) => k.id);
+      kartBilder = await taKartbilderBatch(
+        kartMapRef.current,
+        kartContainerRef.current,
+        grenseGeoJson,
+        aktivKategorier
+      );
+      kartBilde = kartBilder["base"] || null;
     }
+
+    // Enable stoy layer on map after analysis
+    setSynligeKartlag((prev) => ({ ...prev, stoy: true }));
 
     setProsent(100);
 
     const nyttRapport: RapportType = {
-      adresse, kort, aiOppsummering, hoydeOverHavet: hoyde, kartBilde,
+      adresse, kort, aiOppsummering, hoydeOverHavet: hoyde, kartBilde, kartBilder,
       tidspunkt: new Date().toISOString(),
     };
     setRapport(nyttRapport);
@@ -542,11 +569,16 @@ export default function AnalyserView() {
           lat={valgtAdresse?.representasjonspunkt.lat}
           lon={valgtAdresse?.representasjonspunkt.lon}
           grense={tomtegrense}
-          visStoy={!!rapport}
+          synligeKartlag={synligeKartlag}
           onKlikkKart={handleKlikkKart}
           onMapReady={handleMapReady}
         />
       </div>
+
+      {/* Left sidebar: kartlag toggles (only after analysis) */}
+      {rapport && (
+        <KartlagPanel synlige={synligeKartlag} onToggle={handleKartlagToggle} />
+      )}
 
       {/* Top bar: logo + search */}
       <div className="absolute top-0 left-0 right-0 z-[1000] pointer-events-none">

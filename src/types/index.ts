@@ -12,6 +12,8 @@ export interface KartverketAdresse {
 
 export type TrafikklysStatus = "gronn" | "gul" | "rod" | "gra";
 
+export type KartlagId = "stoy" | "matrikkel" | "radon" | "losmasser" | "regulering";
+
 export interface AnalyseKort {
   id: string;
   tittel: string;
@@ -35,6 +37,7 @@ export interface Rapport {
   aiOppsummering: AiOppsummering | null;
   hoydeOverHavet: number | null;
   kartBilde: string | null;
+  kartBilder?: Record<string, string>;
   tidspunkt: string;
 }
 
@@ -138,23 +141,27 @@ export interface KulturminneResultat {
   detaljer?: string;
 }
 
+export interface SolbanePunkt {
+  time: number;       // 0-23
+  altitude: number;   // degrees
+  azimuth: number;    // compass degrees (0=N, 90=E, 180=S, 270=W)
+}
+
+export interface SolforholdSesong {
+  soloppgang: string;
+  solnedgang: string;
+  daglengdeTimer: number;
+  solhoyde09: number;
+  solhoyde12: number;
+  solhoyde15: number;
+  soloppgangRetning: string;   // "NØ", "Ø", etc.
+  solnedgangRetning: string;   // "NV", "V", etc.
+  bane: SolbanePunkt[];        // hourly sun positions
+}
+
 export interface SolforholdResultat {
-  sommer: {
-    soloppgang: string;
-    solnedgang: string;
-    daglengdeTimer: number;
-    solhoyde09: number;
-    solhoyde12: number;
-    solhoyde15: number;
-  };
-  vinter: {
-    soloppgang: string;
-    solnedgang: string;
-    daglengdeTimer: number;
-    solhoyde09: number;
-    solhoyde12: number;
-    solhoyde15: number;
-  };
+  sommer: SolforholdSesong;
+  vinter: SolforholdSesong;
   hovedretning: string;
   detaljer?: string;
 }

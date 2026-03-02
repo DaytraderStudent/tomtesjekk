@@ -3,12 +3,14 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { KARTLAG } from "@/lib/kartlag";
+import type { KartlagId } from "@/types";
 
 interface Props {
   lat?: number;
   lon?: number;
   grense?: GeoJSON.Feature | null;
-  visStoy?: boolean;
+  synligeKartlag?: Record<KartlagId, boolean>;
   onKlikkKart?: (lat: number, lon: number) => void;
   onMapReady?: (map: L.Map, container: HTMLDivElement) => void;
 }
@@ -24,11 +26,11 @@ const markerIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-export function Kart({ lat, lon, grense, visStoy, onKlikkKart, onMapReady }: Props) {
+export function Kart({ lat, lon, grense, synligeKartlag, onKlikkKart, onMapReady }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const polygonRef = useRef<L.GeoJSON | null>(null);
-  const stoyLayerRef = useRef<L.TileLayer.WMS | null>(null);
+  const wmsLayersRef = useRef<Record<string, L.TileLayer.WMS>>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const clickRef = useRef(onKlikkKart);
   clickRef.current = onKlikkKart;
@@ -50,29 +52,6 @@ export function Kart({ lat, lon, grense, visStoy, onKlikkKart, onMapReady }: Pro
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
     }).addTo(map);
-
-    // WMS cadastral boundaries — visible at zoom >= 15
-    const wmsLayer = L.tileLayer.wms(
-      "https://wms.geonorge.no/skwms1/wms.matrikkelkart",
-      {
-        layers: "eiendomsgrense",
-        format: "image/png",
-        transparent: true,
-        opacity: 0.6,
-        minZoom: 15,
-        maxZoom: 19,
-      }
-    );
-
-    const updateWms = () => {
-      const z = map.getZoom();
-      if (z >= 15 && !map.hasLayer(wmsLayer)) {
-        wmsLayer.addTo(map);
-      } else if (z < 15 && map.hasLayer(wmsLayer)) {
-        map.removeLayer(wmsLayer);
-      }
-    };
-    map.on("zoomend", updateWms);
 
     map.on("click", (e: L.LeafletMouseEvent) => {
       clickRef.current?.(e.latlng.lat, e.latlng.lng);
@@ -134,54 +113,48 @@ export function Kart({ lat, lon, grense, visStoy, onKlikkKart, onMapReady }: Pro
     }
   }, [grense]);
 
-  // Noise WMS overlay — Stoyvarselkart (red/yellow noise zones)
+  // Manage WMS kartlag based on synligeKartlag
   useEffect(() => {
-    if (!mapRef.current) return;
+    const map = mapRef.current;
+    if (!map) return;
 
-    if (visStoy && !stoyLayerRef.current) {
-      const stoyLayer = L.tileLayer.wms(
-        "https://www.vegvesen.no/kart/ogc/norstoy_1_0/ows",
-        {
-          layers: "Stoyvarselkart",
+    for (const lag of KARTLAG) {
+      const shouldShow = synligeKartlag?.[lag.id] ?? false;
+      const existing = wmsLayersRef.current[lag.id];
+
+      if (shouldShow && !existing) {
+        const wmsLayer = L.tileLayer.wms(lag.baseUrl, {
+          layers: lag.layers,
           format: "image/png",
           transparent: true,
-          opacity: 0.4,
-          minZoom: 13,
+          opacity: lag.opacity,
+          minZoom: lag.minZoom,
           maxZoom: 19,
+        });
+
+        const updateVisibility = () => {
+          const z = map.getZoom();
+          if (z >= lag.minZoom && !map.hasLayer(wmsLayer)) {
+            wmsLayer.addTo(map);
+          } else if (z < lag.minZoom && map.hasLayer(wmsLayer)) {
+            map.removeLayer(wmsLayer);
+          }
+        };
+
+        map.on("zoomend", updateVisibility);
+        updateVisibility();
+        wmsLayersRef.current[lag.id] = wmsLayer;
+        // Store the cleanup handler on the layer object
+        (wmsLayer as any)._cleanupZoom = () => map.off("zoomend", updateVisibility);
+      } else if (!shouldShow && existing) {
+        (existing as any)._cleanupZoom?.();
+        if (map.hasLayer(existing)) {
+          map.removeLayer(existing);
         }
-      );
-
-      const map = mapRef.current;
-      const updateStoy = () => {
-        const z = map.getZoom();
-        if (z >= 13 && !map.hasLayer(stoyLayer)) {
-          stoyLayer.addTo(map);
-        } else if (z < 13 && map.hasLayer(stoyLayer)) {
-          map.removeLayer(stoyLayer);
-        }
-      };
-
-      map.on("zoomend", updateStoy);
-      updateStoy();
-      stoyLayerRef.current = stoyLayer;
-
-      return () => {
-        map.off("zoomend", updateStoy);
-        if (map.hasLayer(stoyLayer)) {
-          map.removeLayer(stoyLayer);
-        }
-        stoyLayerRef.current = null;
-      };
-    }
-
-    if (!visStoy && stoyLayerRef.current) {
-      const map = mapRef.current;
-      if (map.hasLayer(stoyLayerRef.current)) {
-        map.removeLayer(stoyLayerRef.current);
+        delete wmsLayersRef.current[lag.id];
       }
-      stoyLayerRef.current = null;
     }
-  }, [visStoy]);
+  }, [synligeKartlag]);
 
   return (
     <div
