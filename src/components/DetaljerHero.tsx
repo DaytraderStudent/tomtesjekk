@@ -145,7 +145,7 @@ export function DetaljerHero({ rapport }: Props) {
                 </p>
                 <button
                   onClick={() => setAiUtvidet(!aiUtvidet)}
-                  className="flex items-center gap-1 mt-2 text-xs font-semibold text-white/70 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-xs font-semibold text-white transition-colors"
                 >
                   {aiUtvidet ? (
                     <>
@@ -155,7 +155,7 @@ export function DetaljerHero({ rapport }: Props) {
                   ) : (
                     <>
                       <ChevronDown className="w-3.5 h-3.5" />
-                      Se mer
+                      Se hele oppsummeringen
                     </>
                   )}
                 </button>
