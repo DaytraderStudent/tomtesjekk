@@ -40,6 +40,7 @@ Spesielle instruksjoner:
 - Oversett tekniske grunnforhold-beskrivelser til hverdagsspråk. Forklar hva jordarten betyr i praksis og nevn omtrentlige merkostnader for fundament/graving der det er relevant (f.eks. peling, masseutskifting, sprengning).
 - Nevn alltid VA-tilknytning (vann og avløp) under "Ting å være oppmerksom på". Anbefal at kjøper kontakter kommunen for å avklare avstand til VA-nett og tilknytningskostnad, da dette ikke er tilgjengelig i offentlige kartdata.
 - Hvis reguleringsplan mangler (uregulert område), fremhev dette som den viktigste røde flaggen. Uten reguleringsplan er det stor usikkerhet rundt hva tomten kan brukes til.
+- Hvis grunnforhold er ukjent/utilgjengelig, fremhev tydelig at geoteknisk undersøkelse er ekstra viktig nettopp fordi offentlige data mangler. Anbefal geoteknisk rapport før kjøp, og nevn at ukjent grunn betyr at fundamenteringskostnader ikke kan anslås uten befaring.
 
 VIKTIG: Skriv kun ren tekst. IKKE bruk markdown-formatering som #, ##, **, *, ✓ eller lignende. Bruk vanlig bindestrek (-) for kulepunkter. Overskrifter skal bare være tekst på egen linje uten noen formatering.
 
