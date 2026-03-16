@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Info, Building2, Ruler, Layers, BadgePercent, MapPin, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statusFarge, statusLabel } from "@/lib/trafikklys";
@@ -156,14 +157,42 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
   const farge = statusFarge(kort.status);
   const label = statusLabel(kort.status);
   const forklaring = FORKLARINGER[kort.id];
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.08 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   return (
     <section
+      ref={sectionRef}
       id={`kategori-${kort.id}`}
-      className="detaljer-kategori scroll-mt-32 lg:scroll-mt-24 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:break-inside-avoid"
+      className={cn(
+        "detaljer-kategori scroll-mt-32 lg:scroll-mt-24 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:break-inside-avoid",
+        "kategori-entrance",
+        isVisible && "kategori-visible"
+      )}
     >
-      {/* Colored top line */}
-      <div className="h-1.5" style={{ backgroundColor: farge }} />
+      {/* Gradient top line that fades out */}
+      <div
+        className="h-1.5"
+        style={{
+          background: `linear-gradient(to right, ${farge}, ${farge}cc 60%, transparent)`,
+        }}
+      />
 
       <div className="p-5 sm:p-6 space-y-4">
         {/* Header: icon + title + status badge */}
@@ -244,7 +273,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
 
             <div className="grid grid-cols-2 gap-3">
               {kort.raadata.utnyttingsgrad != null && (
-                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                <div className="bg-white rounded-lg p-3 border border-gray-100 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm">
                   <div className="flex items-center gap-1.5 mb-1">
                     <BadgePercent className="w-3.5 h-3.5 text-fjord-500" />
                     <span className="text-xs text-gray-500">Maks BYA</span>
@@ -256,7 +285,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
               )}
 
               {kort.raadata.maksBebyggetAreal != null && (
-                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                <div className="bg-white rounded-lg p-3 border border-gray-100 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Building2 className="w-3.5 h-3.5 text-fjord-500" />
                     <span className="text-xs text-gray-500">Maks bebygd</span>
@@ -268,7 +297,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
               )}
 
               {kort.raadata.maksHoyde != null && (
-                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                <div className="bg-white rounded-lg p-3 border border-gray-100 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Ruler className="w-3.5 h-3.5 text-fjord-500" />
                     <span className="text-xs text-gray-500">Maks høyde</span>
@@ -280,7 +309,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
               )}
 
               {kort.raadata.maksEtasjer != null && (
-                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                <div className="bg-white rounded-lg p-3 border border-gray-100 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Layers className="w-3.5 h-3.5 text-fjord-500" />
                     <span className="text-xs text-gray-500">Maks etasjer</span>
@@ -484,14 +513,14 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
 
         {/* Explanation */}
         {forklaring && (
-          <div className="bg-fjord-50 border border-fjord-100 rounded-lg p-4">
+          <div className="bg-fjord-50 border border-fjord-100 rounded-lg p-4 border-l-[3px] border-l-fjord-400">
             <div className="flex items-center gap-2 mb-2">
               <Info className="w-4 h-4 text-fjord-500" />
               <span className="text-sm font-semibold text-fjord-700">
                 Hva betyr dette?
               </span>
             </div>
-            <p className="text-sm text-fjord-700 leading-relaxed">
+            <p className="text-sm text-fjord-700/80 leading-relaxed">
               {forklaring}
             </p>
           </div>

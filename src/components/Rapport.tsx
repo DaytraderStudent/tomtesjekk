@@ -4,6 +4,7 @@ import { Sparkles, AlertTriangle } from "lucide-react";
 import { Rapportkort } from "./Rapportkort";
 import { PDFEksport } from "./PDFEksport";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
+import { statusFarge } from "@/lib/trafikklys";
 import type { Rapport as RapportType } from "@/types";
 
 function stripMarkdown(text: string): string {
@@ -22,7 +23,7 @@ interface Props {
 
 export function Rapport({ rapport }: Props) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 rapport-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -42,9 +43,30 @@ export function Rapport({ rapport }: Props) {
         <PDFEksport rapport={rapport} />
       </div>
 
+      {/* Risk overview bar */}
+      {rapport.kort.length > 0 && (
+        <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 px-4 py-3 shadow-sm">
+          <span className="text-xs font-medium text-gray-500 mr-1 shrink-0">Risikosammendrag</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {rapport.kort.map((kort) => (
+              <div
+                key={kort.id}
+                className="risiko-dot-enter group relative"
+                title={`${kort.tittel}: ${kort.statusTekst}`}
+              >
+                <div
+                  className="w-3.5 h-3.5 rounded-full transition-transform duration-200 group-hover:scale-150 cursor-default"
+                  style={{ backgroundColor: statusFarge(kort.status) }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* AI Summary */}
       {rapport.aiOppsummering && (
-        <div className="bg-fjord-50 border-2 border-fjord-200 rounded-xl p-5">
+        <div className="ai-sammendrag-ramme rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-5 h-5 text-fjord-500" />
             <h3 className="font-semibold text-fjord-700">
@@ -62,8 +84,8 @@ export function Rapport({ rapport }: Props) {
 
       {/* Analysis cards */}
       <div className="space-y-3">
-        {rapport.kort.map((kort) => (
-          <Rapportkort key={kort.id} kort={kort} />
+        {rapport.kort.map((kort, i) => (
+          <Rapportkort key={kort.id} kort={kort} index={i} />
         ))}
       </div>
 

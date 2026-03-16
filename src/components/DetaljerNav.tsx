@@ -70,17 +70,30 @@ export function DetaljerNav({ kort, onPrint }: Props) {
                 <button
                   onClick={() => scrollTo(k.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all",
+                    "nav-sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all relative",
                     erAktiv
                       ? "bg-fjord-50 text-fjord-700 font-semibold"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
+                  {/* Animated active indicator bar */}
                   <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    className={cn(
+                      "absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full bg-fjord-500 transition-all duration-300",
+                      erAktiv ? "h-6 opacity-100" : "h-0 opacity-0"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "nav-status-dot w-2.5 h-2.5 rounded-full shrink-0 transition-transform duration-200",
+                      erAktiv && "scale-125"
+                    )}
                     style={{ backgroundColor: farge }}
                   />
-                  <Icon className="w-4 h-4 shrink-0 opacity-60" />
+                  <Icon className={cn(
+                    "w-4 h-4 shrink-0 transition-opacity duration-200",
+                    erAktiv ? "opacity-100" : "opacity-60"
+                  )} />
                   <span className="truncate">{k.tittel}</span>
                 </button>
               </li>
@@ -115,14 +128,17 @@ export function DetaljerNav({ kort, onPrint }: Props) {
                 data-nav={k.id}
                 onClick={() => scrollTo(k.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200",
                   erAktiv
-                    ? "bg-fjord-500 text-white shadow-sm"
+                    ? "bg-fjord-500 text-white shadow-md scale-105"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 )}
               >
                 <span
-                  className={cn("w-2 h-2 rounded-full shrink-0")}
+                  className={cn(
+                    "w-2 h-2 rounded-full shrink-0 transition-transform duration-200",
+                    erAktiv && "scale-125"
+                  )}
                   style={{
                     backgroundColor: erAktiv ? "white" : farge,
                   }}

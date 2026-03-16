@@ -13,13 +13,13 @@ function StegIkon({ status }: { status: AnalyseSteg["status"] }) {
   switch (status) {
     case "ferdig":
       return (
-        <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center">
-          <Check className="w-3.5 h-3.5 text-white" />
+        <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center steg-ferdig-enter">
+          <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
         </div>
       );
     case "aktiv":
       return (
-        <div className="w-6 h-6 rounded-full bg-fjord-500 flex items-center justify-center animate-progress-pulse">
+        <div className="w-6 h-6 rounded-full bg-fjord-500 flex items-center justify-center steg-aktiv-puls">
           <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
         </div>
       );
@@ -44,7 +44,7 @@ export function Fremdriftslinje({ steg, prosent }: Props) {
       {/* Progress bar */}
       <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
         <div
-          className="h-full bg-fjord-500 rounded-full transition-all duration-500 ease-out"
+          className="fremdrift-bar h-full rounded-full transition-all duration-500 ease-out"
           style={{ width: `${prosent}%` }}
         />
       </div>
