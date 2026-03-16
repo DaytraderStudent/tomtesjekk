@@ -10,6 +10,7 @@ function samletRisiko(kort: Rapport["kort"]): {
   label: string;
   farge: string;
   bg: string;
+  glowColor: string;
 } {
   const harRod = kort.some((k) => k.status === "rod");
   const harGul = kort.some((k) => k.status === "gul");
@@ -20,6 +21,7 @@ function samletRisiko(kort: Rapport["kort"]): {
       label: "Høy risiko",
       farge: "text-red-100",
       bg: "bg-red-500/90",
+      glowColor: "rgba(239, 68, 68, 0.6)",
     };
   if (harGul)
     return {
@@ -27,12 +29,14 @@ function samletRisiko(kort: Rapport["kort"]): {
       label: "Moderat risiko",
       farge: "text-amber-100",
       bg: "bg-amber-500/90",
+      glowColor: "rgba(245, 158, 11, 0.6)",
     };
   return {
     status: "gronn",
     label: "Lav risiko",
     farge: "text-emerald-100",
     bg: "bg-emerald-500/90",
+    glowColor: "rgba(16, 185, 129, 0.6)",
   };
 }
 
@@ -50,7 +54,7 @@ function stripMarkdown(text: string): string {
 function TopoPattern() {
   return (
     <svg
-      className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
+      className="absolute inset-0 w-full h-full opacity-[0.18] pointer-events-none hero-topo-drift"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
@@ -72,6 +76,90 @@ function TopoPattern() {
   );
 }
 
+/** Score summary dots — shows green/yellow/red item counts */
+function ScoreDots({ kort }: { kort: Rapport["kort"] }) {
+  const gronn = kort.filter((k) => k.status === "gronn").length;
+  const gul = kort.filter((k) => k.status === "gul").length;
+  const rod = kort.filter((k) => k.status === "rod").length;
+  const gra = kort.filter((k) => k.status === "gra").length;
+
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      {gronn > 0 && (
+        <div className="flex items-center gap-1.5">
+          <div className="flex gap-0.5">
+            {Array.from({ length: gronn }).map((_, i) => (
+              <span
+                key={`g-${i}`}
+                className="w-3.5 h-3.5 rounded-full risiko-dot-enter"
+                style={{
+                  backgroundColor: "#2ECC71",
+                  boxShadow: "0 0 6px rgba(46, 204, 113, 0.5)",
+                  animationDelay: `${i * 0.05}s`,
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-emerald-200 font-medium">{gronn} lav</span>
+        </div>
+      )}
+      {gul > 0 && (
+        <div className="flex items-center gap-1.5">
+          <div className="flex gap-0.5">
+            {Array.from({ length: gul }).map((_, i) => (
+              <span
+                key={`y-${i}`}
+                className="w-3.5 h-3.5 rounded-full risiko-dot-enter"
+                style={{
+                  backgroundColor: "#F39C12",
+                  boxShadow: "0 0 6px rgba(243, 156, 18, 0.5)",
+                  animationDelay: `${(gronn + i) * 0.05}s`,
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-amber-200 font-medium">{gul} moderat</span>
+        </div>
+      )}
+      {rod > 0 && (
+        <div className="flex items-center gap-1.5">
+          <div className="flex gap-0.5">
+            {Array.from({ length: rod }).map((_, i) => (
+              <span
+                key={`r-${i}`}
+                className="w-3.5 h-3.5 rounded-full risiko-dot-enter"
+                style={{
+                  backgroundColor: "#E74C3C",
+                  boxShadow: "0 0 6px rgba(231, 76, 60, 0.5)",
+                  animationDelay: `${(gronn + gul + i) * 0.05}s`,
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-red-200 font-medium">{rod} høy</span>
+        </div>
+      )}
+      {gra > 0 && (
+        <div className="flex items-center gap-1.5">
+          <div className="flex gap-0.5">
+            {Array.from({ length: gra }).map((_, i) => (
+              <span
+                key={`x-${i}`}
+                className="w-3.5 h-3.5 rounded-full risiko-dot-enter"
+                style={{
+                  backgroundColor: "#9CA3AF",
+                  animationDelay: `${(gronn + gul + rod + i) * 0.05}s`,
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-gray-300 font-medium">{gra} ukjent</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Props {
   rapport: Rapport;
 }
@@ -86,14 +174,17 @@ export function DetaljerHero({ rapport }: Props) {
   });
 
   return (
-    <section className="detaljer-hero relative bg-gradient-to-br from-fjord-500 via-fjord-600 to-fjord-800 text-white overflow-hidden">
-      {/* Topographic contour pattern */}
+    <section className="detaljer-hero relative text-white overflow-hidden">
+      {/* Animated gradient mesh background */}
+      <div className="hero-gradient-mesh absolute inset-0" />
+
+      {/* Topographic contour pattern — clearly visible */}
       <TopoPattern />
 
       {/* Decorative background circles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full" />
-        <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/5 rounded-full" />
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/8 rounded-full" />
+        <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/8 rounded-full" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
@@ -129,16 +220,19 @@ export function DetaljerHero({ rapport }: Props) {
               </div>
             </div>
 
-            {/* Risk badge with gradient animation */}
+            {/* Risk badge — LARGE and prominent with glow */}
             <div
               className={cn(
-                "hero-risk-badge inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm",
+                "hero-risk-badge inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full font-bold text-base",
                 risiko.farge
               )}
+              style={{
+                boxShadow: `0 0 20px ${risiko.glowColor}, 0 0 40px ${risiko.glowColor}`,
+              }}
             >
               <span
                 className={cn(
-                  "w-3 h-3 rounded-full animate-pulse",
+                  "w-4 h-4 rounded-full hero-risk-dot-pulse",
                   risiko.status === "rod" && "bg-red-200",
                   risiko.status === "gul" && "bg-amber-200",
                   risiko.status === "gronn" && "bg-emerald-200"
@@ -146,6 +240,9 @@ export function DetaljerHero({ rapport }: Props) {
               />
               Samlet vurdering: {risiko.label}
             </div>
+
+            {/* Score dots — colored circles showing green/yellow/red counts */}
+            <ScoreDots kort={rapport.kort} />
 
             {/* PDF download button */}
             <button
@@ -156,13 +253,13 @@ export function DetaljerHero({ rapport }: Props) {
               Last ned PDF
             </button>
 
-            {/* AI summary (expandable) with border gradient */}
+            {/* AI summary (expandable) with visible rotating gradient border */}
             {rapport.aiOppsummering && (
-              <div className="hero-ai-card rounded-xl p-[1px]">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="hero-ai-card-v2 rounded-xl p-[2px]">
+                <div className="bg-fjord-700/90 backdrop-blur-sm rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2 text-fjord-100">
-                    <Sparkles className="w-4 h-4" />
-                    <span className="text-sm font-semibold">AI-oppsummering</span>
+                    <Sparkles className="w-5 h-5 text-amber-300" />
+                    <span className="text-sm font-bold">AI-oppsummering</span>
                   </div>
                   <p
                     className={cn(
@@ -193,10 +290,16 @@ export function DetaljerHero({ rapport }: Props) {
             )}
           </div>
 
-          {/* Right: map image with hover zoom */}
+          {/* Right: map image with glowing border */}
           <div className="lg:col-span-2 flex justify-center lg:justify-end">
             {rapport.kartBilde ? (
-              <div className="w-full rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl group">
+              <div
+                className="hero-map-glow w-full rounded-xl overflow-hidden border-2 shadow-2xl group"
+                style={{
+                  borderColor: risiko.glowColor,
+                  boxShadow: `0 0 24px ${risiko.glowColor}, 0 4px 20px rgba(0,0,0,0.3)`,
+                }}
+              >
                 <img
                   src={rapport.kartBilde}
                   alt={`Kart over ${rapport.adresse.adressetekst}`}

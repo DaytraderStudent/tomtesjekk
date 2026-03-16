@@ -13,26 +13,26 @@ function StegIkon({ status }: { status: AnalyseSteg["status"] }) {
   switch (status) {
     case "ferdig":
       return (
-        <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center steg-ferdig-enter">
-          <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+        <div className="w-7 h-7 rounded-full bg-success flex items-center justify-center steg-ferdig-enter shadow-md shadow-emerald-300/50">
+          <Check className="w-4 h-4 text-white" strokeWidth={3} />
         </div>
       );
     case "aktiv":
       return (
-        <div className="w-6 h-6 rounded-full bg-fjord-500 flex items-center justify-center steg-aktiv-puls">
-          <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+        <div className="w-7 h-7 rounded-full bg-fjord-500 flex items-center justify-center steg-aktiv-puls shadow-md shadow-fjord-400/50">
+          <Loader2 className="w-4 h-4 text-white animate-spin" />
         </div>
       );
     case "feil":
       return (
-        <div className="w-6 h-6 rounded-full bg-danger flex items-center justify-center">
-          <X className="w-3.5 h-3.5 text-white" />
+        <div className="w-7 h-7 rounded-full bg-danger flex items-center justify-center steg-feil-shake shadow-md shadow-red-300/50">
+          <X className="w-4 h-4 text-white" strokeWidth={3} />
         </div>
       );
     default:
       return (
-        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-          <Circle className="w-3 h-3 text-gray-400" />
+        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+          <Circle className="w-3.5 h-3.5 text-gray-400" />
         </div>
       );
   }
@@ -41,12 +41,29 @@ function StegIkon({ status }: { status: AnalyseSteg["status"] }) {
 export function Fremdriftslinje({ steg, prosent }: Props) {
   return (
     <div className="w-full space-y-4">
-      {/* Progress bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+      {/* Percentage display */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-fjord-500 uppercase tracking-wide">
+          Fremdrift
+        </span>
+        <span className="text-lg font-bold text-fjord-600 tabular-nums fremdrift-prosent-enter">
+          {Math.round(prosent)}%
+        </span>
+      </div>
+
+      {/* Progress bar — thicker with gradient and glow dot */}
+      <div className="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
         <div
           className="fremdrift-bar h-full rounded-full transition-all duration-500 ease-out"
           style={{ width: `${prosent}%` }}
         />
+        {/* Glowing leading edge dot */}
+        {prosent > 0 && prosent < 100 && (
+          <div
+            className="fremdrift-glow-dot"
+            style={{ left: `${prosent}%` }}
+          />
+        )}
       </div>
 
       {/* Step list */}
@@ -55,24 +72,27 @@ export function Fremdriftslinje({ steg, prosent }: Props) {
           <div
             key={s.id}
             className={cn(
-              "flex items-center gap-3 py-1.5 transition-opacity",
-              s.status === "venter" && "opacity-50"
+              "flex items-center gap-3 py-2 px-2 rounded-lg transition-all duration-300",
+              s.status === "venter" && "opacity-40",
+              s.status === "aktiv" && "bg-fjord-50/70",
+              s.status === "ferdig" && "bg-emerald-50/40",
+              s.status === "feil" && "bg-red-50/40"
             )}
           >
             <StegIkon status={s.status} />
             <span
               className={cn(
                 "text-sm",
-                s.status === "aktiv" && "font-medium text-fjord-700",
-                s.status === "ferdig" && "text-gray-500",
-                s.status === "feil" && "text-danger",
+                s.status === "aktiv" && "font-bold text-fjord-700",
+                s.status === "ferdig" && "text-gray-500 line-through decoration-emerald-400/50",
+                s.status === "feil" && "text-danger font-medium",
                 s.status === "venter" && "text-gray-400"
               )}
             >
               {s.navn}
             </span>
             {s.feilmelding && (
-              <span className="text-xs text-danger ml-auto">{s.feilmelding}</span>
+              <span className="text-xs text-danger font-medium ml-auto">{s.feilmelding}</span>
             )}
           </div>
         ))}

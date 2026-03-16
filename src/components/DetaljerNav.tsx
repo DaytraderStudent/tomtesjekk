@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { statusFarge } from "@/lib/trafikklys";
+import { statusFarge, statusLabel } from "@/lib/trafikklys";
 import { hentKortIkon } from "@/lib/kort-ikoner";
 import type { AnalyseKort } from "@/types";
 
@@ -64,6 +64,7 @@ export function DetaljerNav({ kort, onPrint }: Props) {
             const { icon: Icon } = hentKortIkon(k.id);
             const farge = statusFarge(k.status);
             const erAktiv = aktivId === k.id;
+            const risikoLabel = statusLabel(k.status);
 
             return (
               <li key={k.id}>
@@ -72,29 +73,31 @@ export function DetaljerNav({ kort, onPrint }: Props) {
                   className={cn(
                     "nav-sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all relative",
                     erAktiv
-                      ? "bg-fjord-50 text-fjord-700 font-semibold"
+                      ? "bg-fjord-50 text-fjord-700 font-semibold border-l-4 border-l-fjord-500 pl-4"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
-                  {/* Animated active indicator bar */}
+                  {/* Traffic light dot with glow */}
                   <span
-                    className={cn(
-                      "absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full bg-fjord-500 transition-all duration-300",
-                      erAktiv ? "h-6 opacity-100" : "h-0 opacity-0"
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "nav-status-dot w-2.5 h-2.5 rounded-full shrink-0 transition-transform duration-200",
-                      erAktiv && "scale-125"
-                    )}
-                    style={{ backgroundColor: farge }}
+                    className="w-3 h-3 rounded-full shrink-0 nav-traffic-dot"
+                    style={{
+                      backgroundColor: farge,
+                      boxShadow: `0 0 8px ${farge}80`,
+                    }}
                   />
                   <Icon className={cn(
                     "w-4 h-4 shrink-0 transition-opacity duration-200",
                     erAktiv ? "opacity-100" : "opacity-60"
                   )} />
-                  <span className="truncate">{k.tittel}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate">{k.tittel}</span>
+                    <span
+                      className="text-[10px] font-medium leading-tight truncate"
+                      style={{ color: farge }}
+                    >
+                      {risikoLabel}
+                    </span>
+                  </div>
                 </button>
               </li>
             );
@@ -112,7 +115,7 @@ export function DetaljerNav({ kort, onPrint }: Props) {
         )}
       </nav>
 
-      {/* Mobile: horizontal scrolling pills */}
+      {/* Mobile: horizontal scrolling pills — colorful status tinting */}
       <div
         ref={mobilRef}
         className="lg:hidden sticky top-16 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 overflow-x-auto print:hidden"
@@ -130,17 +133,23 @@ export function DetaljerNav({ kort, onPrint }: Props) {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200",
                   erAktiv
-                    ? "bg-fjord-500 text-white shadow-md scale-105"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "text-white shadow-md scale-105"
+                    : "text-gray-700 hover:opacity-90"
                 )}
+                style={
+                  erAktiv
+                    ? { backgroundColor: farge, boxShadow: `0 2px 10px ${farge}50` }
+                    : { backgroundColor: `${farge}18` }
+                }
               >
                 <span
                   className={cn(
-                    "w-2 h-2 rounded-full shrink-0 transition-transform duration-200",
+                    "w-2.5 h-2.5 rounded-full shrink-0 transition-transform duration-200",
                     erAktiv && "scale-125"
                   )}
                   style={{
                     backgroundColor: erAktiv ? "white" : farge,
+                    boxShadow: erAktiv ? "none" : `0 0 6px ${farge}60`,
                   }}
                 />
                 {k.tittel}

@@ -56,19 +56,26 @@ body {
   animation: progress-pulse 1.5s ease-in-out infinite;
 }
 
-/* ── Rapportkort staggered entrance ── */
+/* ── Rapportkort staggered entrance — slide from left with border grow ── */
 @keyframes rapportkort-slide-in {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateX(-24px);
+    border-left-width: 0px;
   }
-  to {
+  60% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(4px);
+    border-left-width: 6px;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    border-left-width: 5px;
   }
 }
 .rapportkort-enter {
-  animation: rapportkort-slide-in 0.4s ease-out both;
+  animation: rapportkort-slide-in 0.5s ease-out both;
 }
 
 /* ── Traffic light dot pulse on appear ── */
@@ -112,47 +119,154 @@ body {
 .risiko-dot-enter:nth-child(11) { animation-delay: 0.55s; }
 .risiko-dot-enter:nth-child(12) { animation-delay: 0.6s; }
 
-/* ── AI summary animated border glow ── */
+/* ── AI summary animated border glow — bold visible ── */
 @keyframes ai-border-glow {
-  0%, 100% { border-color: #c7d8ed; }
-  50% { border-color: #1B3F6E; }
+  0%, 100% {
+    border-color: #8fb3de;
+    box-shadow: 0 0 12px rgba(27, 63, 110, 0.08);
+  }
+  50% {
+    border-color: #1B3F6E;
+    box-shadow: 0 0 20px rgba(27, 63, 110, 0.2);
+  }
 }
 .ai-sammendrag-ramme {
-  background: linear-gradient(135deg, #eff4fb 0%, #f0f6ff 50%, #eff4fb 100%);
-  border: 2px solid #c7d8ed;
+  background: linear-gradient(135deg, #dce8f5 0%, #e4edf8 50%, #dce8f5 100%);
+  border: 3px solid #8fb3de;
   animation: ai-border-glow 3s ease-in-out infinite;
 }
 
-/* ── Fremdriftslinje shimmer bar ── */
+/* ── AI Sparkles icon pulse ── */
+@keyframes ai-sparkles-pulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(1.2) rotate(8deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1.15) rotate(-6deg);
+    opacity: 0.85;
+  }
+}
+.ai-sparkles-pulse {
+  animation: ai-sparkles-pulse 2.5s ease-in-out infinite;
+}
+
+/* ── Fremdriftslinje shimmer bar — thicker with gradient ── */
 .fremdrift-bar {
-  background: linear-gradient(90deg, #1B3F6E 0%, #2d5fa0 50%, #1B3F6E 100%);
+  background: linear-gradient(90deg, #1B3F6E 0%, #2d5fa0 30%, #10b981 70%, #059669 100%);
   background-size: 200% 100%;
-  animation: fremdrift-shimmer 1.8s ease-in-out infinite;
+  animation: fremdrift-shimmer 2.5s ease-in-out infinite;
+  box-shadow: 0 1px 4px rgba(27, 63, 110, 0.3);
 }
 @keyframes fremdrift-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-/* ── Completed step checkmark bounce ── */
+/* ── Glowing dot at leading edge of progress bar ── */
+.fremdrift-glow-dot {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px 3px rgba(16, 185, 129, 0.6), 0 0 16px 6px rgba(16, 185, 129, 0.3);
+  animation: fremdrift-glow-pulse 1.5s ease-in-out infinite;
+}
+@keyframes fremdrift-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px 3px rgba(16, 185, 129, 0.6), 0 0 16px 6px rgba(16, 185, 129, 0.3);
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 12px 5px rgba(16, 185, 129, 0.8), 0 0 24px 10px rgba(16, 185, 129, 0.4);
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+/* ── Percentage text entrance ── */
+@keyframes fremdrift-prosent-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fremdrift-prosent-enter {
+  animation: fremdrift-prosent-enter 0.4s ease-out both;
+}
+
+/* ── Completed step checkmark POP ── */
 @keyframes steg-ferdig-pop {
-  0% { transform: scale(0); }
-  50% { transform: scale(1.25); }
-  70% { transform: scale(0.9); }
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+  70% { transform: scale(0.85); }
+  85% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }
 .steg-ferdig-enter {
-  animation: steg-ferdig-pop 0.4s ease-out both;
+  animation: steg-ferdig-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* ── Active step pulsing ring ── */
+/* ── Active step pulsing ring — bold visible ── */
 @keyframes steg-aktiv-ring {
-  0% { box-shadow: 0 0 0 0 rgba(27, 63, 110, 0.4); }
-  70% { box-shadow: 0 0 0 8px rgba(27, 63, 110, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(27, 63, 110, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(27, 63, 110, 0.5);
+  }
+  40% {
+    box-shadow: 0 0 0 6px rgba(27, 63, 110, 0.25);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(27, 63, 110, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(27, 63, 110, 0);
+  }
 }
 .steg-aktiv-puls {
   animation: steg-aktiv-ring 1.5s ease-out infinite;
+}
+
+/* ── Failed step shake ── */
+@keyframes steg-feil-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-4px); }
+  30% { transform: translateX(4px); }
+  45% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+  75% { transform: translateX(-1px); }
+  90% { transform: translateX(1px); }
+}
+.steg-feil-shake {
+  animation: steg-feil-shake 0.5s ease-out both;
+}
+
+/* ── Samlet risiko header entrance ── */
+@keyframes samlet-risiko-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.samlet-risiko-enter {
+  animation: samlet-risiko-enter 0.5s ease-out both;
 }
 
 /* Scroll reveal */
@@ -166,22 +280,79 @@ body {
   transform: translateY(0);
 }
 
-/* Hero floating map pin */
-@keyframes float-pin {
-  0%, 100% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-14px) rotate(3deg); }
+/* ═══════════════════════════════════════════════
+   HERO SECTION
+   ═══════════════════════════════════════════════ */
+
+/* Aurora mesh background */
+.hero-aurora {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(16, 185, 129, 0.2) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 70%, rgba(59, 130, 246, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 90% 40% at 10% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 50%);
+  animation: aurora-shift 12s ease-in-out infinite alternate;
 }
-.animate-float-pin {
-  animation: float-pin 4s ease-in-out infinite;
+@keyframes aurora-shift {
+  0% {
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(16, 185, 129, 0.2) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 70%, rgba(59, 130, 246, 0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 60%),
+      radial-gradient(ellipse 90% 40% at 10% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 50%);
+  }
+  33% {
+    background:
+      radial-gradient(ellipse 70% 70% at 70% 20%, rgba(59, 130, 246, 0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 60% at 60% 60%, rgba(139, 92, 246, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 80% at 90% 40%, rgba(16, 185, 129, 0.15) 0%, transparent 50%);
+  }
+  66% {
+    background:
+      radial-gradient(ellipse 60% 80% at 40% 60%, rgba(16, 185, 129, 0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 50% at 80% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 70% at 20% 40%, rgba(139, 92, 246, 0.14) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 40% at 60% 90%, rgba(59, 130, 246, 0.12) 0%, transparent 50%);
+  }
+  100% {
+    background:
+      radial-gradient(ellipse 90% 50% at 50% 40%, rgba(59, 130, 246, 0.2) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 70% at 10% 60%, rgba(16, 185, 129, 0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 60% at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 30% 90%, rgba(16, 185, 129, 0.14) 0%, transparent 50%);
+  }
 }
 
 /* Hero headline glow */
 @keyframes headline-glow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 .animate-headline-glow {
   animation: headline-glow 3s ease-in-out infinite;
+}
+
+/* Hero gradient text — animated shifting gradient */
+.hero-gradient-text {
+  background: linear-gradient(90deg, #6ee7b7, #34d399, #3b82f6, #6ee7b7);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-text-shift 4s ease-in-out infinite;
+}
+@keyframes gradient-text-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Hero counter digit — tabular nums for smooth animation */
+.hero-counter-digit {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Hero badge pulse ring */
@@ -194,63 +365,405 @@ body {
   animation: badge-pulse 2.5s ease-in-out infinite;
 }
 
-/* Topographic contour lines */
+/* Topographic contour drift */
 @keyframes contour-drift {
   0% { transform: translateX(0) translateY(0); }
-  100% { transform: translateX(-30px) translateY(15px); }
+  50% { transform: translateX(-20px) translateY(10px); }
+  100% { transform: translateX(0) translateY(0); }
 }
 .animate-contour-drift {
-  animation: contour-drift 20s linear infinite;
+  animation: contour-drift 20s ease-in-out infinite;
+}
+@keyframes contour-drift-reverse {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(15px) translateY(-10px); }
+  100% { transform: translateX(0) translateY(0); }
+}
+.animate-contour-drift-reverse {
+  animation: contour-drift-reverse 25s ease-in-out infinite;
 }
 
-/* CTA dot grid pulse */
-@keyframes dot-pulse {
-  0%, 100% { opacity: 0.06; }
-  50% { opacity: 0.12; }
+/* Hero terrain illustration */
+.hero-terrain-illustration {
+  animation: terrain-float 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(16, 185, 129, 0.15));
 }
-.animate-dot-pulse {
-  animation: dot-pulse 4s ease-in-out infinite;
+@keyframes terrain-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.hero-terrain-layer {
+  animation: terrain-layer-wave 4s ease-in-out infinite;
+}
+.hero-terrain-layer-1 { animation-delay: 0s; }
+.hero-terrain-layer-2 { animation-delay: 0.4s; }
+.hero-terrain-layer-3 { animation-delay: 0.8s; }
+@keyframes terrain-layer-wave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.hero-terrain-pin {
+  animation: terrain-pin-bounce 3s ease-in-out infinite;
+}
+@keyframes terrain-pin-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.hero-pin-ring {
+  animation: pin-ring-expand 2s ease-out infinite;
+}
+@keyframes pin-ring-expand {
+  0% { r: 24; opacity: 0.3; }
+  100% { r: 40; opacity: 0; }
 }
 
-/* Feature card accent line */
-.feature-card::before {
+/* Hero CTA button glow */
+.hero-cta-button {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 0 40px rgba(16, 185, 129, 0.15);
+}
+
+/* ═══════════════════════════════════════════════
+   GLASSMORPHISM FEATURE CARDS
+   ═══════════════════════════════════════════════ */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 0 0 1px var(--feature-color-10),
+    0 0 20px var(--feature-color-10);
+  transition: all 0.35s ease-out;
+}
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--feature-color-20);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.1),
+    0 0 0 1px var(--feature-color-20),
+    0 0 30px var(--feature-color-20);
+  transform: translateY(-4px);
+}
+
+/* Visible colored accent line at top */
+.glass-card::before {
   content: "";
   position: absolute;
   top: 0;
-  left: 24px;
-  right: 24px;
+  left: 0;
+  right: 0;
   height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--feature-color);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.35s ease-out;
+  border-radius: 1rem 1rem 0 0;
+  background: linear-gradient(90deg, transparent, var(--feature-color), transparent);
+  opacity: 0.6;
+  transition: opacity 0.35s ease-out;
 }
-.feature-card:hover::before {
-  transform: scaleX(1);
+.glass-card:hover::before {
+  opacity: 1;
 }
 
-/* Feature icon hover */
-.feature-icon-wrap {
+/* Icon wrap */
+.glass-icon-wrap {
   transition: transform 0.3s ease-out;
 }
-.feature-card:hover .feature-icon-wrap {
+.glass-card:hover .glass-icon-wrap {
   transform: scale(1.1) rotate(3deg);
 }
 
-/* Feature card gradient overlay on hover */
-.feature-card::after {
-  content: "";
+/* Connecting dots between feature cards */
+.features-connector-bg {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--feature-color-light) 0%, transparent 60%);
-  opacity: 0;
-  transition: opacity 0.35s ease-out;
+  background-image:
+    radial-gradient(circle 2px, rgba(27, 63, 110, 0.08) 100%, transparent 100%);
+  background-size: 32px 32px;
   pointer-events: none;
 }
-.feature-card:hover::after {
-  opacity: 1;
+
+/* ═══════════════════════════════════════════════
+   STEPS SECTION
+   ═══════════════════════════════════════════════ */
+
+/* Horizontal connector line between steps */
+.steps-connector-line {
+  background: linear-gradient(
+    90deg,
+    rgba(27, 63, 110, 0.1) 0%,
+    rgba(27, 63, 110, 0.25) 20%,
+    rgba(27, 63, 110, 0.25) 80%,
+    rgba(27, 63, 110, 0.1) 100%
+  );
+  border-radius: 2px;
+}
+.steps-connector-line::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 40%;
+  height: 7px;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.4), rgba(59, 130, 246, 0.3));
+  border-radius: 4px;
+  animation: connector-shimmer 3s ease-in-out infinite;
+}
+@keyframes connector-shimmer {
+  0% { left: 0; }
+  50% { left: 60%; }
+  100% { left: 0; }
+}
+
+/* Step number circle */
+.step-number-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+.step-number-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(27, 63, 110, 0.2) 0%, transparent 70%);
+  animation: step-glow-pulse 2.5s ease-in-out infinite;
+}
+@keyframes step-glow-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+.step-number-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4777AF 0%, #1B3F6E 60%, #102642 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(27, 63, 110, 0.35);
+}
+.step-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #E8EEF5, #D1DDEB);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Steps slide-in from left */
+.steps-slide-in {
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* ═══════════════════════════════════════════════
+   COMPARISON TABLE
+   ═══════════════════════════════════════════════ */
+
+.comparison-table-wrap {
+  border: 1px solid rgba(27, 63, 110, 0.12);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(27, 63, 110, 0.05);
+}
+
+.comparison-highlight-header {
+  background: linear-gradient(135deg, rgba(27, 63, 110, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%);
+}
+
+.comparison-highlight-cell {
+  background: rgba(27, 63, 110, 0.04);
+  position: relative;
+}
+.comparison-highlight-cell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(27, 63, 110, 0.15), rgba(16, 185, 129, 0.15));
+}
+
+.comparison-row {
+  transition: background-color 0.2s ease;
+}
+.comparison-row:hover {
+  background-color: rgba(27, 63, 110, 0.03);
+}
+.comparison-row:hover .comparison-highlight-cell {
+  background: rgba(27, 63, 110, 0.08);
+}
+
+/* Time comparison row — visually emphasized */
+.comparison-time-row {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(239, 68, 68, 0.05) 100%) !important;
+  border-top: 2px solid rgba(27, 63, 110, 0.1);
+}
+.comparison-time-row .comparison-highlight-cell {
+  background: rgba(16, 185, 129, 0.12);
+}
+
+/* ═══════════════════════════════════════════════
+   AUDIENCE CARDS
+   ═══════════════════════════════════════════════ */
+
+.audience-card {
+  transition: all 0.35s ease-out;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+.audience-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-color: transparent;
+}
+
+/* Hover gradient fill from bottom */
+.audience-hover-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--audience-accent), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.audience-card:hover .audience-hover-fill {
+  opacity: 0.06;
+}
+
+/* Icon pop animation on scroll reveal */
+.audience-icon-wrap {
+  transition: transform 0.3s ease-out;
+  animation: audience-icon-pop 0.5s ease-out both;
+}
+@keyframes audience-icon-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.audience-card:hover .audience-icon-wrap {
+  transform: scale(1.1) rotate(3deg);
+}
+
+/* ═══════════════════════════════════════════════
+   CTA SECTION
+   ═══════════════════════════════════════════════ */
+
+/* Floating shapes */
+.cta-floating-shapes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cta-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+}
+.cta-shape-1 {
+  width: 120px;
+  height: 120px;
+  top: 15%;
+  left: 10%;
+  background: #10B981;
+  animation: cta-float-1 8s ease-in-out infinite;
+}
+.cta-shape-2 {
+  width: 80px;
+  height: 80px;
+  top: 60%;
+  right: 15%;
+  background: #3B82F6;
+  animation: cta-float-2 10s ease-in-out infinite;
+}
+.cta-shape-3 {
+  width: 60px;
+  height: 60px;
+  bottom: 20%;
+  left: 30%;
+  background: #8B5CF6;
+  animation: cta-float-3 7s ease-in-out infinite;
+}
+.cta-shape-4 {
+  width: 40px;
+  height: 40px;
+  top: 25%;
+  right: 30%;
+  background: #10B981;
+  animation: cta-float-1 9s ease-in-out infinite reverse;
+}
+.cta-shape-5 {
+  width: 100px;
+  height: 100px;
+  bottom: 10%;
+  right: 5%;
+  background: #3B82F6;
+  animation: cta-float-2 12s ease-in-out infinite;
+}
+
+@keyframes cta-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.1); }
+  66% { transform: translate(-15px, 15px) scale(0.95); }
+}
+@keyframes cta-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, -30px) scale(1.15); }
+}
+@keyframes cta-float-3 {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(20px, 10px); }
+  75% { transform: translate(-10px, -20px); }
+}
+
+/* CTA glow button */
+.cta-glow-button {
+  box-shadow:
+    0 4px 20px rgba(16, 185, 129, 0.4),
+    0 0 60px rgba(16, 185, 129, 0.15);
+  animation: cta-button-pulse 2.5s ease-in-out infinite;
+}
+@keyframes cta-button-pulse {
+  0%, 100% {
+    box-shadow:
+      0 4px 20px rgba(16, 185, 129, 0.4),
+      0 0 60px rgba(16, 185, 129, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 4px 30px rgba(16, 185, 129, 0.55),
+      0 0 80px rgba(16, 185, 129, 0.25);
+  }
+}
+.cta-glow-button:hover {
+  box-shadow:
+    0 8px 40px rgba(16, 185, 129, 0.5),
+    0 0 100px rgba(16, 185, 129, 0.3);
+}
+
+/* === Detaljer hero animated gradient mesh background === */
+.hero-gradient-mesh {
+  background: linear-gradient(135deg, #1B3F6E 0%, #102642 25%, #0f3d2e 50%, #102642 75%, #1B3F6E 100%);
+  background-size: 400% 400%;
+  animation: hero-mesh-shift 12s ease-in-out infinite;
+}
+@keyframes hero-mesh-shift {
+  0% { background-position: 0% 0%; }
+  25% { background-position: 100% 50%; }
+  50% { background-position: 50% 100%; }
+  75% { background-position: 0% 50%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* === Detaljer hero topo contour slow drift === */
+.hero-topo-drift {
+  animation: hero-topo-drift-anim 25s linear infinite;
+}
+@keyframes hero-topo-drift-anim {
+  0% { transform: translateX(0) translateY(0); }
+  100% { transform: translateX(-40px) translateY(20px); }
 }
 
 /* === Hero risk badge gradient animation === */
@@ -287,32 +800,103 @@ body {
   50% { background-position: 100% 50%; }
 }
 
-/* === Hero AI summary card border gradient === */
-.hero-ai-card {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.25) 0%,
-    rgba(255, 255, 255, 0.08) 40%,
-    rgba(255, 255, 255, 0.2) 100%
-  );
-  background-size: 200% 200%;
-  animation: ai-border-shimmer 6s ease-in-out infinite;
-  border-radius: 0.75rem;
+/* === Hero risk dot pulsing glow === */
+.hero-risk-dot-pulse {
+  animation: hero-risk-dot-anim 2s ease-in-out infinite;
 }
-@keyframes ai-border-shimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@keyframes hero-risk-dot-anim {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.8);
+    transform: scale(1.2);
+  }
 }
 
-/* === Category section scroll-triggered entrance === */
+/* === Detaljer hero AI card — visible rotating gradient border === */
+.hero-ai-card-v2 {
+  background: conic-gradient(
+    from var(--ai-angle, 0deg),
+    rgba(255, 255, 255, 0.5),
+    rgba(16, 185, 129, 0.6),
+    rgba(27, 63, 110, 0.7),
+    rgba(245, 158, 11, 0.5),
+    rgba(255, 255, 255, 0.5)
+  );
+  border-radius: 0.75rem;
+  animation: ai-rotate-border 4s linear infinite;
+}
+@property --ai-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes ai-rotate-border {
+  0% { --ai-angle: 0deg; }
+  100% { --ai-angle: 360deg; }
+}
+/* Fallback for browsers without @property support */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+  .hero-ai-card-v2 {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(16, 185, 129, 0.5) 25%,
+      rgba(27, 63, 110, 0.6) 50%,
+      rgba(245, 158, 11, 0.4) 75%,
+      rgba(255, 255, 255, 0.4) 100%
+    );
+    background-size: 300% 300%;
+    animation: ai-border-shimmer-fallback 4s linear infinite;
+  }
+}
+@keyframes ai-border-shimmer-fallback {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 300% 300%; }
+}
+
+/* === Hero map glowing border === */
+.hero-map-glow {
+  transition: box-shadow 0.3s ease;
+}
+.hero-map-glow:hover {
+  filter: brightness(1.05);
+}
+
+/* === Category section scroll-triggered entrance — 30px slide === */
 .kategori-entrance {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 .kategori-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* === Category status dot subtle pulse === */
+.kategori-status-dot {
+  animation: kategori-dot-pulse 2.5s ease-in-out infinite;
+}
+@keyframes kategori-dot-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+/* === Category BYA info cards — colored top border === */
+.kategori-bya-card {
+  border-top: 3px solid #1B3F6E;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* === Nav sidebar traffic dot glow pulse === */
+.nav-traffic-dot {
+  animation: nav-dot-glow 3s ease-in-out infinite;
+}
+@keyframes nav-dot-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 /* === Print overrides — disable animations === */
@@ -325,8 +909,28 @@ body {
     animation: none !important;
   }
   .hero-risk-badge,
-  .hero-ai-card {
+  .hero-ai-card-v2,
+  .hero-gradient-mesh,
+  .hero-topo-drift,
+  .hero-risk-dot-pulse,
+  .hero-map-glow,
+  .kategori-status-dot,
+  .nav-traffic-dot,
+  .ai-sammendrag-ramme,
+  .ai-sparkles-pulse,
+  .rapportkort-enter,
+  .fremdrift-bar,
+  .fremdrift-glow-dot,
+  .steg-ferdig-enter,
+  .steg-aktiv-puls,
+  .steg-feil-shake,
+  .samlet-risiko-enter,
+  .risiko-dot-enter,
+  .trafikklys-puls {
     animation: none !important;
+  }
+  .hero-gradient-mesh {
+    background: #1B3F6E !important;
   }
 }
 
