@@ -91,7 +91,8 @@ export default function TomtefinnerView() {
         `https://ws.geonorge.no/kommuneinfo/v1/sok?knavn=${encodeURIComponent(tekst)}`
       );
       const data = await res.json();
-      const forslag = (data || []).slice(0, 8).map((k: any) => ({
+      const kommuner = data?.kommuner || data || [];
+      const forslag = (Array.isArray(kommuner) ? kommuner : []).slice(0, 8).map((k: any) => ({
         kommunenummer: k.kommunenummer,
         kommunenavn: k.kommunenavnNorsk || k.kommunenavn,
       }));
@@ -192,10 +193,12 @@ export default function TomtefinnerView() {
             `https://ws.geonorge.no/kommuneinfo/v1/sok?knavn=${encodeURIComponent(kommuneSok)}`
           );
           const data = await res.json();
-          if (data?.[0]) {
+          const kommuner = data?.kommuner || data || [];
+          const forsteTreff = Array.isArray(kommuner) ? kommuner[0] : null;
+          if (forsteTreff) {
             kommune = {
-              kommunenummer: data[0].kommunenummer,
-              kommunenavn: data[0].kommunenavnNorsk || data[0].kommunenavn,
+              kommunenummer: forsteTreff.kommunenummer,
+              kommunenavn: forsteTreff.kommunenavnNorsk || forsteTreff.kommunenavn,
             };
           }
         } catch {}
