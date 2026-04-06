@@ -71,7 +71,7 @@ Requirements:
 Style: Photorealistic architectural rendering, warm natural lighting, high quality`;
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-preview-image-generation",
+      model: "gemini-2.5-flash-image",
       generationConfig: {
         // @ts-expect-error - responseModalities not in types yet
         responseModalities: ["TEXT", "IMAGE"],
