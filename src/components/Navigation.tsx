@@ -30,6 +30,12 @@ export function Navigation() {
               Hjem
             </Link>
             <Link
+              href="/tomtefinner"
+              className="text-gray-600 hover:text-fjord-500 transition-colors font-medium"
+            >
+              AI Tomtefinner
+            </Link>
+            <Link
               href="/analyser"
               className="px-5 py-2.5 bg-fjord-500 text-white rounded-lg hover:bg-fjord-600 transition-colors font-medium"
             >
@@ -61,6 +67,13 @@ export function Navigation() {
               className="text-gray-600 hover:text-fjord-500 transition-colors font-medium"
             >
               Hjem
+            </Link>
+            <Link
+              href="/tomtefinner"
+              onClick={() => setIsOpen(false)}
+              className="text-gray-600 hover:text-fjord-500 transition-colors font-medium"
+            >
+              AI Tomtefinner
             </Link>
             <Link
               href="/analyser"

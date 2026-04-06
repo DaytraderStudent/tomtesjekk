@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import SunCalc from "suncalc";
-import type { SolforholdResultat } from "@/types";
+import type { SolforholdResultat, SolbanePunkt } from "@/types";
 
 function formatTid(date: Date): string {
   return date.toLocaleTimeString("nb-NO", {
@@ -14,6 +14,19 @@ function radTilGrader(rad: number): number {
   return Math.round((rad * 180) / Math.PI * 10) / 10;
 }
 
+function radTilKompassGrader(azimuthRad: number): number {
+  // SunCalc azimuth: 0 = south, negative = east, positive = west
+  // Convert to compass degrees: 0 = north
+  let deg = (azimuthRad * 180) / Math.PI + 180;
+  return ((deg % 360) + 360) % 360;
+}
+
+function kompassRetning(kompassGrader: number): string {
+  const retninger = ["N", "NØ", "Ø", "SØ", "S", "SV", "V", "NV"];
+  const idx = Math.round(kompassGrader / 45) % 8;
+  return retninger[idx];
+}
+
 function beregnSolhoyde(dato: Date, time: number, lat: number, lon: number): number {
   const d = new Date(dato);
   d.setHours(time, 0, 0, 0);
@@ -21,19 +34,22 @@ function beregnSolhoyde(dato: Date, time: number, lat: number, lon: number): num
   return radTilGrader(pos.altitude);
 }
 
-function azimuthTilRetning(azimuthRad: number): string {
-  // SunCalc azimuth: 0 = south, negative = east, positive = west
-  // Convert to compass degrees: 0 = north
-  let deg = (azimuthRad * 180) / Math.PI + 180;
-  deg = ((deg % 360) + 360) % 360;
-
-  const retninger = ["N", "NØ", "Ø", "SØ", "S", "SV", "V", "NV"];
-  const idx = Math.round(deg / 45) % 8;
-  return retninger[idx];
+function beregnSolbane(dato: Date, lat: number, lon: number): SolbanePunkt[] {
+  const punkter: SolbanePunkt[] = [];
+  for (let h = 0; h <= 23; h++) {
+    const d = new Date(dato);
+    d.setHours(h, 0, 0, 0);
+    const pos = SunCalc.getPosition(d, lat, lon);
+    punkter.push({
+      time: h,
+      altitude: radTilGrader(pos.altitude),
+      azimuth: Math.round(radTilKompassGrader(pos.azimuth)),
+    });
+  }
+  return punkter;
 }
 
 function beregnHovedretning(dato: Date, lat: number, lon: number): string {
-  // Average azimuth between 09:00 and 15:00
   let sumAzimuth = 0;
   let count = 0;
   for (let h = 9; h <= 15; h++) {
@@ -46,7 +62,7 @@ function beregnHovedretning(dato: Date, lat: number, lon: number): string {
     }
   }
   if (count === 0) return "—";
-  return azimuthTilRetning(sumAzimuth / count);
+  return kompassRetning(radTilKompassGrader(sumAzimuth / count));
 }
 
 function beregnSesong(dato: Date, lat: number, lon: number) {
@@ -55,6 +71,7 @@ function beregnSesong(dato: Date, lat: number, lon: number) {
   const sunset = tider.sunset;
 
   const solhoyde12 = beregnSolhoyde(dato, 12, lat, lon);
+  const bane = beregnSolbane(dato, lat, lon);
 
   // Handle polar cases: SunCalc returns NaN for sunrise/sunset
   // when sun never rises (polar night) or never sets (midnight sun)
@@ -62,8 +79,6 @@ function beregnSesong(dato: Date, lat: number, lon: number) {
   const sunsetValid = sunset instanceof Date && !isNaN(sunset.getTime());
 
   if (!sunriseValid || !sunsetValid) {
-    // Midnight sun: noon altitude > 0 → 24h daylight
-    // Polar night: noon altitude <= 0 → 0h daylight
     const erMidnattssol = solhoyde12 > 0;
     return {
       soloppgang: erMidnattssol ? "Midnattssol" : "Solen står ikke opp",
@@ -72,8 +87,17 @@ function beregnSesong(dato: Date, lat: number, lon: number) {
       solhoyde09: beregnSolhoyde(dato, 9, lat, lon),
       solhoyde12,
       solhoyde15: beregnSolhoyde(dato, 15, lat, lon),
+      soloppgangRetning: erMidnattssol ? "—" : "—",
+      solnedgangRetning: erMidnattssol ? "—" : "—",
+      bane,
     };
   }
+
+  // Get azimuth at sunrise and sunset
+  const sunrisePos = SunCalc.getPosition(sunrise, lat, lon);
+  const sunsetPos = SunCalc.getPosition(sunset, lat, lon);
+  const soloppgangKompass = radTilKompassGrader(sunrisePos.azimuth);
+  const solnedgangKompass = radTilKompassGrader(sunsetPos.azimuth);
 
   const daglengdeMs = sunset.getTime() - sunrise.getTime();
   const daglengdeTimer = Math.round((daglengdeMs / (1000 * 60 * 60)) * 10) / 10;
@@ -85,6 +109,9 @@ function beregnSesong(dato: Date, lat: number, lon: number) {
     solhoyde09: beregnSolhoyde(dato, 9, lat, lon),
     solhoyde12,
     solhoyde15: beregnSolhoyde(dato, 15, lat, lon),
+    soloppgangRetning: kompassRetning(soloppgangKompass),
+    solnedgangRetning: kompassRetning(solnedgangKompass),
+    bane,
   };
 }
 

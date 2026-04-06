@@ -166,6 +166,57 @@ export interface SolforholdResultat {
   detaljer?: string;
 }
 
+// --- Tomtefinner types ---
+
+export interface TomtefinnerKriterier {
+  kommunenummer: string;
+  kommunenavn: string;
+  bygningstype: "enebolig" | "rekkehus" | "blokk" | "naering" | "hytte" | "annet";
+  virksomhetstype?: string;
+  arealMin?: number;
+  arealMax?: number;
+  etasjer?: number;
+  budsjettMin?: number;
+  budsjettMax?: number;
+  preferanser: TomtefinnerPreferanser;
+}
+
+export interface TomtefinnerPreferanser {
+  solretning?: "sor" | "vest" | "ost" | "likegyldig";
+  terreng?: "flatt" | "slakt" | "likegyldig";
+  veinaerhet?: boolean;
+  stille?: boolean;
+  lavRisiko?: boolean;
+}
+
+export interface KandidatOmraade {
+  id: string;
+  lat: number;
+  lon: number;
+  arealformaal: string;
+  planNavn: string | null;
+  kommunenummer: string;
+}
+
+export interface TomtefinnerResultat {
+  id: string;
+  kandidat: KandidatOmraade;
+  analyseKort: AnalyseKort[];
+  poeng: number;
+  begrunnelse: string;
+  adresseTekst: string;
+}
+
+export interface TomtefinnerSokeresultat {
+  kriterier: TomtefinnerKriterier;
+  kandidater: TomtefinnerResultat[];
+  aiOppsummering: string;
+  soketidSekunder: number;
+  tidspunkt: string;
+}
+
+// --- Reguleringsplan types ---
+
 export interface ReguleringsplanResultat {
   harPlan: boolean | null;
   planNavn: string | null;
