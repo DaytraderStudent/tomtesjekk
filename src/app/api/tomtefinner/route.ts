@@ -3,6 +3,9 @@ import { fetchWithTimeout } from "@/lib/api-helpers";
 import { hentKommuneBbox, genererRutenett, hentNaermesteAdresse, BYGNINGSTYPE_TIL_FORMAAL } from "@/lib/tomtefinner-helpers";
 import Anthropic from "@anthropic-ai/sdk";
 
+// Allow up to 60s on Vercel (streaming keeps connection alive)
+export const maxDuration = 60;
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Helper to write a JSON line to the stream
@@ -11,39 +14,25 @@ function jsonLine(writer: WritableStreamDefaultWriter<Uint8Array>, data: Record<
   writer.write(encoder.encode(JSON.stringify(data) + "\n"));
 }
 
-// Check zoning at a point (server-side, calls DiBK directly)
-async function sjekkReguleringServer(lat: number, lon: number) {
+// Check zoning at a point by calling our own reguleringsplan API route
+// This reuses the full logic (reguleringsplan + kommuneplan fallback + SOSI mapping)
+async function sjekkReguleringServer(lat: number, lon: number, baseUrl: string) {
   try {
-    const x = (lon * 20037508.34) / 180;
-    const latRad = (lat * Math.PI) / 180;
-    const y = (Math.log(Math.tan(Math.PI / 4 + latRad / 2)) * 20037508.34) / Math.PI;
-    const delta = 200;
-    const bbox = `${x - delta},${y - delta},${x + delta},${y + delta}`;
-
-    const params = new URLSearchParams({
-      SERVICE: "WMS", VERSION: "1.1.1", REQUEST: "GetFeatureInfo",
-      LAYERS: "rpomrade_vn1,arealformal_vn1", QUERY_LAYERS: "rpomrade_vn1,arealformal_vn1",
-      SRS: "EPSG:3857", BBOX: bbox, WIDTH: "256", HEIGHT: "256",
-      X: "128", Y: "128", INFO_FORMAT: "application/json", FEATURE_COUNT: "5",
-    });
-
     const res = await fetchWithTimeout(
-      `https://nap.ft.dibk.no/services/wms/reguleringsplaner/?${params.toString()}`,
+      `${baseUrl}/api/reguleringsplan?lat=${lat}&lon=${lon}`,
       {},
-      8000
+      10000
     );
     if (!res.ok) return null;
     const data = await res.json();
-    if (!data?.features?.length) return null;
-
-    let arealformaal: string | null = null;
-    let planNavn: string | null = null;
-    for (const f of data.features) {
-      const p = f.properties || {};
-      if (!arealformaal) arealformaal = p.arealformaal || p.arealformål || p.AREALFORMAAL || null;
-      if (!planNavn) planNavn = p.plannavn || p.planNavn || p.PLANNAVN || null;
-    }
-    return { harPlan: true, arealformaal, planNavn };
+    if (!data || data.harPlan === false) return null;
+    // harPlan === null means "data unavailable" — skip these too
+    if (data.harPlan === null) return null;
+    return {
+      harPlan: true,
+      arealformaal: data.arealformaal || null,
+      planNavn: data.planNavn || null,
+    };
   } catch {
     return null;
   }
@@ -186,17 +175,22 @@ export async function POST(request: NextRequest) {
         melding: `Søker etter ${bygningstype === "naering" ? "nærings" : bygningstype}områder i ${kommunenavn}...`,
       });
 
-      // Step 2: Generate sample grid points across the municipality
-      const rutenett = genererRutenett(bbox, 36);
+      // Step 2: Generate sample grid points across the municipality (denser grid)
+      const rutenett = genererRutenett(bbox, 64);
 
-      // Step 3: Check zoning at each point in parallel (batches of 12)
+      jsonLine(writer, {
+        type: "status",
+        melding: `Sjekker regulering på ${rutenett.length} punkter...`,
+      });
+
+      // Step 3: Check zoning at each point in parallel (batches of 8 to avoid overload)
       const formaalSokeord = BYGNINGSTYPE_TIL_FORMAAL[bygningstype] || ["Bebyggelse"];
       const kandidater: Array<{ lat: number; lon: number; arealformaal: string; planNavn: string | null }> = [];
 
-      for (let i = 0; i < rutenett.length; i += 12) {
-        const batch = rutenett.slice(i, i + 12);
+      for (let i = 0; i < rutenett.length; i += 8) {
+        const batch = rutenett.slice(i, i + 8);
         const resultater = await Promise.allSettled(
-          batch.map((p) => sjekkReguleringServer(p.lat, p.lon))
+          batch.map((p) => sjekkReguleringServer(p.lat, p.lon, baseUrl))
         );
 
         for (let j = 0; j < resultater.length; j++) {
