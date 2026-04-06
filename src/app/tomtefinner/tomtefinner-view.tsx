@@ -99,13 +99,12 @@ export default function TomtefinnerView() {
       setKommuneForslag(forslag);
       sisteForslag.current = forslag;
 
-      // Auto-select if exact match
+      // Auto-select if exact match, but keep dropdown visible briefly
       const eksakt = forslag.find(
         (k: Kommune) => k.kommunenavn.toLowerCase() === tekst.toLowerCase()
       );
       if (eksakt) {
         setValgtKommune(eksakt);
-        setKommuneForslag([]);
       }
     } catch {
       setKommuneForslag([]);
@@ -369,26 +368,32 @@ export default function TomtefinnerView() {
                     disabled={soker}
                   />
                 </div>
-                {kommuneForslag.length > 0 && (
+                {kommuneForslag.length > 0 && !valgtKommune && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {kommuneForslag.map((k) => (
                       <button
                         key={k.kommunenummer}
                         onClick={() => velgKommune(k)}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-fjord-50 transition-colors"
+                        className="w-full text-left px-3 py-2.5 text-sm hover:bg-fjord-50 transition-colors flex items-center justify-between"
                       >
-                        {k.kommunenavn}
-                        <span className="text-xs text-gray-400 ml-2">
-                          ({k.kommunenummer})
+                        <span>
+                          {k.kommunenavn}
+                          <span className="text-xs text-gray-400 ml-2">
+                            ({k.kommunenummer})
+                          </span>
                         </span>
+                        <MapPin className="w-3.5 h-3.5 text-gray-300" />
                       </button>
                     ))}
                   </div>
                 )}
                 {valgtKommune && (
-                  <p className="text-xs text-emerald-600 mt-1">
-                    Valgt: {valgtKommune.kommunenavn} ({valgtKommune.kommunenummer})
-                  </p>
+                  <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <p className="text-xs text-emerald-700 font-medium">
+                      {valgtKommune.kommunenavn} ({valgtKommune.kommunenummer})
+                    </p>
+                  </div>
                 )}
               </div>
 
