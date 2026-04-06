@@ -2,6 +2,7 @@
 
 import { Sparkles, AlertTriangle, Shield } from "lucide-react";
 import { Rapportkort } from "./Rapportkort";
+import { Bildegenerering } from "./Bildegenerering";
 import { PDFEksport } from "./PDFEksport";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 import { statusFarge, statusLabel } from "@/lib/trafikklys";
@@ -151,6 +152,9 @@ export function Rapport({ rapport }: Props) {
           </p>
         </div>
       )}
+
+      {/* AI House Image */}
+      <Bildegenerering rapport={rapport} />
 
       {/* Analysis cards */}
       <div className="space-y-3">
