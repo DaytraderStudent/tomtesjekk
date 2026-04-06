@@ -76,11 +76,14 @@ export default function TomtefinnerView() {
   const markersRef = useRef<L.Marker[]>([]);
 
   // Kommune search
+  const sisteForslag = useRef<Kommune[]>([]);
+
   const sokKommune = useCallback(async (tekst: string) => {
     setKommuneSok(tekst);
     setValgtKommune(null);
     if (tekst.length < 2) {
       setKommuneForslag([]);
+      sisteForslag.current = [];
       return;
     }
     try {
@@ -88,12 +91,21 @@ export default function TomtefinnerView() {
         `https://ws.geonorge.no/kommuneinfo/v1/sok?knavn=${encodeURIComponent(tekst)}`
       );
       const data = await res.json();
-      setKommuneForslag(
-        (data || []).slice(0, 8).map((k: any) => ({
-          kommunenummer: k.kommunenummer,
-          kommunenavn: k.kommunenavnNorsk || k.kommunenavn,
-        }))
+      const forslag = (data || []).slice(0, 8).map((k: any) => ({
+        kommunenummer: k.kommunenummer,
+        kommunenavn: k.kommunenavnNorsk || k.kommunenavn,
+      }));
+      setKommuneForslag(forslag);
+      sisteForslag.current = forslag;
+
+      // Auto-select if exact match
+      const eksakt = forslag.find(
+        (k: Kommune) => k.kommunenavn.toLowerCase() === tekst.toLowerCase()
       );
+      if (eksakt) {
+        setValgtKommune(eksakt);
+        setKommuneForslag([]);
+      }
     } catch {
       setKommuneForslag([]);
     }
@@ -104,6 +116,31 @@ export default function TomtefinnerView() {
     setKommuneSok(kommune.kommunenavn);
     setKommuneForslag([]);
   };
+
+  // Auto-select first suggestion if user hasn't picked one
+  const autoVelgKommune = useCallback(async () => {
+    if (valgtKommune) return;
+    // Check latest suggestions
+    if (sisteForslag.current.length > 0) {
+      velgKommune(sisteForslag.current[0]);
+      return;
+    }
+    // Try a fresh lookup
+    if (kommuneSok.length >= 2) {
+      try {
+        const res = await fetch(
+          `https://ws.geonorge.no/kommuneinfo/v1/sok?knavn=${encodeURIComponent(kommuneSok)}`
+        );
+        const data = await res.json();
+        if (data?.[0]) {
+          velgKommune({
+            kommunenummer: data[0].kommunenummer,
+            kommunenavn: data[0].kommunenavnNorsk || data[0].kommunenavn,
+          });
+        }
+      } catch {}
+    }
+  }, [valgtKommune, kommuneSok]);
 
   // Initialize map
   const initKart = useCallback(() => {
@@ -144,7 +181,32 @@ export default function TomtefinnerView() {
 
   // Start search
   const startSok = useCallback(async () => {
-    if (!valgtKommune) return;
+    // Auto-select municipality if user typed but didn't pick from list
+    let kommune = valgtKommune;
+    if (!kommune && kommuneSok.length >= 2) {
+      if (sisteForslag.current.length > 0) {
+        kommune = sisteForslag.current[0];
+      } else {
+        try {
+          const res = await fetch(
+            `https://ws.geonorge.no/kommuneinfo/v1/sok?knavn=${encodeURIComponent(kommuneSok)}`
+          );
+          const data = await res.json();
+          if (data?.[0]) {
+            kommune = {
+              kommunenummer: data[0].kommunenummer,
+              kommunenavn: data[0].kommunenavnNorsk || data[0].kommunenavn,
+            };
+          }
+        } catch {}
+      }
+      if (kommune) {
+        setValgtKommune(kommune);
+        setKommuneSok(kommune.kommunenavn);
+        setKommuneForslag([]);
+      }
+    }
+    if (!kommune) return;
 
     setSoker(true);
     setFerdig(false);
@@ -165,8 +227,8 @@ export default function TomtefinnerView() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          kommunenummer: valgtKommune.kommunenummer,
-          kommunenavn: valgtKommune.kommunenavn,
+          kommunenummer: kommune.kommunenummer,
+          kommunenavn: kommune.kommunenavn,
           bygningstype,
           arealMin: arealMin ? parseInt(arealMin) : undefined,
           arealMax: arealMax ? parseInt(arealMax) : undefined,
@@ -433,7 +495,7 @@ export default function TomtefinnerView() {
               {/* Search button */}
               <button
                 onClick={startSok}
-                disabled={!valgtKommune || soker}
+                disabled={(!valgtKommune && kommuneSok.length < 2) || soker}
                 className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-fjord-500 text-white rounded-lg font-semibold hover:bg-fjord-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {soker ? (
