@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { DetaljerHero } from "@/components/DetaljerHero";
 import { DetaljerKategori } from "@/components/DetaljerKategori";
 import { DetaljerNav } from "@/components/DetaljerNav";
+import { Bildegenerering } from "@/components/Bildegenerering";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 import type { Rapport } from "@/types";
 
@@ -84,6 +85,9 @@ export default function DetaljerView() {
 
           {/* Categories */}
           <div className="flex-1 space-y-6 min-w-0">
+            {/* AI House Image */}
+            <Bildegenerering rapport={rapport} />
+
             {rapport.kort.map((kort) => (
               <DetaljerKategori
                 key={kort.id}
