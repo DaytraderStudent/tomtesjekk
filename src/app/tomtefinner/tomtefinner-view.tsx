@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { MapPin, Search, Sparkles, ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import L from "leaflet";
@@ -74,6 +74,21 @@ export default function TomtefinnerView() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
+
+  // Invalidate map size when layout changes or window resizes
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const invalidate = () => {
+      mapRef.current?.invalidateSize();
+    };
+    // Multiple delayed invalidations to handle layout settling
+    const timers = [50, 200, 500, 1000].map((ms) => setTimeout(invalidate, ms));
+    window.addEventListener("resize", invalidate);
+    return () => {
+      timers.forEach(clearTimeout);
+      window.removeEventListener("resize", invalidate);
+    };
+  }, [resultater, soker, ferdig]);
 
   // Kommune search
   const sisteForslag = useRef<Kommune[]>([]);
@@ -155,6 +170,18 @@ export default function TomtefinnerView() {
       maxZoom: 19,
     }).addTo(map);
     mapRef.current = map;
+
+    // Watch container for size changes (Leaflet doesn't do this automatically)
+    if (typeof ResizeObserver !== "undefined" && mapContainerRef.current) {
+      const ro = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+      ro.observe(mapContainerRef.current);
+    }
+
+    // Initial size invalidation after layout
+    setTimeout(() => map.invalidateSize(), 100);
+    setTimeout(() => map.invalidateSize(), 500);
   }, []);
 
   // Clear map markers
