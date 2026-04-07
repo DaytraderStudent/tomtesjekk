@@ -46,6 +46,8 @@ export function Bildegenerering({ rapport }: BildegenereringProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           adresse: rapport.adresse.adressetekst,
+          lat: rapport.adresse.representasjonspunkt.lat,
+          lon: rapport.adresse.representasjonspunkt.lon,
           tomteareal,
           regulering,
           grunnforhold,

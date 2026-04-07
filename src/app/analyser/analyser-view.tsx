@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { MapPin, Search, X, ChevronUp, ChevronDown, FileText } from "lucide-react";
@@ -529,6 +529,51 @@ export default function AnalyserView() {
   const handleVelgAdresse = (adresse: KartverketAdresse) => {
     setValgtAdresse(adresse);
   };
+
+  // Auto-start analysis if lat/lon provided in URL (from Tomtefinner deep link)
+  const hasAutoStartedRef = useRef(false);
+  useEffect(() => {
+    if (hasAutoStartedRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const latParam = params.get("lat");
+    const lonParam = params.get("lon");
+    if (!latParam || !lonParam) return;
+    const lat = parseFloat(latParam);
+    const lon = parseFloat(lonParam);
+    if (isNaN(lat) || isNaN(lon)) return;
+
+    hasAutoStartedRef.current = true;
+
+    // Reverse geocode to get proper address
+    (async () => {
+      const fallback: KartverketAdresse = {
+        adressetekst: `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+        poststed: "", postnummer: "", kommunenavn: "", kommunenummer: "",
+        representasjonspunkt: { lat, lon },
+      };
+      let adresse = fallback;
+      try {
+        const res = await fetch(
+          `https://ws.geonorge.no/adresser/v1/punktsok?lat=${lat}&lon=${lon}&radius=500&treffPerSide=1`
+        );
+        const data = await res.json();
+        if (data.adresser?.[0]) {
+          const a = data.adresser[0];
+          adresse = {
+            adressetekst: a.adressetekst || fallback.adressetekst,
+            poststed: a.poststed || "",
+            postnummer: a.postnummer || "",
+            kommunenavn: a.kommunenavn || "",
+            kommunenummer: a.kommunenummer || "",
+            representasjonspunkt: { lat, lon },
+          };
+        }
+      } catch {}
+      setValgtAdresse(adresse);
+      // Wait for map to be ready before starting
+      setTimeout(() => startAnalyse(adresse), 500);
+    })();
+  }, []);
 
   const handleKlikkKart = async (lat: number, lon: number) => {
     const fallback: KartverketAdresse = {
