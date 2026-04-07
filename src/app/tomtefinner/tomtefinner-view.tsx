@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { MapPin, Search, Sparkles, ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { cn } from "@/lib/utils";
 
 interface Kommune {
