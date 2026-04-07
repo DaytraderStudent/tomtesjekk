@@ -72,7 +72,7 @@ export default function TomtefinnerView() {
 
   // Map state
   const mapRef = useRef<L.Map | null>(null);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
 
   // Invalidate map size when layout changes or window resizes
@@ -157,31 +157,43 @@ export default function TomtefinnerView() {
     }
   }, [valgtKommune, kommuneSok]);
 
-  // Initialize map
-  const initKart = useCallback(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
-    const map = L.map(mapContainerRef.current, {
-      center: [65.0, 13.0],
-      zoom: 5,
-      zoomControl: true,
-    });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(map);
-    mapRef.current = map;
+  // Initialize map via ref callback — fires only when the container is actually in the DOM
+  const setMapContainer = useCallback((el: HTMLDivElement | null) => {
+    mapContainerRef.current = el;
+    if (!el || mapRef.current) return;
 
-    // Watch container for size changes (Leaflet doesn't do this automatically)
-    if (typeof ResizeObserver !== "undefined" && mapContainerRef.current) {
-      const ro = new ResizeObserver(() => {
-        map.invalidateSize();
+    // Wait a frame for layout to settle, then measure
+    requestAnimationFrame(() => {
+      if (!el || mapRef.current) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        // Container not ready yet, try again
+        setTimeout(() => setMapContainer(el), 100);
+        return;
+      }
+
+      const map = L.map(el, {
+        center: [65.0, 13.0],
+        zoom: 5,
+        zoomControl: true,
       });
-      ro.observe(mapContainerRef.current);
-    }
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+      mapRef.current = map;
 
-    // Initial size invalidation after layout
-    setTimeout(() => map.invalidateSize(), 100);
-    setTimeout(() => map.invalidateSize(), 500);
+      // Watch container for size changes
+      if (typeof ResizeObserver !== "undefined") {
+        const ro = new ResizeObserver(() => {
+          map.invalidateSize();
+        });
+        ro.observe(el);
+      }
+
+      // Force multiple invalidations as layout settles
+      [100, 300, 600, 1200].forEach((ms) => setTimeout(() => map.invalidateSize(), ms));
+    });
   }, []);
 
   // Clear map markers
@@ -243,13 +255,6 @@ export default function TomtefinnerView() {
     setStatusMeldinger([]);
     setResultater([]);
     fjernMarkorer();
-
-    // Initialize map if not already
-    setTimeout(() => {
-      initKart();
-      // Invalidate size after render
-      setTimeout(() => mapRef.current?.invalidateSize(), 100);
-    }, 50);
 
     try {
       const res = await fetch("/api/tomtefinner", {
@@ -334,7 +339,7 @@ export default function TomtefinnerView() {
     } finally {
       setSoker(false);
     }
-  }, [valgtKommune, bygningstype, arealMin, arealMax, etasjer, lavRisiko, stille, veinaerhet, initKart]);
+  }, [valgtKommune, bygningstype, arealMin, arealMax, etasjer, lavRisiko, stille, veinaerhet, kommuneSok]);
 
   const harResultater = resultater.length > 0 || soker;
 
@@ -553,7 +558,7 @@ export default function TomtefinnerView() {
             <div className="flex-1 min-w-0 space-y-4">
               {/* Map */}
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div ref={mapContainerRef} className="w-full h-[400px] lg:h-[450px]" />
+                <div ref={setMapContainer} className="w-full h-[400px] lg:h-[450px]" />
               </div>
 
               {/* Status messages */}
