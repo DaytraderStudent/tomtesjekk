@@ -26,9 +26,34 @@ export interface AnalyseKort {
   raadata?: Record<string, any>;
 }
 
+export interface AiStrukturertFlagg {
+  tema: string;
+  beskrivelse: string;
+  paragraf?: string;
+  paragrafLenke?: string;
+  anbefaling: string;
+}
+
+export interface AiStrukturertKostnad {
+  tiltak: string;
+  intervallKr: string;
+  usikkerhet: "lav" | "middels" | "hoy";
+  begrunnelse?: string;
+}
+
+export interface AiStrukturertRapport {
+  oppsummering: string;
+  rodeFlagg: AiStrukturertFlagg[];
+  positiveFunn: string[];
+  kostnadsfordyrende: AiStrukturertKostnad[];
+  nesteSteg: string[];
+  disclaimer: string;
+}
+
 export interface AiOppsummering {
   tekst: string;
   generert: string;
+  strukturert?: AiStrukturertRapport;
 }
 
 export interface Rapport {
@@ -164,6 +189,16 @@ export interface SolforholdResultat {
   vinter: SolforholdSesong;
   hovedretning: string;
   detaljer?: string;
+}
+
+// --- VA-tilknytning ---
+
+export interface VaTilknytningResultat {
+  status: TrafikklysStatus;
+  estimertAvstand: number | null;
+  forklaring: string;
+  kostnadIndikasjon: string;
+  kilder: string[];
 }
 
 // --- Tomtefinner types ---

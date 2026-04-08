@@ -30,6 +30,7 @@ import {
   reguleringsplanStatus,
   kulturminnerStatus,
   solforholdStatus,
+  vaStatus,
 } from "@/lib/trafikklys";
 import type {
   KartverketAdresse,
@@ -47,6 +48,7 @@ import type {
   ReguleringsplanResultat,
   KulturminneResultat,
   SolforholdResultat,
+  VaTilknytningResultat,
 } from "@/types";
 
 function lagInitielleSteg(): AnalyseSteg[] {
@@ -320,8 +322,9 @@ export default function AnalyserView() {
     oppdaterSteg("stoy", "aktiv");
     oppdaterSteg("boligpris", "aktiv");
     oppdaterSteg("solforhold", "aktiv");
+    oppdaterSteg("va", "aktiv");
 
-    const [radonRes, grunnRes, ssbRes, nvdbRes, stoyRes, boligprisRes, solforholdRes] = await Promise.allSettled([
+    const [radonRes, grunnRes, ssbRes, nvdbRes, stoyRes, boligprisRes, solforholdRes, vaRes] = await Promise.allSettled([
       fetch(`/api/ngu-radon?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch(`/api/ngu-grunn?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch("/api/ssb").then((r) => r.json()),
@@ -329,6 +332,7 @@ export default function AnalyserView() {
       fetch(`/api/stoy?lat=${lat}&lon=${lon}`).then((r) => r.json()),
       fetch(`/api/boligpris?kommunenummer=${adresse.kommunenummer}`).then((r) => r.json()),
       fetch(`/api/solforhold?lat=${lat}&lon=${lon}`).then((r) => r.json()),
+      fetch(`/api/va-tilknytning?lat=${lat}&lon=${lon}`).then((r) => r.json()),
     ]);
 
     if (radonRes.status === "fulfilled" && !radonRes.value.error) {
@@ -465,6 +469,25 @@ export default function AnalyserView() {
       oppdaterSteg("solforhold", "feil", "Kunne ikke beregne solforhold");
     }
 
+    if (vaRes.status === "fulfilled" && !vaRes.value.error) {
+      const data: VaTilknytningResultat = vaRes.value;
+      const vs = vaStatus(data);
+      kort.push({
+        id: "va",
+        tittel: "VA-tilknytning",
+        beskrivelse: vs.tekst,
+        detaljer: `${data.forklaring}\n\nKostnadsindikasjon: ${data.kostnadIndikasjon}\n\nMerk: Dette er en heuristisk indikator basert på avstand til nabobebyggelse og offentlig vei. Det erstatter ikke et faktisk ledningskart fra kommunen.`,
+        status: vs.status,
+        statusTekst: vs.tekst,
+        kilde: data.kilder.join(" + "),
+        kildeUrl: "https://www.geonorge.no",
+        raadata: { estimertAvstand: data.estimertAvstand, statusKode: data.status },
+      });
+      oppdaterSteg("va", "ferdig");
+    } else {
+      oppdaterSteg("va", "feil", "Kunne ikke estimere VA-tilknytning");
+    }
+
     setProsent(75);
 
     oppdaterSteg("ai", "aktiv");
@@ -476,13 +499,21 @@ export default function AnalyserView() {
         body: JSON.stringify({
           adresse: adresse.adressetekst,
           analysedata: kort.map((k) => ({
-            kategori: k.tittel, status: k.statusTekst, detaljer: k.detaljer,
+            kategori: k.tittel,
+            status: k.statusTekst,
+            detaljer: k.detaljer,
+            // Include structured data (e.g. BYA values) so Claude can reason about buildable area
+            raadata: k.raadata,
           })),
         }),
       });
       const aiData = await aiRes.json();
       if (aiData.tekst) {
-        aiOppsummering = { tekst: aiData.tekst, generert: aiData.generert };
+        aiOppsummering = {
+          tekst: aiData.tekst,
+          generert: aiData.generert,
+          strukturert: aiData.strukturert,
+        };
         oppdaterSteg("ai", "ferdig");
       } else {
         oppdaterSteg("ai", "feil", "AI-oppsummering utilgjengelig");

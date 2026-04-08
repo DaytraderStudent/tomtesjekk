@@ -59,6 +59,68 @@ function detailBorderColor(status: string): string {
   }
 }
 
+function ByaVisualisering({ raadata }: { raadata: Record<string, any> }) {
+  const utnyttingsgrad = raadata.utnyttingsgrad as number | null | undefined;
+  const maksHoyde = raadata.maksHoyde as number | null | undefined;
+  const maksEtasjer = raadata.maksEtasjer as number | null | undefined;
+  const arealKvm = raadata.arealKvm as number | null | undefined;
+  const maksBebyggetAreal = raadata.maksBebyggetAreal as number | null | undefined;
+  const kilde = raadata.utnyttelseKilde as "plan" | "tek17" | undefined;
+
+  if (!utnyttingsgrad && !maksHoyde && !maksEtasjer) return null;
+
+  return (
+    <div className="bg-fjord-50/60 border border-fjord-200 rounded-lg p-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold text-fjord-700 uppercase tracking-wide">
+          Byggerammer
+        </span>
+        {kilde && (
+          <span className={cn(
+            "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+            kilde === "plan"
+              ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+              : "bg-amber-100 text-amber-700 border-amber-200"
+          )}>
+            {kilde === "plan" ? "Fra reguleringsplan" : "TEK17-referanse"}
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {utnyttingsgrad != null && (
+          <div className="bg-white rounded-md p-2 text-center border border-gray-200">
+            <div className="text-xs text-gray-500">Maks BYA</div>
+            <div className="text-lg font-bold text-fjord-700">{utnyttingsgrad}%</div>
+          </div>
+        )}
+        {maksHoyde != null && (
+          <div className="bg-white rounded-md p-2 text-center border border-gray-200">
+            <div className="text-xs text-gray-500">Maks høyde</div>
+            <div className="text-lg font-bold text-fjord-700">{maksHoyde} m</div>
+          </div>
+        )}
+        {maksEtasjer != null && (
+          <div className="bg-white rounded-md p-2 text-center border border-gray-200">
+            <div className="text-xs text-gray-500">Maks etasjer</div>
+            <div className="text-lg font-bold text-fjord-700">{maksEtasjer}</div>
+          </div>
+        )}
+      </div>
+      {arealKvm && maksBebyggetAreal && (
+        <div className="mt-2 pt-2 border-t border-fjord-200 text-xs text-fjord-700">
+          På din tomt ({Math.round(arealKvm)} m²) kan du bygge inntil{" "}
+          <span className="font-bold">{Math.round(maksBebyggetAreal)} m²</span> bebygd areal.
+          {kilde === "tek17" && (
+            <span className="block text-fjord-500 mt-1 italic">
+              Merk: tallet er basert på TEK17-referanse. Sjekk reguleringsplan for kommunen for faktiske tillatte rammer.
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Rapportkort({ kort, index = 0 }: Props) {
   const [erUtvidet, setErUtvidet] = useState(false);
   const innholdRef = useRef<HTMLDivElement>(null);
@@ -140,6 +202,10 @@ export function Rapportkort({ kort, index = 0 }: Props) {
               <p className="text-sm text-gray-600 whitespace-pre-line">
                 {kort.detaljer}
               </p>
+            )}
+            {/* Special: BYA visualization for regulering card */}
+            {kort.id === "regulering" && kort.raadata && (
+              <ByaVisualisering raadata={kort.raadata} />
             )}
             <div className="flex items-center gap-1 text-xs text-gray-400">
               <span>Kilde:</span>

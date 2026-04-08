@@ -30,6 +30,7 @@ export const STEG_NAVN: Record<string, string> = {
   stoy: "Sjekker støynivå (Statens vegvesen)",
   boligpris: "Henter boligpriser (SSB)",
   solforhold: "Beregner solforhold (SunCalc)",
+  va: "Estimerer VA-tilknytning",
   ai: "Genererer AI-oppsummering",
 };
 

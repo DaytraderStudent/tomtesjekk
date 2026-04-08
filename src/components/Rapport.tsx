@@ -3,6 +3,7 @@
 import { Sparkles, AlertTriangle, Shield } from "lucide-react";
 import { Rapportkort } from "./Rapportkort";
 import { Bildegenerering } from "./Bildegenerering";
+import { StrukturertRapport } from "./StrukturertRapport";
 import { PDFEksport } from "./PDFEksport";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 import { statusFarge, statusLabel } from "@/lib/trafikklys";
@@ -135,8 +136,13 @@ export function Rapport({ rapport }: Props) {
         </div>
       )}
 
-      {/* AI Summary */}
-      {rapport.aiOppsummering && (
+      {/* AI Summary — structured if available, fallback to plain text */}
+      {rapport.aiOppsummering?.strukturert ? (
+        <StrukturertRapport
+          data={rapport.aiOppsummering.strukturert}
+          generert={rapport.aiOppsummering.generert}
+        />
+      ) : rapport.aiOppsummering ? (
         <div className="ai-sammendrag-ramme rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-5 h-5 text-fjord-500 ai-sparkles-pulse" />
@@ -151,7 +157,7 @@ export function Rapport({ rapport }: Props) {
             Generert {new Date(rapport.aiOppsummering.generert).toLocaleString("nb-NO")}
           </p>
         </div>
-      )}
+      ) : null}
 
       {/* AI House Image */}
       <Bildegenerering rapport={rapport} />

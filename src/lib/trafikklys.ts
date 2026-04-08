@@ -1,4 +1,4 @@
-import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat, StoyResultat, BoligprisResultat, ReguleringsplanResultat, KulturminneResultat, SolforholdResultat } from "@/types";
+import type { TrafikklysStatus, NveResultat, NguRadonResultat, NguGrunnResultat, NvdbResultat, EiendomResultat, StoyResultat, BoligprisResultat, ReguleringsplanResultat, KulturminneResultat, SolforholdResultat, VaTilknytningResultat } from "@/types";
 
 export function flomStatus(data: NveResultat["flom"]): { status: TrafikklysStatus; tekst: string } {
   if (!data.aktsomhetsomrade) return { status: "gronn", tekst: "Ikke i flomaktsomhetsområde" };
@@ -126,6 +126,21 @@ export function reguleringsplanStatus(data: ReguleringsplanResultat): { status: 
     return { status: "gul", tekst: `Regulert til ${data.arealformaal}` };
   }
   return { status: "gronn", tekst: `Reguleringsplan: ${data.planNavn || "Ja"}` };
+}
+
+export function vaStatus(data: VaTilknytningResultat): { status: TrafikklysStatus; tekst: string } {
+  const avstand = data.estimertAvstand;
+  const avstandTekst = avstand != null ? ` (~${avstand} m til infrastruktur)` : "";
+  switch (data.status) {
+    case "gronn":
+      return { status: "gronn", tekst: `Sannsynlig kommunalt VA${avstandTekst}` };
+    case "gul":
+      return { status: "gul", tekst: `VA mulig men usikker${avstandTekst}` };
+    case "rod":
+      return { status: "rod", tekst: "Sannsynlig privat løsning nødvendig" };
+    default:
+      return { status: "gra", tekst: "VA-status kunne ikke estimeres" };
+  }
 }
 
 export function solforholdStatus(data: SolforholdResultat): { status: TrafikklysStatus; tekst: string } {
