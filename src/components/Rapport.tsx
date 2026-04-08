@@ -1,6 +1,5 @@
 "use client";
 
-import { Sparkles, AlertTriangle, Shield } from "lucide-react";
 import { Rapportkort } from "./Rapportkort";
 import { Bildegenerering } from "./Bildegenerering";
 import { StrukturertRapport } from "./StrukturertRapport";
@@ -8,25 +7,16 @@ import { KlimaVisning } from "./KlimaVisning";
 import { FotoAnalyse } from "./FotoAnalyse";
 import { SdgSeksjon } from "./SdgSeksjon";
 import { PDFEksport } from "./PDFEksport";
+import { Badge } from "./ui/badge";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
-import { statusFarge, statusLabel } from "@/lib/trafikklys";
+import { statusFarge } from "@/lib/trafikklys";
 import type { Rapport as RapportType, TrafikklysStatus } from "@/types";
-
-function stripMarkdown(text: string): string {
-  return text
-    .replace(/^#{1,6}\s+/gm, "")     // headings
-    .replace(/\*\*(.+?)\*\*/g, "$1")  // bold
-    .replace(/\*(.+?)\*/g, "$1")      // italic
-    .replace(/[✓✗⚠△▲●]/g, "")        // special symbols
-    .replace(/^\s*[-*]\s+/gm, "- ")   // normalize bullets
-    .replace(/\n{3,}/g, "\n\n");      // collapse extra newlines
-}
 
 function kortLabel(id: string): string {
   const labels: Record<string, string> = {
     flom: "Flom",
     skred: "Skred",
-    kvikkleire: "Kvikkl.",
+    kvikkleire: "Kvikk",
     radon: "Radon",
     grunn: "Grunn",
     eiendom: "Eiendom",
@@ -34,8 +24,11 @@ function kortLabel(id: string): string {
     stoy: "Støy",
     boligpris: "Pris",
     kulturminner: "Kultur",
-    regulering: "Reg.plan",
+    regulering: "Plan",
     sol: "Sol",
+    va: "VA",
+    solforhold: "Sol",
+    nvdb: "Vei",
   };
   return labels[id] || id.slice(0, 5);
 }
@@ -47,16 +40,19 @@ function beregnSamletRisiko(kort: RapportType["kort"]): TrafikklysStatus {
   return "gronn";
 }
 
-function samletRisikoBg(status: TrafikklysStatus): string {
+function samletRisikoVariant(status: TrafikklysStatus): {
+  label: string;
+  variant: "green" | "amber" | "red" | "default";
+} {
   switch (status) {
     case "gronn":
-      return "bg-emerald-100 text-emerald-900 ring-2 ring-emerald-400";
+      return { label: "Lav samlet risiko", variant: "green" };
     case "gul":
-      return "bg-amber-100 text-amber-900 ring-2 ring-amber-400";
+      return { label: "Moderat samlet risiko", variant: "amber" };
     case "rod":
-      return "bg-red-100 text-red-900 ring-2 ring-red-400";
+      return { label: "Høy samlet risiko", variant: "red" };
     default:
-      return "bg-gray-100 text-gray-700 ring-2 ring-gray-400";
+      return { label: "Ukjent", variant: "default" };
   }
 }
 
@@ -66,71 +62,53 @@ interface Props {
 
 export function Rapport({ rapport }: Props) {
   const samletRisiko = beregnSamletRisiko(rapport.kort);
+  const risiko = samletRisikoVariant(samletRisiko);
 
   return (
-    <div className="space-y-4 rapport-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-display font-bold text-fjord-500">
-            Analyserapport
-          </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {rapport.adresse.adressetekst}, {rapport.adresse.postnummer}{" "}
-            {rapport.adresse.poststed}
-            {rapport.hoydeOverHavet !== null && (
-              <span className="ml-1 text-fjord-400">
-                ({rapport.hoydeOverHavet} moh.)
-              </span>
-            )}
-          </p>
+    <div className="space-y-8 fade-up">
+      {/* Editorial masthead */}
+      <header className="pb-6 border-b border-paper-edge">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <span className="label-editorial">Analyserapport</span>
+          <PDFEksport rapport={rapport} />
         </div>
-        <PDFEksport rapport={rapport} />
-      </div>
-
-      {/* Overall risk assessment header */}
-      {rapport.kort.length > 0 && (
-        <div className="samlet-risiko-enter flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-md">
-          <Shield className="w-6 h-6 text-fjord-500 shrink-0" />
-          <div className="flex items-center gap-3">
-            <h3 className="text-sm font-bold text-fjord-700">Samlet risikovurdering</h3>
-            <span
-              className={`inline-flex items-center gap-1.5 text-sm font-bold px-4 py-1.5 rounded-full shadow-sm ${samletRisikoBg(samletRisiko)}`}
-            >
-              <span
-                className="w-3 h-3 rounded-full shrink-0"
-                style={{
-                  backgroundColor: statusFarge(samletRisiko),
-                  boxShadow: `0 0 6px ${statusFarge(samletRisiko)}`,
-                }}
-              />
-              {statusLabel(samletRisiko)}
+        <h2 className="font-display text-display-sm text-ink leading-tight">
+          {rapport.adresse.adressetekst}
+        </h2>
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-mono uppercase tracking-wider text-ink-muted">
+          {(rapport.adresse.postnummer || rapport.adresse.poststed) && (
+            <span>
+              {rapport.adresse.postnummer} {rapport.adresse.poststed}
             </span>
-          </div>
+          )}
+          {rapport.adresse.kommunenavn && <span>{rapport.adresse.kommunenavn}</span>}
+          {rapport.hoydeOverHavet !== null && (
+            <span>{rapport.hoydeOverHavet} moh.</span>
+          )}
         </div>
-      )}
+      </header>
 
-      {/* Risk overview bar */}
+      {/* Overall verdict + risk dots — editorial summary bar */}
       {rapport.kort.length > 0 && (
-        <div className="bg-fjord-50/60 rounded-xl border border-fjord-200/50 px-5 py-4 shadow-sm">
-          <span className="text-xs font-bold text-fjord-600 uppercase tracking-wide mb-3 block">
-            Risikosammendrag
-          </span>
-          <div className="flex items-start gap-3 flex-wrap">
+        <div className="bg-paper-soft border border-paper-edge p-5 lg:p-6">
+          <div className="flex items-center justify-between mb-5">
+            <span className="label-editorial">Samlet vurdering</span>
+            <Badge variant={risiko.variant}>{risiko.label}</Badge>
+          </div>
+
+          {/* Dot grid */}
+          <div className="flex flex-wrap gap-x-5 gap-y-3">
             {rapport.kort.map((kort) => (
               <div
                 key={kort.id}
-                className="risiko-dot-enter group flex flex-col items-center gap-1.5"
+                className="group flex items-center gap-2"
                 title={`${kort.tittel}: ${kort.statusTekst}`}
               >
                 <div
-                  className="w-4 h-4 rounded-full transition-transform duration-200 group-hover:scale-[1.6] cursor-default"
-                  style={{
-                    backgroundColor: statusFarge(kort.status),
-                    boxShadow: `0 0 0 2px white, 0 0 6px ${statusFarge(kort.status)}`,
-                  }}
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: statusFarge(kort.status) }}
                 />
-                <span className="text-[10px] font-medium text-fjord-500 leading-none">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-ink-muted">
                   {kortLabel(kort.id)}
                 </span>
               </div>
@@ -139,52 +117,45 @@ export function Rapport({ rapport }: Props) {
         </div>
       )}
 
-      {/* AI Summary — structured if available, fallback to plain text */}
+      {/* AI structured report */}
       {rapport.aiOppsummering?.strukturert ? (
         <StrukturertRapport
           data={rapport.aiOppsummering.strukturert}
           generert={rapport.aiOppsummering.generert}
         />
       ) : rapport.aiOppsummering ? (
-        <div className="ai-sammendrag-ramme rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-5 h-5 text-fjord-500 ai-sparkles-pulse" />
-            <h3 className="font-bold text-fjord-700">
-              AI-oppsummering
-            </h3>
-          </div>
-          <div className="text-sm text-fjord-800 leading-relaxed whitespace-pre-line max-w-none">
-            {stripMarkdown(rapport.aiOppsummering.tekst)}
-          </div>
-          <p className="text-xs text-fjord-400 mt-3">
-            Generert {new Date(rapport.aiOppsummering.generert).toLocaleString("nb-NO")}
+        <div className="bg-paper-soft border border-paper-edge border-l-[3px] border-l-ink p-6">
+          <span className="label-editorial block mb-3">AI-oppsummering</span>
+          <p className="font-display text-lg text-ink leading-relaxed whitespace-pre-line">
+            {rapport.aiOppsummering.tekst}
           </p>
         </div>
       ) : null}
 
-      {/* Climate projection 2100 */}
+      {/* Climate projection */}
       <KlimaVisning adresse={rapport.adresse} />
 
-      {/* AI photo analysis of aerial image */}
+      {/* AI photo analysis */}
       <FotoAnalyse rapport={rapport} />
 
-      {/* AI House Image */}
+      {/* AI house concept */}
       <Bildegenerering rapport={rapport} />
 
-      {/* Analysis cards */}
+      {/* Analysis cards grid */}
       <div className="space-y-3">
+        <span className="label-editorial block mb-2">Detaljerte funn</span>
         {rapport.kort.map((kort, i) => (
           <Rapportkort key={kort.id} kort={kort} index={i} />
         ))}
       </div>
 
-      {/* FNs bærekraftsmål */}
+      {/* UN SDG */}
       <SdgSeksjon />
 
       {/* Disclaimer */}
-      <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-800 leading-relaxed">
+      <div className="border-t border-paper-edge pt-6 mt-6">
+        <span className="label-editorial block mb-2">Ansvarsfraskrivelse</span>
+        <p className="text-xs text-ink-muted leading-relaxed max-w-2xl">
           {DISCLAIMER_TEXT}
         </p>
       </div>

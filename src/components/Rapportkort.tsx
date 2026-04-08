@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { statusFarge } from "@/lib/trafikklys";
 import type { AnalyseKort } from "@/types";
 
 interface Props {
@@ -11,51 +10,37 @@ interface Props {
   index?: number;
 }
 
-function gradientForStatus(status: string): string {
+/* -------------------------------------------------------------------------
+   Rapportkort — editorial data card
+   Left-aligned numeric marker, subdued typography, minimal chrome
+   ------------------------------------------------------------------------- */
+
+function statusToneClasses(status: string) {
   switch (status) {
     case "gronn":
-      return "from-emerald-100/40 via-emerald-50/20 to-white";
+      return {
+        indicator: "bg-data-green",
+        accentBorder: "border-l-data-green",
+        badgeBg: "bg-moss-500/8 border-moss-500/25 text-moss-700",
+      };
     case "gul":
-      return "from-amber-100/40 via-amber-50/20 to-white";
+      return {
+        indicator: "bg-data-amber",
+        accentBorder: "border-l-data-amber",
+        badgeBg: "bg-[#C18A2F]/10 border-[#C18A2F]/30 text-[#8B6220]",
+      };
     case "rod":
-      return "from-red-100/40 via-red-50/20 to-white";
+      return {
+        indicator: "bg-data-red",
+        accentBorder: "border-l-data-red",
+        badgeBg: "bg-clay-500/10 border-clay-500/30 text-clay-700",
+      };
     default:
-      return "from-gray-100/40 via-gray-50/20 to-white";
-  }
-}
-
-function badgeBg(status: string): string {
-  switch (status) {
-    case "gronn":
-      return "bg-emerald-100 text-emerald-900 ring-2 ring-emerald-400/60 shadow-sm shadow-emerald-200";
-    case "gul":
-      return "bg-amber-100 text-amber-900 ring-2 ring-amber-400/60 shadow-sm shadow-amber-200";
-    case "rod":
-      return "bg-red-100 text-red-900 ring-2 ring-red-400/60 shadow-sm shadow-red-200";
-    default:
-      return "bg-gray-100 text-gray-700 ring-2 ring-gray-400/60 shadow-sm shadow-gray-200";
-  }
-}
-
-function glowShadow(status: string): string {
-  switch (status) {
-    case "gronn":
-      return "0 0 0 3px rgba(46,204,113,0.25), 0 0 8px rgba(46,204,113,0.3)";
-    case "gul":
-      return "0 0 0 3px rgba(243,156,18,0.25), 0 0 8px rgba(243,156,18,0.3)";
-    case "rod":
-      return "0 0 0 3px rgba(231,76,60,0.25), 0 0 8px rgba(231,76,60,0.3)";
-    default:
-      return "0 0 0 3px rgba(156,163,175,0.25), 0 0 8px rgba(156,163,175,0.3)";
-  }
-}
-
-function detailBorderColor(status: string): string {
-  switch (status) {
-    case "gronn": return "#2ECC71";
-    case "gul": return "#F39C12";
-    case "rod": return "#E74C3C";
-    default: return "#9CA3AF";
+      return {
+        indicator: "bg-data-gray",
+        accentBorder: "border-l-stone-300",
+        badgeBg: "bg-stone-100 border-stone-200 text-ink-muted",
+      };
   }
 }
 
@@ -70,52 +55,70 @@ function ByaVisualisering({ raadata }: { raadata: Record<string, any> }) {
   if (!utnyttingsgrad && !maksHoyde && !maksEtasjer) return null;
 
   return (
-    <div className="bg-fjord-50/60 border border-fjord-200 rounded-lg p-3">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-bold text-fjord-700 uppercase tracking-wide">
-          Byggerammer
-        </span>
+    <div className="mt-5 border-t border-paper-edge pt-5">
+      <div className="flex items-center justify-between mb-4">
+        <span className="label-editorial">Byggerammer</span>
         {kilde && (
-          <span className={cn(
-            "text-[10px] font-medium px-2 py-0.5 rounded-full border",
-            kilde === "plan"
-              ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-              : "bg-amber-100 text-amber-700 border-amber-200"
-          )}>
-            {kilde === "plan" ? "Fra reguleringsplan" : "TEK17-referanse"}
+          <span
+            className={cn(
+              "text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 border",
+              kilde === "plan"
+                ? "border-moss-500/40 bg-moss-500/10 text-moss-700"
+                : "border-[#C18A2F]/40 bg-[#C18A2F]/10 text-[#8B6220]"
+            )}
+          >
+            {kilde === "plan" ? "Fra plan" : "TEK17-referanse"}
           </span>
         )}
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-px bg-paper-edge border border-paper-edge">
         {utnyttingsgrad != null && (
-          <div className="bg-white rounded-md p-2 text-center border border-gray-200">
-            <div className="text-xs text-gray-500">Maks BYA</div>
-            <div className="text-lg font-bold text-fjord-700">{utnyttingsgrad}%</div>
+          <div className="bg-paper-soft px-4 py-4">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-ink-muted mb-1">
+              Maks BYA
+            </div>
+            <div className="font-display text-3xl text-ink tracking-tight">
+              {utnyttingsgrad}
+              <span className="text-lg text-ink-muted">%</span>
+            </div>
           </div>
         )}
         {maksHoyde != null && (
-          <div className="bg-white rounded-md p-2 text-center border border-gray-200">
-            <div className="text-xs text-gray-500">Maks høyde</div>
-            <div className="text-lg font-bold text-fjord-700">{maksHoyde} m</div>
+          <div className="bg-paper-soft px-4 py-4">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-ink-muted mb-1">
+              Maks høyde
+            </div>
+            <div className="font-display text-3xl text-ink tracking-tight">
+              {maksHoyde}
+              <span className="text-lg text-ink-muted"> m</span>
+            </div>
           </div>
         )}
         {maksEtasjer != null && (
-          <div className="bg-white rounded-md p-2 text-center border border-gray-200">
-            <div className="text-xs text-gray-500">Maks etasjer</div>
-            <div className="text-lg font-bold text-fjord-700">{maksEtasjer}</div>
+          <div className="bg-paper-soft px-4 py-4">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-ink-muted mb-1">
+              Maks etasjer
+            </div>
+            <div className="font-display text-3xl text-ink tracking-tight">
+              {maksEtasjer}
+            </div>
           </div>
         )}
       </div>
       {arealKvm && maksBebyggetAreal && (
-        <div className="mt-2 pt-2 border-t border-fjord-200 text-xs text-fjord-700">
-          På din tomt ({Math.round(arealKvm)} m²) kan du bygge inntil{" "}
-          <span className="font-bold">{Math.round(maksBebyggetAreal)} m²</span> bebygd areal.
+        <p className="mt-4 text-sm text-ink-soft leading-relaxed">
+          Med tomteareal på <span className="font-mono text-ink">{Math.round(arealKvm)} m²</span>{" "}
+          tillater reguleringsgrunnlaget inntil{" "}
+          <span className="font-display text-lg text-clay-500">
+            {Math.round(maksBebyggetAreal)} m²
+          </span>{" "}
+          bebygd areal.
           {kilde === "tek17" && (
-            <span className="block text-fjord-500 mt-1 italic">
-              Merk: tallet er basert på TEK17-referanse. Sjekk reguleringsplan for kommunen for faktiske tillatte rammer.
+            <span className="block mt-1 text-xs text-ink-muted italic">
+              Tallet er TEK17-referanse, ikke bindende. Sjekk faktisk reguleringsplan før prosjektering.
             </span>
           )}
-        </div>
+        </p>
       )}
     </div>
   );
@@ -125,7 +128,7 @@ export function Rapportkort({ kort, index = 0 }: Props) {
   const [erUtvidet, setErUtvidet] = useState(false);
   const innholdRef = useRef<HTMLDivElement>(null);
   const [innholdHoyde, setInnholdHoyde] = useState(0);
-  const farge = statusFarge(kort.status);
+  const tone = statusToneClasses(kort.status);
 
   useEffect(() => {
     if (innholdRef.current) {
@@ -134,94 +137,86 @@ export function Rapportkort({ kort, index = 0 }: Props) {
   }, [erUtvidet, kort.detaljer]);
 
   return (
-    <div
+    <article
       className={cn(
-        "rapportkort-enter rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-gradient-to-r",
-        gradientForStatus(kort.status)
+        "group bg-paper-soft border border-paper-edge border-l-[3px] transition-colors fade-up",
+        tone.accentBorder
       )}
-      style={{
-        borderLeftWidth: "5px",
-        borderLeftColor: farge,
-        animationDelay: `${index * 100}ms`,
-      }}
+      style={{ animationDelay: `${index * 40}ms` }}
     >
       <button
         onClick={() => setErUtvidet(!erUtvidet)}
-        className="w-full text-left p-4 flex items-start gap-3"
+        className="w-full text-left p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20"
         aria-expanded={erUtvidet}
       >
-        {/* Traffic light circle — larger with glow ring */}
-        <div
-          className="w-5 h-5 rounded-full shrink-0 mt-0.5 trafikklys-puls"
-          style={{
-            backgroundColor: farge,
-            boxShadow: glowShadow(kort.status),
-          }}
-          title={kort.statusTekst}
-        />
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="font-semibold text-gray-900 text-base">{kort.tittel}</h3>
-            <ChevronDown
-              className={cn(
-                "w-5 h-5 text-gray-400 shrink-0 transition-transform duration-300",
-                erUtvidet && "rotate-180"
-              )}
-            />
+        <div className="flex items-start gap-5">
+          {/* Numeric marker + status dot */}
+          <div className="flex flex-col items-center gap-2 pt-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div className={cn("w-2 h-2 rounded-full", tone.indicator)} />
           </div>
-          <p className="text-sm text-gray-600 mt-0.5">{kort.beskrivelse}</p>
-          <span
-            className={cn(
-              "inline-block mt-2 text-xs font-bold px-3.5 py-1.5 rounded-full",
-              badgeBg(kort.status)
-            )}
-          >
-            {kort.statusTekst}
-          </span>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="font-display text-xl lg:text-2xl text-ink tracking-tight leading-tight">
+                {kort.tittel}
+              </h3>
+              <ChevronDown
+                className={cn(
+                  "w-5 h-5 text-ink-muted shrink-0 mt-1 transition-transform duration-300",
+                  erUtvidet && "rotate-180 text-ink"
+                )}
+              />
+            </div>
+            <p className="mt-1 text-sm text-ink-soft leading-relaxed">
+              {kort.beskrivelse}
+            </p>
+            <span
+              className={cn(
+                "mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 border text-[11px] font-mono uppercase tracking-wider",
+                tone.badgeBg
+              )}
+            >
+              {kort.statusTekst}
+            </span>
+          </div>
         </div>
       </button>
 
       <div
-        className="transition-[max-height,opacity] duration-300 ease-in-out overflow-hidden"
+        className="transition-[max-height,opacity] duration-400 ease-out overflow-hidden"
         style={{
           maxHeight: erUtvidet ? `${innholdHoyde + 32}px` : "0px",
           opacity: erUtvidet ? 1 : 0,
         }}
       >
-        <div
-          ref={innholdRef}
-          className="px-4 pb-4 pt-0 border-t border-gray-100"
-          style={{
-            borderLeft: `4px solid ${detailBorderColor(kort.status)}`,
-            marginLeft: "12px",
-          }}
-        >
-          <div className="pt-3 pl-3 space-y-3">
-            {kort.detaljer && (
-              <p className="text-sm text-gray-600 whitespace-pre-line">
-                {kort.detaljer}
-              </p>
-            )}
-            {/* Special: BYA visualization for regulering card */}
-            {kort.id === "regulering" && kort.raadata && (
-              <ByaVisualisering raadata={kort.raadata} />
-            )}
-            <div className="flex items-center gap-1 text-xs text-gray-400">
-              <span>Kilde:</span>
-              <a
-                href={kort.kildeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-fjord-500 hover:underline flex items-center gap-0.5"
-              >
-                {kort.kilde}
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
+        <div ref={innholdRef} className="px-6 pb-6 pl-[4.75rem]">
+          {kort.detaljer && (
+            <p className="text-sm text-ink-soft leading-relaxed whitespace-pre-line pt-1">
+              {kort.detaljer}
+            </p>
+          )}
+          {kort.id === "regulering" && kort.raadata && (
+            <ByaVisualisering raadata={kort.raadata} />
+          )}
+          <div className="mt-5 pt-4 border-t border-paper-edge flex items-center justify-between">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted">
+              Kilde
+            </span>
+            <a
+              href={kort.kildeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-mono text-ink hover:text-clay-500 transition-colors"
+            >
+              {kort.kilde}
+              <ArrowUpRight className="w-3 h-3" />
+            </a>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

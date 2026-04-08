@@ -656,25 +656,22 @@ export default function AnalyserView() {
         <KartlagPanel synlige={synligeKartlag} onToggle={handleKartlagToggle} />
       )}
 
-      {/* Top bar: logo + search */}
+      {/* Top bar: editorial search chrome */}
       <div className="absolute top-0 left-0 right-0 z-[1000] pointer-events-none">
         <div className="flex items-start gap-3 p-4 max-w-4xl mx-auto">
-          {/* Logo pill */}
-          <a
+          {/* Logo mark */}
+          <Link
             href="/"
-            className="pointer-events-auto flex items-center gap-2 px-4 py-3 bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow shrink-0"
+            className="pointer-events-auto flex items-baseline gap-2 px-5 py-3 bg-paper/95 backdrop-blur-md border border-paper-edge shadow-editorial-lg hover:shadow-editorial-xl transition-shadow shrink-0"
           >
-            <div className="w-7 h-7 rounded-lg bg-fjord-500 flex items-center justify-center">
-              <MapPin className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-display text-lg font-bold text-fjord-500 hidden sm:inline">
+            <span className="font-display text-xl tracking-tight text-ink font-medium">
               Tomtesjekk
             </span>
-          </a>
+          </Link>
 
-          {/* Search + button */}
+          {/* Search + CTA */}
           <div className="pointer-events-auto flex-1 flex flex-col sm:flex-row gap-2">
-            <div className="flex-1 bg-white rounded-xl shadow-lg border border-gray-200">
+            <div className="flex-1 bg-paper/95 backdrop-blur-md border border-paper-edge shadow-editorial-lg">
               <Adressesok
                 onVelgAdresse={handleVelgAdresse}
                 onSubmit={() => valgtAdresse && startAnalyse(valgtAdresse)}
@@ -685,11 +682,11 @@ export default function AnalyserView() {
             <button
               onClick={() => valgtAdresse && startAnalyse(valgtAdresse)}
               disabled={!valgtAdresse || erAktiv}
-              className="flex items-center justify-center gap-2 px-5 py-3.5 bg-fjord-500 text-white rounded-xl font-semibold hover:bg-fjord-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg whitespace-nowrap"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-ink text-paper font-sans font-medium hover:bg-ink-soft disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-editorial-lg whitespace-nowrap border border-ink"
             >
-              <Search className="w-5 h-5" />
-              <span className="hidden sm:inline">
-                {erAktiv ? "Analyserer..." : "Analyser tomt"}
+              <Search className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm tracking-tight">
+                {erAktiv ? "Analyserer…" : "Analyser tomt"}
               </span>
             </button>
           </div>
@@ -698,13 +695,19 @@ export default function AnalyserView() {
         {/* Selected address chip */}
         {valgtAdresse && !erAktiv && !rapport && (
           <div className="flex justify-center px-4 -mt-1">
-            <div className="pointer-events-auto inline-flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-sm border border-fjord-100 rounded-full shadow-md">
-              <MapPin className="w-3.5 h-3.5 text-fjord-500" />
-              <span className="text-sm text-fjord-700">
-                <strong>{valgtAdresse.adressetekst}</strong>
-                {valgtAdresse.kommunenavn && `, ${valgtAdresse.kommunenavn}`}
+            <div className="pointer-events-auto inline-flex items-center gap-3 px-4 py-2 bg-paper/95 backdrop-blur-md border border-paper-edge shadow-editorial">
+              <MapPin className="w-3 h-3 text-ink-muted" />
+              <span className="text-sm text-ink">
+                {valgtAdresse.adressetekst}
+                {valgtAdresse.kommunenavn && (
+                  <span className="text-ink-muted ml-1">
+                    · {valgtAdresse.kommunenavn}
+                  </span>
+                )}
               </span>
-              <span className="text-xs text-fjord-400 ml-1">— klikk Analyser</span>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted pl-2 border-l border-paper-edge">
+                Klikk analyser
+              </span>
             </div>
           </div>
         )}
@@ -733,40 +736,37 @@ export default function AnalyserView() {
             {/* Collapse/expand toggle */}
             <button
               onClick={() => setPanelApen(!panelApen)}
-              className="mx-auto lg:mx-0 lg:ml-auto flex items-center gap-1.5 px-4 py-1.5 bg-white rounded-t-xl border border-b-0 border-gray-200 shadow-lg text-sm text-gray-600 hover:text-fjord-600 transition-colors"
+              className="mx-auto lg:mx-0 lg:ml-auto flex items-center gap-2 px-4 py-2 bg-paper/95 backdrop-blur-md border border-paper-edge border-b-0 shadow-editorial-lg text-[11px] font-mono uppercase tracking-wider text-ink-muted hover:text-ink transition-colors"
             >
               {panelApen ? (
                 <>
-                  <ChevronDown className="w-4 h-4 lg:hidden" />
-                  <X className="w-4 h-4 hidden lg:block" />
+                  <ChevronDown className="w-3.5 h-3.5 lg:hidden" />
+                  <X className="w-3.5 h-3.5 hidden lg:block" />
                   <span>Skjul</span>
                 </>
               ) : (
                 <>
-                  <ChevronUp className="w-4 h-4 lg:hidden" />
-                  <ChevronUp className="w-4 h-4 hidden lg:block" />
+                  <ChevronUp className="w-3.5 h-3.5" />
                   <span>{rapport ? "Vis rapport" : "Vis fremdrift"}</span>
                 </>
               )}
             </button>
 
             {panelApen && (
-              <div className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-2xl overflow-y-auto rounded-t-2xl lg:rounded-none lg:rounded-l-2xl lg:border-r-0 p-5">
+              <div className="bg-paper/98 backdrop-blur-md border border-paper-edge shadow-editorial-xl overflow-y-auto lg:border-r-0 p-6 lg:p-8">
                 {erAktiv && (
                   <div>
-                    <h2 className="font-display text-lg font-bold text-fjord-500 mb-4">
-                      Analyserer...
-                    </h2>
+                    <span className="label-editorial block mb-4">Analyse pågår</span>
                     <Fremdriftslinje steg={steg} prosent={prosent} />
                   </div>
                 )}
                 {rapport && !erAktiv && (
                   <>
                     <Rapport rapport={rapport} />
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-6 flex gap-2">
                       <Link
                         href="/analyser/detaljer"
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-fjord-500 text-white rounded-xl font-semibold hover:bg-fjord-600 transition-colors text-sm"
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-ink text-paper border border-ink hover:bg-ink-soft transition-colors text-sm font-medium tracking-tight"
                       >
                         <FileText className="w-4 h-4" />
                         Full rapport

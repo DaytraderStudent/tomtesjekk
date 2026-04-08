@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Sparkles, Trees, Home, Mountain, Navigation as NavIcon, Waves, Info, X, RefreshCw } from "lucide-react";
+import { RefreshCw, X, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 import type { Rapport as RapportType } from "@/types";
 
 interface Props {
@@ -20,24 +22,14 @@ interface FotoAnalyseData {
   ortofotoBase64: string;
 }
 
-function ikonForKategori(kategori: string) {
-  const k = kategori.toLowerCase();
-  if (k.includes("veg")) return <Trees className="w-3.5 h-3.5" />;
-  if (k.includes("bebyg")) return <Home className="w-3.5 h-3.5" />;
-  if (k.includes("terr")) return <Mountain className="w-3.5 h-3.5" />;
-  if (k.includes("adko") || k.includes("vei")) return <NavIcon className="w-3.5 h-3.5" />;
-  if (k.includes("vann") || k.includes("vassdrag")) return <Waves className="w-3.5 h-3.5" />;
-  return <Info className="w-3.5 h-3.5" />;
-}
-
 function fargeForKategori(kategori: string) {
   const k = kategori.toLowerCase();
-  if (k.includes("veg")) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-  if (k.includes("bebyg")) return "bg-amber-100 text-amber-700 border-amber-200";
-  if (k.includes("terr")) return "bg-stone-100 text-stone-700 border-stone-200";
-  if (k.includes("adko")) return "bg-slate-100 text-slate-700 border-slate-200";
-  if (k.includes("vann")) return "bg-blue-100 text-blue-700 border-blue-200";
-  return "bg-gray-100 text-gray-700 border-gray-200";
+  if (k.includes("veg")) return "border-moss-500/40 bg-moss-500/10 text-moss-700";
+  if (k.includes("bebyg")) return "border-[#C18A2F]/40 bg-[#C18A2F]/10 text-[#8B6220]";
+  if (k.includes("terr")) return "border-stone-300 bg-stone-100 text-ink-soft";
+  if (k.includes("adko")) return "border-stone-300 bg-stone-100 text-ink-soft";
+  if (k.includes("vann")) return "border-clay-500/40 bg-clay-500/10 text-clay-700";
+  return "border-paper-edge bg-paper text-ink-muted";
 }
 
 export function FotoAnalyse({ rapport }: Props) {
@@ -60,11 +52,8 @@ export function FotoAnalyse({ rapport }: Props) {
         }),
       });
       const json = await res.json();
-      if (json.error) {
-        setFeil(json.error);
-      } else {
-        setData(json);
-      }
+      if (json.error) setFeil(json.error);
+      else setData(json);
     } catch {
       setFeil("Nettverksfeil — prøv igjen");
     } finally {
@@ -73,107 +62,108 @@ export function FotoAnalyse({ rapport }: Props) {
   };
 
   return (
-    <div className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-violet-200 bg-gradient-to-r from-violet-100/60 to-fuchsia-100/40">
-        <div className="flex items-center gap-2">
-          <Eye className="w-4 h-4 text-violet-600" />
-          <h3 className="text-sm font-bold text-violet-900">AI-analyse av ortofoto</h3>
+    <section className="bg-paper-soft border border-paper-edge fade-up">
+      <div className="border-b border-paper-edge px-6 lg:px-8 py-4 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <span className="label-editorial">Multimodal AI</span>
+          <h3 className="font-display text-xl text-ink tracking-tight mt-1">
+            Lesning av ortofoto
+          </h3>
         </div>
-        <p className="text-[11px] text-violet-700 mt-0.5">
-          Multimodal AI leser ekte luftfoto fra Kartverket og identifiserer fysiske forhold på tomten.
-        </p>
+        <span className="text-[11px] font-mono uppercase tracking-wider text-ink-muted">
+          Kartverket NiB · Gemini 2.5
+        </span>
       </div>
 
-      <div className="p-4">
+      <div className="p-6 lg:p-8">
         {!data && !laster && (
-          <button
-            onClick={analyser}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-lg font-semibold hover:from-violet-600 hover:to-fuchsia-600 transition-all text-sm shadow-sm"
-          >
-            <Sparkles className="w-4 h-4" />
-            Analyser tomten fra luftfoto
-          </button>
+          <div>
+            <p className="text-sm text-ink-soft leading-relaxed max-w-xl mb-5">
+              Send det faktiske luftfotoet av tomten til en multimodal AI som
+              identifiserer vegetasjon, eksisterende bebyggelse, terreng, adkomst
+              og vassdrag — faktabasert lesning forankret i det virkelige bildet.
+            </p>
+            <Button onClick={analyser} variant="outline" size="md">
+              Analyser tomten fra luftfoto
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
         )}
 
         {laster && (
-          <div className="flex flex-col items-center gap-2 py-6">
-            <div className="w-8 h-8 border-[3px] border-violet-200 border-t-violet-500 rounded-full animate-spin" />
-            <p className="text-xs text-violet-600">Henter ortofoto og analyserer med Gemini...</p>
+          <div className="flex items-center gap-3 py-6">
+            <div className="w-5 h-5 border-2 border-ink/20 border-t-ink rounded-full animate-spin" />
+            <p className="text-sm text-ink-muted">
+              Henter ortofoto og analyserer med Gemini...
+            </p>
           </div>
         )}
 
         {feil && (
-          <div className="text-center py-4">
-            <p className="text-sm text-red-600 mb-2">{feil}</p>
-            <button
-              onClick={analyser}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-violet-600 border border-violet-200 rounded-lg hover:bg-violet-50 transition-colors"
-            >
+          <div className="py-4">
+            <p className="text-sm text-clay-700 mb-3">{feil}</p>
+            <Button onClick={analyser} variant="outline" size="sm">
               <RefreshCw className="w-3 h-3" />
               Prøv igjen
-            </button>
+            </Button>
           </div>
         )}
 
         {data && !laster && (
-          <div className="space-y-3">
-            {/* Thumbnail */}
-            <button
-              onClick={() => setVisFullskjerm(true)}
-              className="block w-full rounded-lg overflow-hidden border border-violet-200 hover:border-violet-300 transition-colors cursor-zoom-in"
-            >
-              <img
-                src={data.ortofotoBase64}
-                alt="Ortofoto av tomten"
-                className="w-full h-auto"
-              />
-            </button>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr,1.2fr] gap-6">
+            {/* Ortofoto thumbnail */}
+            <div>
+              <button
+                onClick={() => setVisFullskjerm(true)}
+                className="block w-full border border-paper-edge overflow-hidden cursor-zoom-in hover:opacity-95 transition-opacity"
+              >
+                <img
+                  src={data.ortofotoBase64}
+                  alt="Ortofoto av tomten"
+                  className="w-full h-auto"
+                />
+              </button>
+              <p className="mt-2 text-[10px] font-mono uppercase tracking-wider text-ink-muted">
+                Klikk for å forstørre
+              </p>
+            </div>
 
-            {/* Sammendrag */}
-            {data.sammendrag && (
-              <div className="bg-white rounded-lg border border-violet-200 p-3">
-                <p className="text-sm text-gray-700 italic leading-relaxed">
+            {/* Analysis */}
+            <div>
+              {data.sammendrag && (
+                <p className="font-display text-lg text-ink italic leading-relaxed mb-6 pl-4 border-l-2 border-clay-500">
                   &ldquo;{data.sammendrag}&rdquo;
                 </p>
-              </div>
-            )}
+              )}
 
-            {/* Observasjoner */}
-            {data.observasjoner && data.observasjoner.length > 0 && (
-              <div className="space-y-2">
-                {data.observasjoner.map((obs, i) => (
-                  <div key={i} className="bg-white rounded-lg border border-violet-200 p-3">
-                    <div className="flex items-start gap-2">
+              {data.observasjoner && data.observasjoner.length > 0 && (
+                <ul className="space-y-4">
+                  {data.observasjoner.map((obs, i) => (
+                    <li key={i} className="grid grid-cols-[auto,1fr] gap-3">
                       <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0 ${fargeForKategori(
-                          obs.kategori
-                        )}`}
+                        className={cn(
+                          "text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 border self-start whitespace-nowrap",
+                          fargeForKategori(obs.kategori)
+                        )}
                       >
-                        {ikonForKategori(obs.kategori)}
                         {obs.kategori}
                       </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{obs.funn}</p>
-                        <p className="text-xs text-gray-500 mt-0.5 italic">
+                      <div>
+                        <p className="text-sm font-medium text-ink">{obs.funn}</p>
+                        <p className="text-xs text-ink-muted italic mt-0.5">
                           → {obs.relevans}
                         </p>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-[10px] text-violet-600">
-                Kilde: Kartverket Norge i bilder · AI: Gemini 2.5 Flash
-              </p>
               <button
                 onClick={analyser}
-                className="inline-flex items-center gap-1 text-[10px] text-violet-600 hover:text-violet-700"
+                className="mt-6 inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-ink-muted hover:text-clay-500 transition-colors"
               >
-                <RefreshCw className="w-2.5 h-2.5" />
+                <RefreshCw className="w-3 h-3" />
                 Analyser på nytt
               </button>
             </div>
@@ -184,23 +174,23 @@ export function FotoAnalyse({ rapport }: Props) {
       {/* Fullscreen overlay */}
       {visFullskjerm && data && (
         <div
-          className="fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[2000] bg-ink/90 flex items-center justify-center p-4"
           onClick={() => setVisFullskjerm(false)}
         >
           <button
             onClick={() => setVisFullskjerm(false)}
-            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors"
+            className="absolute top-4 right-4 p-2 text-paper/80 hover:text-paper transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
           <img
             src={data.ortofotoBase64}
             alt="Ortofoto"
-            className="max-w-full max-h-full rounded-lg shadow-2xl"
+            className="max-w-full max-h-full shadow-editorial-xl"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}
-    </div>
+    </section>
   );
 }

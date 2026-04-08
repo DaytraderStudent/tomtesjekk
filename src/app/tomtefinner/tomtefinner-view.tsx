@@ -347,21 +347,21 @@ export default function TomtefinnerView() {
   return (
     <div className="min-h-screen bg-surface">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-paper border-b border-paper-edge">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="p-2 text-gray-400 hover:text-fjord-500 transition-colors"
+              className="p-2 text-gray-400 hover:text-ink-muted transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg bg-fjord-500 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-lg bg-ink flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="font-display text-xl font-bold text-fjord-500">
+                <h1 className="font-display text-xl font-bold text-ink-muted">
                   AI Tomtefinner
                 </h1>
                 <p className="text-xs text-gray-500">
@@ -377,10 +377,10 @@ export default function TomtefinnerView() {
         <div className={cn("flex gap-6", harResultater ? "flex-col lg:flex-row" : "flex-col items-center")}>
           {/* Form */}
           <div className={cn(
-            "bg-white rounded-xl border border-gray-200 shadow-sm p-6",
+            "bg-paper-soft border border-paper-edge shadow-editorial p-6",
             harResultater ? "lg:w-[380px] lg:shrink-0" : "w-full max-w-2xl"
           )}>
-            <h2 className="font-display font-bold text-lg text-fjord-700 mb-4">
+            <h2 className="font-display font-bold text-lg text-ink mb-4">
               Hva vil du bygge?
             </h2>
 
@@ -402,12 +402,12 @@ export default function TomtefinnerView() {
                   />
                 </div>
                 {kommuneForslag.length > 0 && !valgtKommune && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-paper-soft border border-paper-edge shadow-editorial-lg max-h-48 overflow-y-auto">
                     {kommuneForslag.map((k) => (
                       <button
                         key={k.kommunenummer}
                         onClick={() => velgKommune(k)}
-                        className="w-full text-left px-3 py-2.5 text-sm hover:bg-fjord-50 transition-colors flex items-center justify-between"
+                        className="w-full text-left px-3 py-2.5 text-sm hover:bg-paper-deep transition-colors flex items-center justify-between"
                       >
                         <span>
                           {k.kommunenavn}
@@ -438,7 +438,7 @@ export default function TomtefinnerView() {
                 <select
                   value={bygningstype}
                   onChange={(e) => setBygningstype(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-fjord-500 focus:border-fjord-500 outline-none bg-white"
+                  className="w-full px-3 py-2.5 border border-paper-edge bg-paper-soft text-sm focus:outline-none focus:border-ink"
                   disabled={soker}
                 >
                   {BYGNINGSTYPER.map((b) => (
@@ -505,7 +505,7 @@ export default function TomtefinnerView() {
                       type="checkbox"
                       checked={lavRisiko}
                       onChange={(e) => setLavRisiko(e.target.checked)}
-                      className="rounded border-gray-300 text-fjord-500 focus:ring-fjord-500"
+                      className="rounded border-gray-300 text-ink-muted focus:ring-fjord-500"
                       disabled={soker}
                     />
                     Lav naturfare (flom, skred, kvikkleire)
@@ -515,7 +515,7 @@ export default function TomtefinnerView() {
                       type="checkbox"
                       checked={stille}
                       onChange={(e) => setStille(e.target.checked)}
-                      className="rounded border-gray-300 text-fjord-500 focus:ring-fjord-500"
+                      className="rounded border-gray-300 text-ink-muted focus:ring-fjord-500"
                       disabled={soker}
                     />
                     Stille område (lite støy)
@@ -525,7 +525,7 @@ export default function TomtefinnerView() {
                       type="checkbox"
                       checked={veinaerhet}
                       onChange={(e) => setVeinaerhet(e.target.checked)}
-                      className="rounded border-gray-300 text-fjord-500 focus:ring-fjord-500"
+                      className="rounded border-gray-300 text-ink-muted focus:ring-fjord-500"
                       disabled={soker}
                     />
                     Nær offentlig vei
@@ -537,7 +537,7 @@ export default function TomtefinnerView() {
               <button
                 onClick={startSok}
                 disabled={(!valgtKommune && kommuneSok.length < 2) || soker}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-fjord-500 text-white rounded-lg font-semibold hover:bg-fjord-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-ink text-white rounded-lg font-semibold hover:bg-ink-soft disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {soker ? (
                   <>
@@ -558,18 +558,18 @@ export default function TomtefinnerView() {
           {harResultater && (
             <div className="flex-1 min-w-0 space-y-4">
               {/* Map */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="bg-paper-soft border border-paper-edge shadow-editorial overflow-hidden">
                 <div ref={setMapContainer} className="w-full h-[400px] lg:h-[450px]" />
               </div>
 
               {/* Status messages */}
               {soker && (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <div className="bg-paper-soft border border-paper-edge shadow-editorial p-4">
                   <div className="space-y-2">
                     {statusMeldinger.map((s, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
                         {i === statusMeldinger.length - 1 && soker ? (
-                          <div className="w-3.5 h-3.5 border-2 border-fjord-200 border-t-fjord-500 rounded-full animate-spin shrink-0" />
+                          <div className="w-3.5 h-3.5 border-2 border-paper-edge border-t-fjord-500 rounded-full animate-spin shrink-0" />
                         ) : (
                           <div className="w-3.5 h-3.5 rounded-full bg-emerald-400 shrink-0" />
                         )}
@@ -590,13 +590,13 @@ export default function TomtefinnerView() {
               {/* Result cards */}
               {ferdig && resultater.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-display font-bold text-lg text-fjord-700">
+                  <h3 className="font-display font-bold text-lg text-ink">
                     {resultater.length} tomteområder funnet
                   </h3>
                   {resultater.map((r, i) => (
                     <div
                       key={r.id}
-                      className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
+                      className="bg-paper-soft border border-paper-edge shadow-editorial p-4 hover:shadow-md transition-shadow cursor-pointer"
                       onClick={() => {
                         mapRef.current?.flyTo([r.lat, r.lon], 15, { duration: 1 });
                         markersRef.current[i]?.openPopup();
@@ -650,7 +650,7 @@ export default function TomtefinnerView() {
                           {/* Link to full analysis */}
                           <Link
                             href={`/analyser?lat=${r.lat}&lon=${r.lon}`}
-                            className="inline-flex items-center gap-1 text-xs text-fjord-500 hover:text-fjord-600 mt-2 font-medium"
+                            className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink-soft mt-2 font-medium"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <ExternalLink className="w-3 h-3" />
@@ -665,7 +665,7 @@ export default function TomtefinnerView() {
 
               {/* No results */}
               {ferdig && resultater.length === 0 && !feil && (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+                <div className="bg-paper-soft border border-paper-edge shadow-editorial p-8 text-center">
                   <p className="text-gray-500">
                     Ingen tomteområder funnet som matcher kravene dine. Prøv en annen kommune eller bygningstype.
                   </p>

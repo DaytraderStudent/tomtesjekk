@@ -1,248 +1,348 @@
 import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import {
-  Droplets,
-  Mountain,
-  Radiation,
-  Layers,
-  TrendingUp,
-  Route,
-  Search,
-  CheckCircle2,
-  XCircle,
-  MapPin,
-  ArrowRight,
-  Shield,
-  Zap,
-  FileText,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ArrowUpRight, ArrowRight } from "lucide-react";
 
-const features = [
+/* -------------------------------------------------------------------------
+   Editorial landingsside — Tomtesjekk
+   Aesthetic: Nordic geological survey meets architecture journal
+   ------------------------------------------------------------------------- */
+
+const dimensjoner = [
   {
-    icon: Droplets,
-    title: "Flomfare",
-    desc: "Aktsomhetsområder fra NVE",
-    color: "#3B82F6",
+    nummer: "01",
+    tittel: "Naturfare",
+    tema: ["Flom", "Skred", "Kvikkleire", "Radon"],
+    kilder: "NVE · NGU",
   },
   {
-    icon: Mountain,
-    title: "Skred og kvikkleire",
-    desc: "Skredfarekartlegging fra NVE",
-    color: "#8B5CF6",
+    nummer: "02",
+    tittel: "Grunnforhold",
+    tema: ["Løsmasser", "Fjellgrunn", "Jordart"],
+    kilder: "NGU",
   },
   {
-    icon: Radiation,
-    title: "Radon",
-    desc: "Aktsomhetskart fra NGU",
-    color: "#F59E0B",
+    nummer: "03",
+    tittel: "Reguleringsplan",
+    tema: ["Arealformål", "BYA", "Byggehøyde", "Etasjer"],
+    kilder: "DiBK · Geonorge",
   },
   {
-    icon: Layers,
-    title: "Grunnforhold",
-    desc: "Løsmassekart fra NGU",
-    color: "#10B981",
+    nummer: "04",
+    tittel: "Infrastruktur",
+    tema: ["Veitilgang", "VA-tilknytning", "Støy"],
+    kilder: "NVDB · Statens vegvesen",
   },
   {
-    icon: TrendingUp,
-    title: "Byggekostnader",
-    desc: "Kostnadsindeks fra SSB",
-    color: "#EF4444",
+    nummer: "05",
+    tittel: "Marked og økonomi",
+    tema: ["Boligpriser", "Byggekostnader"],
+    kilder: "SSB",
   },
   {
-    icon: Route,
-    title: "Veitilgang",
-    desc: "Nærmeste vei fra NVDB",
-    color: "#6366F1",
+    nummer: "06",
+    tittel: "Mikroklima og SDG",
+    tema: ["Solforhold", "Havstigning", "Klimaprognose 2100"],
+    kilder: "SunCalc · Kartverket · IPCC",
   },
 ];
 
-const comparison = [
-  { feature: "Flomfare (NVE)", oss: true, manuelt: true },
-  { feature: "Skredfare (NVE)", oss: true, manuelt: true },
-  { feature: "Radon (NGU)", oss: true, manuelt: true },
-  { feature: "Grunnforhold (NGU)", oss: true, manuelt: true },
-  { feature: "Byggekostnader (SSB)", oss: true, manuelt: true },
-  { feature: "Veitilgang (NVDB)", oss: true, manuelt: true },
-  { feature: "Samlet i ett verktøy", oss: true, manuelt: false },
-  { feature: "AI-tolkning", oss: true, manuelt: false },
-  { feature: "PDF-rapport", oss: true, manuelt: false },
-  { feature: "Tidsbruk", oss: "60 sek", manuelt: "2+ timer" },
+const datakilder = [
+  "Kartverket",
+  "NVE",
+  "NGU",
+  "SSB",
+  "Statens vegvesen",
+  "DiBK",
+  "Riksantikvaren",
+  "Geonorge",
 ];
 
 export default function Home() {
   return (
     <>
       <Navigation />
-      <main>
-        {/* Hero — clean, confident, no gimmicks */}
-        <section className="relative bg-fjord-700 text-white">
-          <div className="absolute inset-0 bg-gradient-to-b from-fjord-800/50 to-fjord-700/0" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-            <div className="max-w-2xl">
-              <p className="text-fjord-200 text-sm font-medium tracking-wide uppercase mb-4">
-                Gratis tomteanalyse for hele Norge
-              </p>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-tight">
-                Sjekk tomten
-                <br />
-                <span className="text-emerald-400">før du kjøper.</span>
-              </h1>
-              <p className="mt-6 text-lg text-fjord-200 leading-relaxed max-w-xl">
-                Tomtesjekk henter data fra 6 offentlige kilder og gir deg en
-                komplett rapport med flomfare, skredrisiko, radon, grunnforhold,
-                byggekostnader og veitilgang — på under ett minutt.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <Link
-                  href="/analyser"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 bg-emerald-500 text-white rounded-lg font-semibold text-base hover:bg-emerald-600 transition-colors"
-                >
-                  <Search className="w-5 h-5" />
-                  Analyser en tomt
-                </Link>
-                <span className="text-fjord-300 text-sm">
-                  Ingen registrering nødvendig
-                </span>
+
+      <main className="relative">
+        {/* =========================================================
+            HERO — editorial split
+            ========================================================= */}
+        <section className="relative border-b border-paper-edge bg-paper">
+          {/* Masthead */}
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-10 pb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 text-[11px] font-mono uppercase tracking-[0.14em] text-ink-muted">
+              <span>Volum 01 — En uavhengig screening for norske eiendommer</span>
+              <span className="hidden md:inline">
+                Utgave {new Date().toLocaleDateString("nb-NO", { month: "long", year: "numeric" })}
+              </span>
+            </div>
+          </div>
+
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pb-14 lg:pb-24">
+            <div className="grid grid-cols-12 gap-6 lg:gap-10">
+              {/* Editorial headline — takes 8 cols */}
+              <div className="col-span-12 lg:col-span-8">
+                <h1 className="font-display text-display-xl text-ink rise-in">
+                  <span className="block">Sjekk hva</span>
+                  <span className="block italic">grunnen sier</span>
+                  <span className="block">før du kjøper.</span>
+                </h1>
+              </div>
+
+              {/* Right rail — lede + CTA */}
+              <div className="col-span-12 lg:col-span-4 lg:pt-6 flex flex-col justify-between gap-8">
+                <p className="text-base text-ink-soft leading-relaxed max-w-md fade-up fade-up-2">
+                  En uavhengig sammenstilling av flomfare, skredrisiko, radon,
+                  grunnforhold, reguleringsplan og byggerammer — hentet fra de
+                  samme offentlige kildene som arkitekter, geoteknikere og
+                  kommuneforvaltning bruker.
+                </p>
+
+                <div className="flex flex-col gap-3 fade-up fade-up-3">
+                  <Button asChild size="lg" variant="primary" className="self-start">
+                    <Link href="/analyser">
+                      Analyser en tomt
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-ink-muted">
+                    Ingen registrering · Gratis · Resultat på ~60 sek
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Running footer — data source ribbon */}
+          <div className="border-t border-paper-edge bg-paper-deep/40">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-4">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <span className="label-editorial">Datakilder</span>
+                {datakilder.map((kilde, i) => (
+                  <span
+                    key={kilde}
+                    className="text-[11px] font-mono text-ink-soft tracking-wide"
+                  >
+                    {kilde}
+                    {i < datakilder.length - 1 && (
+                      <span className="text-ink-faint ml-6">·</span>
+                    )}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Trust bar */}
-        <section className="bg-white border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-gray-500">
-              <span className="flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-fjord-500" />
-                Offentlige datakilder
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-fjord-500" />
-                Resultat på 60 sekunder
-              </span>
-              <span className="flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-fjord-500" />
-                AI-tolket PDF-rapport
-              </span>
+        {/* =========================================================
+            INTRO / INGRESS — editorial drop cap
+            ========================================================= */}
+        <section className="relative py-20 lg:py-28">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+            <div className="grid grid-cols-12 gap-6 lg:gap-10">
+              <div className="col-span-12 lg:col-span-3">
+                <span className="label-editorial block mb-3">Premiss</span>
+                <h2 className="font-display text-display-sm text-ink">
+                  Én beslutning.
+                  <br />
+                  Åtte portaler.
+                </h2>
+              </div>
+
+              <div className="col-span-12 lg:col-span-8 lg:col-start-5">
+                <p className="font-display text-2xl lg:text-3xl leading-[1.4] tracking-tight text-ink">
+                  <span className="float-left font-display text-[5.5rem] leading-[0.85] mr-3 mt-1 text-clay-500">
+                    Å
+                  </span>
+                  kjøpe en tomt i Norge krever at du samler informasjon fra
+                  Kartverket, NVE, NGU, SSB, Statens vegvesen, DiBK,
+                  Riksantikvaren og kommunens planinnsyn. I praksis tar det to
+                  timer per tomt. For en lekmann er det uoverkommelig.
+                </p>
+
+                <p className="mt-8 text-base text-ink-soft leading-relaxed max-w-2xl">
+                  Tomtesjekk samler alle datakildene i én rapport på under ett
+                  minutt, tolket av en AI som er forankret i TEK17, NVE-veileder
+                  1/2019 og DSBs anbefalinger for klimatilpasning. Rapporten
+                  erstatter ikke fagkyndig rådgivning — den gir deg grunnlaget
+                  for å stille de riktige spørsmålene før du signerer.
+                </p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* What we check */}
-        <section className="py-16 lg:py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Hva sjekker vi?
-            </h2>
-            <p className="text-gray-500 mb-10 max-w-xl">
-              Data fra Kartverket, NVE, NGU, SSB og Statens vegvesen — samlet i
-              én rapport.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {features.map((f) => (
-                <div
-                  key={f.title}
-                  className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors"
+        <Separator ornamented />
+
+        {/* =========================================================
+            SEKS DIMENSJONER — editorial grid
+            ========================================================= */}
+        <section className="py-20 lg:py-28">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+            <div className="flex items-end justify-between mb-12 lg:mb-16">
+              <div>
+                <span className="label-editorial block mb-3">Innhold</span>
+                <h2 className="font-display text-display-md text-ink">
+                  Seks dimensjoner.
+                  <br />
+                  Én samlet rapport.
+                </h2>
+              </div>
+              <span className="hidden lg:block text-[11px] font-mono uppercase tracking-wider text-ink-muted">
+                § Hva rapporten dekker
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-paper-edge border border-paper-edge">
+              {dimensjoner.map((d) => (
+                <article
+                  key={d.nummer}
+                  className="bg-paper-soft p-8 lg:p-10 group relative"
                 >
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${f.color}12` }}
-                  >
-                    <f.icon className="w-5 h-5" style={{ color: f.color }} />
+                  <div className="flex items-start justify-between mb-6">
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">
+                      {d.nummer} / 06
+                    </span>
+                    <ArrowUpRight className="w-4 h-4 text-ink-faint group-hover:text-ink transition-colors" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{f.title}</h3>
-                    <p className="text-sm text-gray-500 mt-0.5">{f.desc}</p>
+
+                  <h3 className="font-display text-2xl text-ink tracking-tight mb-4">
+                    {d.tittel}
+                  </h3>
+
+                  <ul className="space-y-1 mb-6">
+                    {d.tema.map((t) => (
+                      <li
+                        key={t}
+                        className="text-sm text-ink-soft flex items-center gap-2"
+                      >
+                        <span className="w-3 h-px bg-ink-faint" />
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="pt-4 border-t border-paper-edge">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-ink-muted">
+                      {d.kilder}
+                    </span>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Comparison */}
-        <section className="py-16 lg:py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto">
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-2">
-                Tomtesjekk vs. manuell sjekk
-              </h2>
-              <p className="text-gray-500 text-center mb-8">
-                Spar timer med research — vi gjør jobben for deg.
-              </p>
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        Datapunkt
-                      </th>
-                      <th className="text-center px-4 py-3.5 text-xs font-semibold text-fjord-600 uppercase tracking-wider bg-fjord-50/50">
-                        Tomtesjekk
-                      </th>
-                      <th className="text-center px-4 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        Manuelt
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {comparison.map((row) => (
-                      <tr key={row.feature}>
-                        <td className="px-5 py-3 text-sm text-gray-700">
-                          {row.feature}
-                        </td>
-                        <td className="text-center px-4 py-3 bg-fjord-50/30">
-                          {typeof row.oss === "boolean" ? (
-                            row.oss ? (
-                              <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 mx-auto" />
-                            ) : (
-                              <XCircle className="w-4.5 h-4.5 text-gray-300 mx-auto" />
-                            )
-                          ) : (
-                            <span className="text-sm font-semibold text-emerald-600">
-                              {row.oss}
-                            </span>
-                          )}
-                        </td>
-                        <td className="text-center px-4 py-3">
-                          {typeof row.manuelt === "boolean" ? (
-                            row.manuelt ? (
-                              <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 mx-auto" />
-                            ) : (
-                              <XCircle className="w-4.5 h-4.5 text-gray-300 mx-auto" />
-                            )
-                          ) : (
-                            <span className="text-sm text-gray-400">
-                              {row.manuelt}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        <Separator ornamented />
+
+        {/* =========================================================
+            METODE — editorial three-column text
+            ========================================================= */}
+        <section className="py-20 lg:py-28">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+            <div className="grid grid-cols-12 gap-6 lg:gap-10">
+              <div className="col-span-12 lg:col-span-3">
+                <span className="label-editorial block mb-3">Metode</span>
+                <h2 className="font-display text-display-sm text-ink">
+                  Datadrevet.
+                  <br />
+                  Ikke spekulativ.
+                </h2>
+              </div>
+
+              <div className="col-span-12 lg:col-span-9 grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+                {/* Step 1 */}
+                <div>
+                  <div className="flex items-baseline gap-3 mb-4">
+                    <span className="font-display text-4xl text-clay-500">
+                      I.
+                    </span>
+                    <span className="label-editorial">Innhenting</span>
+                  </div>
+                  <p className="text-base text-ink-soft leading-relaxed">
+                    Vi kaller 16 offentlige API-endepunkter parallelt — alle
+                    åpne, alle autoritative. Ingen proprietære kilder,
+                    ingen påstander vi ikke kan bakke opp.
+                  </p>
+                </div>
+
+                {/* Step 2 */}
+                <div>
+                  <div className="flex items-baseline gap-3 mb-4">
+                    <span className="font-display text-4xl text-clay-500">
+                      II.
+                    </span>
+                    <span className="label-editorial">Tolkning</span>
+                  </div>
+                  <p className="text-base text-ink-soft leading-relaxed">
+                    Claude Haiku oversetter tekniske funn til hverdagsspråk,
+                    siterer relevante TEK17-paragrafer direkte, og rangerer
+                    kostnadsrisiko med eksplisitte usikkerhetsmarkører.
+                  </p>
+                </div>
+
+                {/* Step 3 */}
+                <div>
+                  <div className="flex items-baseline gap-3 mb-4">
+                    <span className="font-display text-4xl text-clay-500">
+                      III.
+                    </span>
+                    <span className="label-editorial">Kontekst</span>
+                  </div>
+                  <p className="text-base text-ink-soft leading-relaxed">
+                    Gemini analyserer faktisk ortofoto av tomten for å
+                    identifisere vegetasjon, adkomst og eksisterende
+                    bebyggelse — multimodal grunnlegging mot virkelige forhold.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* CTA — simple */}
-        <section className="py-16 lg:py-20 bg-fjord-700">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-white mb-3">
-              Klar til å sjekke tomten?
-            </h2>
-            <p className="text-fjord-200 mb-8">
-              Helt gratis. Ingen registrering. Rapport på under ett minutt.
-            </p>
-            <Link
-              href="/analyser"
-              className="inline-flex items-center gap-2 px-7 py-3.5 bg-emerald-500 text-white rounded-lg font-semibold text-base hover:bg-emerald-600 transition-colors"
-            >
-              Start analyse
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+        {/* =========================================================
+            CTA — editorial closing statement
+            ========================================================= */}
+        <section className="relative bg-ink text-paper py-24 lg:py-32 overflow-hidden">
+          {/* Subtle contour pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.04] pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 20% 50%, rgba(245, 242, 235, 0.3) 1px, transparent 1px), radial-gradient(circle at 60% 30%, rgba(245, 242, 235, 0.2) 1px, transparent 1px)",
+              backgroundSize: "48px 48px, 96px 96px",
+            }}
+          />
+
+          <div className="relative max-w-[1400px] mx-auto px-6 lg:px-12">
+            <div className="grid grid-cols-12 gap-6 lg:gap-10 items-end">
+              <div className="col-span-12 lg:col-span-8">
+                <span className="label-editorial block mb-6 text-paper/50">
+                  Start
+                </span>
+                <h2 className="font-display text-display-lg">
+                  Gi tomten din
+                  <br />
+                  <span className="italic text-clay-400">to minutter.</span>
+                </h2>
+                <p className="mt-8 text-lg text-paper/70 max-w-xl leading-relaxed">
+                  Ingen registrering. Ingen bindinger. Bare en åpen rapport
+                  bygget på offentlige data. Bruk den som utgangspunkt for
+                  samtaler med arkitekt, geotekniker eller kommunen.
+                </p>
+              </div>
+
+              <div className="col-span-12 lg:col-span-4 flex lg:justify-end">
+                <Button asChild size="xl" variant="clay">
+                  <Link href="/analyser">
+                    Start analyse
+                    <ArrowRight className="h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </section>
       </main>

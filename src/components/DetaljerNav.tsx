@@ -3,14 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { statusFarge, statusLabel } from "@/lib/trafikklys";
-import { hentKortIkon } from "@/lib/kort-ikoner";
+import { statusFarge } from "@/lib/trafikklys";
+import { Button } from "./ui/button";
 import type { AnalyseKort } from "@/types";
 
 interface Props {
   kort: AnalyseKort[];
   onPrint?: () => void;
 }
+
+/* -------------------------------------------------------------------------
+   DetaljerNav — editorial sticky index
+   Numbered list with status dot, no icons, minimal chrome
+   ------------------------------------------------------------------------- */
 
 export function DetaljerNav({ kort, onPrint }: Props) {
   const [aktivId, setAktivId] = useState<string>(kort[0]?.id || "");
@@ -38,7 +43,6 @@ export function DetaljerNav({ kort, onPrint }: Props) {
     return () => observerRef.current?.disconnect();
   }, [kort]);
 
-  // Auto-scroll mobile nav to keep active pill visible
   useEffect(() => {
     if (!mobilRef.current) return;
     const activeBtn = mobilRef.current.querySelector(`[data-nav="${aktivId}"]`);
@@ -54,74 +58,68 @@ export function DetaljerNav({ kort, onPrint }: Props) {
 
   return (
     <>
-      {/* Desktop: vertical sticky sidebar */}
+      {/* Desktop: editorial sticky sidebar */}
       <nav className="hidden lg:block sticky top-24 w-64 shrink-0 print:hidden">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
-          Kategorier
-        </p>
-        <ul className="space-y-1">
-          {kort.map((k) => {
-            const { icon: Icon } = hentKortIkon(k.id);
+        <span className="label-editorial block mb-5 px-3">Innhold</span>
+        <ol className="space-y-0">
+          {kort.map((k, i) => {
             const farge = statusFarge(k.status);
             const erAktiv = aktivId === k.id;
-            const risikoLabel = statusLabel(k.status);
 
             return (
               <li key={k.id}>
                 <button
                   onClick={() => scrollTo(k.id)}
                   className={cn(
-                    "nav-sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all relative",
+                    "w-full flex items-start gap-3 px-3 py-3 text-left transition-colors border-l-[2px]",
                     erAktiv
-                      ? "bg-fjord-50 text-fjord-700 font-semibold border-l-4 border-l-fjord-500 pl-4"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-paper-deep border-l-ink text-ink"
+                      : "border-l-transparent text-ink-muted hover:text-ink hover:bg-paper-deep/40"
                   )}
                 >
-                  {/* Traffic light dot with glow */}
-                  <span
-                    className="w-3 h-3 rounded-full shrink-0 nav-traffic-dot"
-                    style={{
-                      backgroundColor: farge,
-                      boxShadow: `0 0 8px ${farge}80`,
-                    }}
-                  />
-                  <Icon className={cn(
-                    "w-4 h-4 shrink-0 transition-opacity duration-200",
-                    erAktiv ? "opacity-100" : "opacity-60"
-                  )} />
-                  <div className="flex flex-col min-w-0">
-                    <span className="truncate">{k.tittel}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-ink-muted mt-0.5 w-5 shrink-0">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
                     <span
-                      className="text-[10px] font-medium leading-tight truncate"
-                      style={{ color: farge }}
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: farge }}
+                    />
+                    <span
+                      className={cn(
+                        "text-[13px] truncate",
+                        erAktiv && "font-medium"
+                      )}
                     >
-                      {risikoLabel}
+                      {k.tittel}
                     </span>
                   </div>
                 </button>
               </li>
             );
           })}
-        </ul>
+        </ol>
 
         {onPrint && (
-          <button
+          <Button
             onClick={onPrint}
-            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-fjord-500 text-white rounded-lg text-sm font-semibold hover:bg-fjord-600 transition-colors"
+            variant="primary"
+            size="sm"
+            className="mt-6 w-full"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
             Last ned PDF
-          </button>
+          </Button>
         )}
       </nav>
 
-      {/* Mobile: horizontal scrolling pills — colorful status tinting */}
+      {/* Mobile: horizontal scrolling strip */}
       <div
         ref={mobilRef}
-        className="lg:hidden sticky top-16 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 overflow-x-auto print:hidden"
+        className="lg:hidden sticky top-16 z-40 bg-paper/95 backdrop-blur-md border-b border-paper-edge overflow-x-auto print:hidden"
       >
-        <div className="flex gap-2 px-4 py-3 min-w-max">
-          {kort.map((k) => {
+        <div className="flex gap-0 px-4 min-w-max">
+          {kort.map((k, i) => {
             const farge = statusFarge(k.status);
             const erAktiv = aktivId === k.id;
 
@@ -131,27 +129,17 @@ export function DetaljerNav({ kort, onPrint }: Props) {
                 data-nav={k.id}
                 onClick={() => scrollTo(k.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200",
+                  "flex items-center gap-2 px-4 py-3 text-[11px] font-mono uppercase tracking-wider whitespace-nowrap transition-colors border-b-2",
                   erAktiv
-                    ? "text-white shadow-md scale-105"
-                    : "text-gray-700 hover:opacity-90"
+                    ? "border-b-ink text-ink"
+                    : "border-b-transparent text-ink-muted hover:text-ink"
                 )}
-                style={
-                  erAktiv
-                    ? { backgroundColor: farge, boxShadow: `0 2px 10px ${farge}50` }
-                    : { backgroundColor: `${farge}18` }
-                }
               >
                 <span
-                  className={cn(
-                    "w-2.5 h-2.5 rounded-full shrink-0 transition-transform duration-200",
-                    erAktiv && "scale-125"
-                  )}
-                  style={{
-                    backgroundColor: erAktiv ? "white" : farge,
-                    boxShadow: erAktiv ? "none" : `0 0 6px ${farge}60`,
-                  }}
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ backgroundColor: farge }}
                 />
+                <span className="text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
                 {k.tittel}
               </button>
             );

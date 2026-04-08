@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Sparkles, Download, RefreshCw, X, Camera } from "lucide-react";
+import { Download, RefreshCw, X, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 import type { Rapport } from "@/types";
 
 interface BildegenereringProps {
@@ -103,71 +104,76 @@ export function Bildegenerering({ rapport }: BildegenereringProps) {
   };
 
   return (
-    <div className="mt-5 border border-gray-200 rounded-xl overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-3 bg-gradient-to-r from-fjord-50 to-amber-50 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-amber-500" />
-          <h3 className="font-display font-semibold text-sm text-fjord-700">
-            AI Husforslag
+    <section className="bg-paper-soft border border-paper-edge fade-up">
+      {/* Running head */}
+      <div className="border-b border-paper-edge px-6 lg:px-8 py-4 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <span className="label-editorial">Arkitektonisk visualisering</span>
+          <h3 className="font-display text-xl text-ink tracking-tight mt-1">
+            AI-konsept
           </h3>
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">
-          Tre AI-genererte vinkler av hvordan et hus kan se ut på denne tomten
-        </p>
+        <span className="text-[11px] font-mono uppercase tracking-wider text-ink-muted">
+          Gemini 2.5 · 3 vinkler
+        </span>
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-6 lg:p-8">
         {bilder.length === 0 && !laster && (
-          <button
-            onClick={generer}
-            disabled={laster}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-fjord-500 to-fjord-600 text-white rounded-lg font-semibold hover:from-fjord-600 hover:to-fjord-700 transition-all text-sm shadow-sm"
-          >
-            <Sparkles className="w-4 h-4" />
-            Generer husforslag (3 vinkler)
-          </button>
+          <div>
+            <p className="text-sm text-ink-soft leading-relaxed max-w-xl mb-5">
+              Gemini genererer tre vinkler av et hus som respekterer byggehøyde,
+              utnyttelsesgrad og det faktiske terrenget — forankret i ortofoto
+              av den eksakte tomten.
+            </p>
+            <Button onClick={generer} variant="outline" size="md">
+              Generer husforslag
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
         )}
 
         {laster && (
-          <div className="flex flex-col items-center gap-3 py-6">
-            <div className="w-10 h-10 border-3 border-fjord-200 border-t-fjord-500 rounded-full animate-spin" />
-            <p className="text-sm text-gray-500">Genererer 3 vinkler parallelt med AI...</p>
-            <p className="text-xs text-gray-400">Dette kan ta 20-40 sekunder</p>
+          <div className="flex items-center gap-3 py-6">
+            <div className="w-5 h-5 border-2 border-ink/20 border-t-ink rounded-full animate-spin" />
+            <div>
+              <p className="text-sm text-ink-muted">
+                Genererer 3 vinkler parallelt...
+              </p>
+              <p className="text-[11px] font-mono uppercase tracking-wider text-ink-faint mt-1">
+                ~20–40 sekunder
+              </p>
+            </div>
           </div>
         )}
 
         {feil && (
-          <div className="text-center py-4">
-            <p className="text-sm text-red-600 mb-3">{feil}</p>
-            <button
-              onClick={generer}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-fjord-600 border border-fjord-200 rounded-lg hover:bg-fjord-50 transition-colors"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
+          <div className="py-4">
+            <p className="text-sm text-clay-700 mb-3">{feil}</p>
+            <Button onClick={generer} variant="outline" size="sm">
+              <RefreshCw className="w-3 h-3" />
               Prøv igjen
-            </button>
+            </Button>
           </div>
         )}
 
         {bilder.length > 0 && !laster && aktivtBilde && (
-          <div className="space-y-3">
-            {/* Tabs for different angles */}
+          <div className="space-y-5">
+            {/* Tabs for different angles — editorial pills */}
             {bilder.length > 1 && (
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-0 border border-paper-edge self-start">
                 {bilder.map((b) => (
                   <button
                     key={b.id}
                     onClick={() => setValgtId(b.id)}
                     className={cn(
-                      "inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors",
+                      "text-[11px] font-mono uppercase tracking-wider px-4 py-2 border-r border-paper-edge last:border-r-0 transition-colors",
                       valgtId === b.id
-                        ? "bg-fjord-500 text-white border-fjord-500"
-                        : "bg-white text-fjord-600 border-fjord-200 hover:bg-fjord-50"
+                        ? "bg-ink text-paper"
+                        : "bg-paper-soft text-ink-muted hover:bg-paper-deep hover:text-ink"
                     )}
                   >
-                    <Camera className="w-3 h-3" />
                     {b.label}
                   </button>
                 ))}
@@ -244,27 +250,21 @@ export function Bildegenerering({ rapport }: BildegenereringProps) {
 
             {/* Description */}
             {aktivtBilde.beskrivelse && (
-              <p className="text-xs text-gray-500 leading-relaxed italic">
+              <p className="text-xs text-ink-muted leading-relaxed italic max-w-2xl">
                 {aktivtBilde.beskrivelse}
               </p>
             )}
 
             {/* Actions */}
-            <div className="flex gap-2">
-              <button
-                onClick={generer}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-fjord-600 border border-fjord-200 rounded-lg hover:bg-fjord-50 transition-colors"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
+            <div className="flex gap-3 pt-2">
+              <Button onClick={generer} variant="outline" size="sm">
+                <RefreshCw className="w-3 h-3" />
                 Nye forslag
-              </button>
-              <button
-                onClick={lastNed}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-fjord-600 border border-fjord-200 rounded-lg hover:bg-fjord-50 transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
+              </Button>
+              <Button onClick={lastNed} variant="ghost" size="sm">
+                <Download className="w-3 h-3" />
                 Last ned
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -273,23 +273,23 @@ export function Bildegenerering({ rapport }: BildegenereringProps) {
       {/* Fullscreen overlay */}
       {visFullskjerm && aktivtBilde && (
         <div
-          className="fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[2000] bg-ink/90 flex items-center justify-center p-4"
           onClick={() => setVisFullskjerm(false)}
         >
           <button
             onClick={() => setVisFullskjerm(false)}
-            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors"
+            className="absolute top-4 right-4 p-2 text-paper/80 hover:text-paper transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
           <img
             src={aktivtBilde.bilde}
             alt="AI-generert husforslag"
-            className="max-w-full max-h-full rounded-lg shadow-2xl"
+            className="max-w-full max-h-full shadow-editorial-xl"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}
-    </div>
+    </section>
   );
 }

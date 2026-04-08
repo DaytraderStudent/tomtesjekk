@@ -2,12 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Editorial Nordic — design tokens as CSS custom properties
+   ============================================================ */
+
 :root {
-  --fjord-500: #1B3F6E;
-  --success: #2ECC71;
-  --warning: #F39C12;
-  --danger: #E74C3C;
-  --surface: #F8F9FA;
+  /* Paper tones */
+  --paper: #f5f2eb;
+  --paper-soft: #fbf9f4;
+  --paper-edge: #e9e4d8;
+  --paper-deep: #ede8dc;
+
+  /* Ink tones */
+  --ink: #0f0f11;
+  --ink-soft: #2a2a2f;
+  --ink-muted: #6b6b73;
+  --ink-faint: #9c9ca3;
+
+  /* Accents */
+  --clay-500: #c64b3f;
+  --clay-600: #a63a2f;
+  --moss-500: #4a624a;
+  --moss-600: #3b4f3b;
+
+  /* Data colors */
+  --data-green: #4a7c59;
+  --data-amber: #c18a2f;
+  --data-red: #b8412c;
+  --data-gray: #8e8473;
+
+  /* Legacy */
+  --fjord-500: #1b3f6e;
+  --success: #4a7c59;
+  --warning: #c18a2f;
+  --danger: #b8412c;
+  --surface: #f5f2eb;
 }
 
 * {
@@ -21,487 +50,284 @@ html {
 }
 
 body {
-  font-family: var(--font-source-sans), system-ui, sans-serif;
-  background-color: var(--surface);
-  color: #1a1a2e;
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
 }
 
-/* Leaflet z-index fix */
+/* ============================================================
+   Paper texture — subtle grain overlay, anchors the entire site
+   ============================================================ */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   Typographic utilities
+   ============================================================ */
+
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-variation-settings: "opsz" 144, "SOFT" 30;
+  font-feature-settings: "ss01";
+}
+
+.font-mono {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-feature-settings: "ss01", "ss02";
+}
+
+/* Small caps utility for editorial labels */
+.label-editorial {
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Display number for stats */
+.display-number {
+  font-family: var(--font-fraunces), serif;
+  font-variation-settings: "opsz" 144, "SOFT" 30;
+  font-weight: 500;
+  font-feature-settings: "tnum", "ss01";
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+}
+
+/* ============================================================
+   Leaflet z-index fix
+   ============================================================ */
+
 .leaflet-container {
   z-index: 0;
 }
 
-/* Traffic light colors */
+/* ============================================================
+   Traffic light — editorial data colors
+   ============================================================ */
+
 .trafikklys-gronn {
-  background-color: #2ECC71;
+  background-color: var(--data-green);
 }
 .trafikklys-gul {
-  background-color: #F39C12;
+  background-color: var(--data-amber);
 }
 .trafikklys-rod {
-  background-color: #E74C3C;
+  background-color: var(--data-red);
 }
 .trafikklys-gra {
-  background-color: #9CA3AF;
+  background-color: var(--data-gray);
 }
 
-/* Progress bar animation */
-@keyframes progress-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-.animate-progress-pulse {
-  animation: progress-pulse 1.5s ease-in-out infinite;
-}
+/* ============================================================
+   Subtle animations — purposeful, not gimmicky
+   ============================================================ */
 
-/* ── Rapportkort staggered entrance — slide from left with border grow ── */
-@keyframes rapportkort-slide-in {
-  0% {
-    opacity: 0;
-    transform: translateX(-24px);
-    border-left-width: 0px;
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes editorial-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-  60% {
-    opacity: 1;
-    transform: translateX(4px);
-    border-left-width: 6px;
+
+  .fade-up {
+    animation: editorial-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-    border-left-width: 5px;
+
+  .fade-up-1 { animation-delay: 0.05s; }
+  .fade-up-2 { animation-delay: 0.1s; }
+  .fade-up-3 { animation-delay: 0.15s; }
+  .fade-up-4 { animation-delay: 0.2s; }
+  .fade-up-5 { animation-delay: 0.25s; }
+  .fade-up-6 { animation-delay: 0.3s; }
+
+  @keyframes editorial-rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-}
-.rapportkort-enter {
-  animation: rapportkort-slide-in 0.5s ease-out both;
-}
 
-/* ── Traffic light dot pulse on appear ── */
-@keyframes trafikklys-puls-anim {
-  0% { box-shadow: 0 0 0 0 currentColor; }
-  50% { box-shadow: 0 0 0 6px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-.trafikklys-puls {
-  animation: trafikklys-puls-anim 1s ease-out 0.3s 1;
-}
-
-/* ── Rapport container fade-in ── */
-@keyframes rapport-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-.rapport-fade-in {
-  animation: rapport-fade 0.3s ease-out both;
-}
-
-/* ── Risk overview dot entrance ── */
-@keyframes risiko-dot-pop {
-  0% { transform: scale(0); }
-  60% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-.risiko-dot-enter {
-  animation: risiko-dot-pop 0.35s ease-out both;
-}
-.risiko-dot-enter:nth-child(1) { animation-delay: 0.05s; }
-.risiko-dot-enter:nth-child(2) { animation-delay: 0.1s; }
-.risiko-dot-enter:nth-child(3) { animation-delay: 0.15s; }
-.risiko-dot-enter:nth-child(4) { animation-delay: 0.2s; }
-.risiko-dot-enter:nth-child(5) { animation-delay: 0.25s; }
-.risiko-dot-enter:nth-child(6) { animation-delay: 0.3s; }
-.risiko-dot-enter:nth-child(7) { animation-delay: 0.35s; }
-.risiko-dot-enter:nth-child(8) { animation-delay: 0.4s; }
-.risiko-dot-enter:nth-child(9) { animation-delay: 0.45s; }
-.risiko-dot-enter:nth-child(10) { animation-delay: 0.5s; }
-.risiko-dot-enter:nth-child(11) { animation-delay: 0.55s; }
-.risiko-dot-enter:nth-child(12) { animation-delay: 0.6s; }
-
-/* ── AI summary animated border glow — bold visible ── */
-@keyframes ai-border-glow {
-  0%, 100% {
-    border-color: #8fb3de;
-    box-shadow: 0 0 12px rgba(27, 63, 110, 0.08);
+  .rise-in {
+    animation: editorial-rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
-  50% {
-    border-color: #1B3F6E;
-    box-shadow: 0 0 20px rgba(27, 63, 110, 0.2);
+
+  /* Progress shimmer — kept subtle */
+  .fremdrift-bar {
+    background: linear-gradient(
+      90deg,
+      var(--ink) 0%,
+      var(--moss-500) 50%,
+      var(--ink) 100%
+    );
+    background-size: 200% 100%;
+    animation: fremdrift-shimmer 3s ease-in-out infinite;
+  }
+  @keyframes fremdrift-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .fremdrift-glow-dot {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--paper-soft);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 2px var(--moss-500);
+  }
+
+  /* Active step ring */
+  @keyframes steg-aktiv-ring {
+    0% { box-shadow: 0 0 0 0 rgba(15, 15, 17, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(15, 15, 17, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(15, 15, 17, 0); }
+  }
+  .steg-aktiv-puls {
+    animation: steg-aktiv-ring 1.8s ease-out infinite;
   }
 }
+
+/* Keep legacy class names working but tame them */
+.rapportkort-enter,
+.rapport-fade-in,
+.risiko-dot-enter,
+.samlet-risiko-enter,
+.fade-up,
+.rise-in {
+  will-change: opacity, transform;
+}
+
 .ai-sammendrag-ramme {
-  background: linear-gradient(135deg, #dce8f5 0%, #e4edf8 50%, #dce8f5 100%);
-  border: 3px solid #8fb3de;
-  animation: ai-border-glow 3s ease-in-out infinite;
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-edge);
+  border-left: 3px solid var(--ink);
 }
 
-/* ── AI Sparkles icon pulse ── */
-@keyframes ai-sparkles-pulse {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-  25% {
-    transform: scale(1.2) rotate(8deg);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-  75% {
-    transform: scale(1.15) rotate(-6deg);
-    opacity: 0.85;
-  }
-}
 .ai-sparkles-pulse {
-  animation: ai-sparkles-pulse 2.5s ease-in-out infinite;
-}
-
-/* ── Fremdriftslinje shimmer bar — thicker with gradient ── */
-.fremdrift-bar {
-  background: linear-gradient(90deg, #1B3F6E 0%, #2d5fa0 30%, #10b981 70%, #059669 100%);
-  background-size: 200% 100%;
-  animation: fremdrift-shimmer 2.5s ease-in-out infinite;
-  box-shadow: 0 1px 4px rgba(27, 63, 110, 0.3);
-}
-@keyframes fremdrift-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* ── Glowing dot at leading edge of progress bar ── */
-.fremdrift-glow-dot {
-  position: absolute;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: white;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 8px 3px rgba(16, 185, 129, 0.6), 0 0 16px 6px rgba(16, 185, 129, 0.3);
-  animation: fremdrift-glow-pulse 1.5s ease-in-out infinite;
-}
-@keyframes fremdrift-glow-pulse {
-  0%, 100% {
-    box-shadow: 0 0 8px 3px rgba(16, 185, 129, 0.6), 0 0 16px 6px rgba(16, 185, 129, 0.3);
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    box-shadow: 0 0 12px 5px rgba(16, 185, 129, 0.8), 0 0 24px 10px rgba(16, 185, 129, 0.4);
-    transform: translate(-50%, -50%) scale(1.15);
-  }
-}
-
-/* ── Percentage text entrance ── */
-@keyframes fremdrift-prosent-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.fremdrift-prosent-enter {
-  animation: fremdrift-prosent-enter 0.4s ease-out both;
-}
-
-/* ── Completed step checkmark POP ── */
-@keyframes steg-ferdig-pop {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.3); opacity: 1; }
-  70% { transform: scale(0.85); }
-  85% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-.steg-ferdig-enter {
-  animation: steg-ferdig-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-/* ── Active step pulsing ring — bold visible ── */
-@keyframes steg-aktiv-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(27, 63, 110, 0.5);
-  }
-  40% {
-    box-shadow: 0 0 0 6px rgba(27, 63, 110, 0.25);
-  }
-  70% {
-    box-shadow: 0 0 0 12px rgba(27, 63, 110, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(27, 63, 110, 0);
-  }
-}
-.steg-aktiv-puls {
-  animation: steg-aktiv-ring 1.5s ease-out infinite;
-}
-
-/* ── Failed step shake ── */
-@keyframes steg-feil-shake {
-  0%, 100% { transform: translateX(0); }
-  15% { transform: translateX(-4px); }
-  30% { transform: translateX(4px); }
-  45% { transform: translateX(-3px); }
-  60% { transform: translateX(3px); }
-  75% { transform: translateX(-1px); }
-  90% { transform: translateX(1px); }
-}
-.steg-feil-shake {
-  animation: steg-feil-shake 0.5s ease-out both;
-}
-
-/* ── Samlet risiko header entrance ── */
-@keyframes samlet-risiko-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-12px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-.samlet-risiko-enter {
-  animation: samlet-risiko-enter 0.5s ease-out both;
+  animation: none;
 }
 
 /* Scroll reveal */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transform: translateY(16px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .scroll-reveal.revealed {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* === Detaljer hero animated gradient mesh background === */
-.hero-gradient-mesh {
-  background: linear-gradient(135deg, #1B3F6E 0%, #102642 25%, #0f3d2e 50%, #102642 75%, #1B3F6E 100%);
-  background-size: 400% 400%;
-  animation: hero-mesh-shift 12s ease-in-out infinite;
-}
-@keyframes hero-mesh-shift {
-  0% { background-position: 0% 0%; }
-  25% { background-position: 100% 50%; }
-  50% { background-position: 50% 100%; }
-  75% { background-position: 0% 50%; }
-  100% { background-position: 0% 0%; }
+/* ============================================================
+   Editorial card primitives
+   ============================================================ */
+
+.card-editorial {
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-edge);
+  box-shadow:
+    0 1px 2px rgba(15, 15, 17, 0.03),
+    0 1px 3px rgba(15, 15, 17, 0.05);
 }
 
-/* === Detaljer hero topo contour slow drift === */
-.hero-topo-drift {
-  animation: hero-topo-drift-anim 25s linear infinite;
-}
-@keyframes hero-topo-drift-anim {
-  0% { transform: translateX(0) translateY(0); }
-  100% { transform: translateX(-40px) translateY(20px); }
-}
-
-/* === Hero risk badge gradient animation === */
-.hero-risk-badge {
-  background-size: 200% 200%;
-  animation: risk-gradient-shift 4s ease-in-out infinite;
-}
-.hero-risk-badge.text-red-100 {
-  background-image: linear-gradient(
-    135deg,
-    rgba(239, 68, 68, 0.9) 0%,
-    rgba(185, 28, 28, 0.95) 50%,
-    rgba(239, 68, 68, 0.9) 100%
-  );
-}
-.hero-risk-badge.text-amber-100 {
-  background-image: linear-gradient(
-    135deg,
-    rgba(245, 158, 11, 0.9) 0%,
-    rgba(217, 119, 6, 0.95) 50%,
-    rgba(245, 158, 11, 0.9) 100%
-  );
-}
-.hero-risk-badge.text-emerald-100 {
-  background-image: linear-gradient(
-    135deg,
-    rgba(16, 185, 129, 0.9) 0%,
-    rgba(5, 150, 105, 0.95) 50%,
-    rgba(16, 185, 129, 0.9) 100%
-  );
-}
-@keyframes risk-gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+.card-editorial-raised {
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-edge);
+  box-shadow:
+    0 4px 12px rgba(15, 15, 17, 0.05),
+    0 1px 3px rgba(15, 15, 17, 0.04);
 }
 
-/* === Hero risk dot pulsing glow === */
-.hero-risk-dot-pulse {
-  animation: hero-risk-dot-anim 2s ease-in-out infinite;
-}
-@keyframes hero-risk-dot-anim {
-  0%, 100% {
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 14px rgba(255, 255, 255, 0.8);
-    transform: scale(1.2);
-  }
+/* ============================================================
+   Editorial rule / divider
+   ============================================================ */
+
+.rule-editorial {
+  position: relative;
+  height: 1px;
+  background: var(--paper-edge);
 }
 
-/* === Detaljer hero AI card — visible rotating gradient border === */
-.hero-ai-card-v2 {
-  background: conic-gradient(
-    from var(--ai-angle, 0deg),
-    rgba(255, 255, 255, 0.5),
-    rgba(16, 185, 129, 0.6),
-    rgba(27, 63, 110, 0.7),
-    rgba(245, 158, 11, 0.5),
-    rgba(255, 255, 255, 0.5)
-  );
-  border-radius: 0.75rem;
-  animation: ai-rotate-border 4s linear infinite;
-}
-@property --ai-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-@keyframes ai-rotate-border {
-  0% { --ai-angle: 0deg; }
-  100% { --ai-angle: 360deg; }
-}
-/* Fallback for browsers without @property support */
-@supports not (background: conic-gradient(from 0deg, red, blue)) {
-  .hero-ai-card-v2 {
-    background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.4) 0%,
-      rgba(16, 185, 129, 0.5) 25%,
-      rgba(27, 63, 110, 0.6) 50%,
-      rgba(245, 158, 11, 0.4) 75%,
-      rgba(255, 255, 255, 0.4) 100%
-    );
-    background-size: 300% 300%;
-    animation: ai-border-shimmer-fallback 4s linear infinite;
-  }
-}
-@keyframes ai-border-shimmer-fallback {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 300% 300%; }
+.rule-editorial::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 50%;
 }
 
-/* === Hero map glowing border === */
-.hero-map-glow {
-  transition: box-shadow 0.3s ease;
-}
-.hero-map-glow:hover {
-  filter: brightness(1.05);
-}
+/* ============================================================
+   Scrollbar
+   ============================================================ */
 
-/* === Category section scroll-triggered entrance — 30px slide === */
-.kategori-entrance {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-.kategori-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* === Category status dot subtle pulse === */
-.kategori-status-dot {
-  animation: kategori-dot-pulse 2.5s ease-in-out infinite;
-}
-@keyframes kategori-dot-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.25); }
-}
-
-/* === Category BYA info cards — colored top border === */
-.kategori-bya-card {
-  border-top: 3px solid #1B3F6E;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-/* === Nav sidebar traffic dot glow pulse === */
-.nav-traffic-dot {
-  animation: nav-dot-glow 3s ease-in-out infinite;
-}
-@keyframes nav-dot-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-/* === Print overrides — disable animations === */
-@media print {
-  .kategori-entrance,
-  .kategori-visible {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-    animation: none !important;
-  }
-  .hero-risk-badge,
-  .hero-ai-card-v2,
-  .hero-gradient-mesh,
-  .hero-topo-drift,
-  .hero-risk-dot-pulse,
-  .hero-map-glow,
-  .kategori-status-dot,
-  .nav-traffic-dot,
-  .ai-sammendrag-ramme,
-  .ai-sparkles-pulse,
-  .rapportkort-enter,
-  .fremdrift-bar,
-  .fremdrift-glow-dot,
-  .steg-ferdig-enter,
-  .steg-aktiv-puls,
-  .steg-feil-shake,
-  .samlet-risiko-enter,
-  .risiko-dot-enter,
-  .trafikklys-puls {
-    animation: none !important;
-  }
-  .hero-gradient-mesh {
-    background: #1B3F6E !important;
-  }
-}
-
-/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: var(--paper);
 }
 ::-webkit-scrollbar-thumb {
-  background: #c4c4c4;
-  border-radius: 4px;
+  background: var(--paper-edge);
+  border-radius: 0;
+  border: 2px solid var(--paper);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a0a0a0;
+  background: var(--ink-faint);
 }
 
-/* Print styles — A4 optimized for window.print() PDF export */
+/* ============================================================
+   Print styles — editorial document feel
+   ============================================================ */
+
 @media print {
   @page {
     size: A4;
-    margin: 15mm 18mm;
+    margin: 18mm 20mm;
   }
 
-  /* Hide interactive elements */
+  body::before {
+    display: none !important;
+  }
+
   nav,
   footer,
   .print\:hidden {
     display: none !important;
   }
 
-  /* Show print-only elements */
   .print-only {
     display: block !important;
   }
@@ -512,8 +338,8 @@ body {
 
   body {
     background: white !important;
-    color: #1a1a1a !important;
-    font-size: 11pt;
+    color: #0f0f11 !important;
+    font-size: 10.5pt;
     line-height: 1.5;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -521,9 +347,9 @@ body {
 
   * {
     box-shadow: none !important;
+    animation: none !important;
   }
 
-  /* Cover page */
   .print-cover {
     display: flex !important;
     flex-direction: column;
@@ -535,77 +361,45 @@ body {
     padding: 40mm 20mm;
   }
 
-  .print-cover-logo {
-    width: 48px;
-    height: 48px;
-    background-color: #1B3F6E;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 16px;
-  }
-
   .print-cover h1 {
-    font-size: 28pt;
-    font-weight: 700;
-    color: #1B3F6E;
-    margin-bottom: 8px;
+    font-family: var(--font-fraunces), serif;
+    font-size: 36pt;
+    font-weight: 500;
+    color: #0f0f11;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
   }
 
   .print-cover h2 {
-    font-size: 16pt;
+    font-size: 14pt;
     font-weight: 400;
-    color: #374151;
+    color: #2a2a2f;
     margin-bottom: 32px;
   }
 
   .print-cover .print-cover-meta {
-    font-size: 10pt;
-    color: #6B7280;
+    font-family: var(--font-plex-mono), monospace;
+    font-size: 9pt;
+    color: #6b6b73;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     margin-top: 24px;
   }
 
-  /* Hero section: simplified for print */
   .detaljer-hero {
-    background: #1B3F6E !important;
-    color: white !important;
+    background: #0f0f11 !important;
+    color: #f5f2eb !important;
     padding: 20px 24px !important;
     page-break-after: avoid;
   }
 
-  .detaljer-hero img {
-    max-width: 200px;
-    max-height: 150px;
-    object-fit: contain;
-  }
-
-  /* Category sections */
   .detaljer-kategori {
+    break-inside: avoid;
     break-before: page;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 8px;
+    border: 1px solid #e9e4d8 !important;
+    border-radius: 0;
     overflow: hidden;
     margin-bottom: 0;
-  }
-
-  .detaljer-kategori .kategori-innhold {
-    background: white !important;
-  }
-
-  /* Remove background colors except risk badges */
-  .detaljer-kategori .bg-gray-50,
-  .detaljer-kategori .bg-fjord-50 {
-    background: #f9fafb !important;
-  }
-
-  /* Keep risk badge colors */
-  .detaljer-kategori [class*="bg-red-"],
-  .detaljer-kategori [class*="bg-amber-"],
-  .detaljer-kategori [class*="bg-emerald-"],
-  .detaljer-kategori [class*="bg-green-"] {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
 
   section,
@@ -613,15 +407,14 @@ body {
     break-inside: avoid;
   }
 
-  /* Disclaimer footer */
   .print-disclaimer {
     display: block !important;
     break-before: auto;
     margin-top: 32px;
     padding-top: 16px;
-    border-top: 1px solid #d1d5db;
+    border-top: 1px solid #d1cdc2;
     font-size: 8pt;
-    color: #6B7280;
+    color: #6b6b73;
     line-height: 1.4;
   }
 
@@ -631,12 +424,6 @@ body {
     object-fit: contain;
   }
 
-  /* Tighter spacing for print */
-  .space-y-6 > * + * {
-    margin-top: 0 !important;
-  }
-
-  /* Ensure links show as text */
   a[href]::after {
     content: none;
   }

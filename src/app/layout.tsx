@@ -1,33 +1,35 @@
 import type { Metadata } from "next";
-import { Fraunces, Source_Sans_3, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Bricolage_Grotesque, IBM_Plex_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
+  axes: ["SOFT", "opsz"],
   display: "swap",
 });
 
-const sourceSans = Source_Sans_3({
-  variable: "--font-source-sans",
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
   display: "swap",
 });
 
-const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Tomtesjekk — Gratis AI-drevet tomteanalyse",
-    template: "%s | Tomtesjekk",
+    default: "Tomtesjekk — Tomteanalyse for norske eiendommer",
+    template: "%s · Tomtesjekk",
   },
   description:
-    "Sjekk flomfare, skred, radon, grunnforhold, byggekostnader og veitilgang for enhver tomt i Norge. Gratis AI-analyse på 60 sekunder.",
+    "En uavhengig screening av flomfare, skred, radon, grunnforhold, reguleringsplan og byggerammer for enhver tomt i Norge. Basert på offentlige data fra Kartverket, NVE, NGU, SSB og DiBK.",
   keywords: [
     "tomtesjekk",
     "tomteanalyse",
@@ -36,13 +38,14 @@ export const metadata: Metadata = {
     "radon",
     "grunnforhold",
     "byggekostnader",
+    "reguleringsplan",
     "norge",
     "eiendom",
   ],
   openGraph: {
-    title: "Tomtesjekk — Gratis AI-drevet tomteanalyse",
+    title: "Tomtesjekk — Tomteanalyse for norske eiendommer",
     description:
-      "Sjekk flomfare, skred, radon, grunnforhold, byggekostnader og veitilgang for enhver tomt i Norge.",
+      "En uavhengig screening av flomfare, skred, radon, grunnforhold, reguleringsplan og byggerammer for enhver tomt i Norge.",
     locale: "nb_NO",
     type: "website",
   },
@@ -54,8 +57,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="nb" className={`${fraunces.variable} ${sourceSans.variable} ${jetbrains.variable}`}>
-      <body className="font-sans antialiased">
+    <html
+      lang="nb"
+      className={`${fraunces.variable} ${bricolage.variable} ${plexMono.variable}`}
+    >
+      <body className="font-sans antialiased bg-paper text-ink">
         <Providers>{children}</Providers>
       </body>
     </html>

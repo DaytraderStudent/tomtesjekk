@@ -181,86 +181,57 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
       ref={sectionRef}
       id={`kategori-${kort.id}`}
       className={cn(
-        "detaljer-kategori scroll-mt-32 lg:scroll-mt-24 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:break-inside-avoid",
+        "detaljer-kategori scroll-mt-32 lg:scroll-mt-24 bg-paper-soft border border-paper-edge border-l-[3px] overflow-hidden print:break-inside-avoid",
         "kategori-entrance",
         isVisible && "kategori-visible"
       )}
+      style={{ borderLeftColor: farge }}
     >
-      {/* THICK gradient top bar */}
-      <div
-        className="h-2"
-        style={{
-          background: `linear-gradient(to right, ${farge}, ${farge}99 50%, transparent)`,
-        }}
-      />
-
-      <div className="p-5 sm:p-6 space-y-4">
-        {/* Header: icon + title + status badge */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0"
-              style={{
-                backgroundColor: `${ikonFarge}20`,
-                boxShadow: `0 0 16px ${ikonFarge}30, 0 4px 8px ${ikonFarge}15`,
-              }}
-            >
-              <Icon className="w-7 h-7" style={{ color: ikonFarge }} />
+      <div className="p-6 sm:p-8 lg:p-10 space-y-6">
+        {/* Editorial header */}
+        <header className="flex items-start justify-between gap-4 pb-5 border-b border-paper-edge">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: farge }}
+              />
+              <span className="label-editorial">{label}</span>
             </div>
-            <div>
-              <h3 className="font-display text-lg font-bold text-gray-900">
-                {kort.tittel}
-              </h3>
-              <p className="text-sm text-gray-600 mt-0.5">{kort.beskrivelse}</p>
-            </div>
+            <h3 className="font-display text-2xl lg:text-3xl text-ink tracking-tight leading-tight">
+              {kort.tittel}
+            </h3>
+            <p className="mt-2 text-sm text-ink-muted leading-relaxed">
+              {kort.beskrivelse}
+            </p>
           </div>
-
-          <span
-            className="shrink-0 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap"
-            style={{
-              backgroundColor: `${farge}18`,
-              color: farge,
-              boxShadow: `0 0 0 2px ${farge}30, 0 0 12px ${farge}15`,
-            }}
-          >
-            <span
-              className="w-3 h-3 rounded-full kategori-status-dot"
-              style={{
-                backgroundColor: farge,
-                boxShadow: `0 0 8px ${farge}`,
-              }}
-            />
-            {label}
-          </span>
-        </div>
+          <div className="shrink-0">
+            <Icon className="w-8 h-8 text-ink-faint" strokeWidth={1.25} />
+          </div>
+        </header>
 
         {/* Category map image */}
         {kartBilde && (
-          <div className="rounded-lg overflow-hidden border border-gray-100">
+          <div className="border border-paper-edge overflow-hidden">
             <img
               src={kartBilde}
               alt={`Kart for ${kort.tittel}`}
-              className="w-full h-auto"
+              className="w-full h-auto block"
               loading="lazy"
             />
           </div>
         )}
 
-        {/* Details — with colored left accent border */}
+        {/* Details */}
         {kort.detaljer && (
-          <div
-            className="bg-gray-50 rounded-lg p-4 border-l-[3px]"
-            style={{ borderLeftColor: farge }}
-          >
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-              {kort.detaljer}
-            </p>
-          </div>
+          <p className="text-[15px] text-ink-soft leading-relaxed whitespace-pre-line max-w-3xl">
+            {kort.detaljer}
+          </p>
         )}
 
         {/* Structured BYA subsection for regulering */}
         {kort.id === "regulering" && kort.raadata?.utnyttingsgrad != null && (
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div className="bg-paper border border-paper-edge p-5 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 Utnyttelse og byggehøyde
@@ -281,9 +252,9 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
 
             <div className="grid grid-cols-2 gap-3">
               {kort.raadata.utnyttingsgrad != null && (
-                <div className="bg-white rounded-lg p-3 border border-gray-100 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm kategori-bya-card">
+                <div className="bg-paper-soft border border-paper-edge p-3 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm kategori-bya-card">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <BadgePercent className="w-3.5 h-3.5 text-fjord-500" />
+                    <BadgePercent className="w-3.5 h-3.5 text-ink-muted" />
                     <span className="text-xs text-gray-500">Maks BYA</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -293,9 +264,9 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
               )}
 
               {kort.raadata.maksBebyggetAreal != null && (
-                <div className="bg-white rounded-lg p-3 border border-gray-100 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm kategori-bya-card">
+                <div className="bg-paper-soft border border-paper-edge p-3 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm kategori-bya-card">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Building2 className="w-3.5 h-3.5 text-fjord-500" />
+                    <Building2 className="w-3.5 h-3.5 text-ink-muted" />
                     <span className="text-xs text-gray-500">Maks bebygd</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -305,9 +276,9 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
               )}
 
               {kort.raadata.maksHoyde != null && (
-                <div className="bg-white rounded-lg p-3 border border-gray-100 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm kategori-bya-card">
+                <div className="bg-paper-soft border border-paper-edge p-3 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm kategori-bya-card">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Ruler className="w-3.5 h-3.5 text-fjord-500" />
+                    <Ruler className="w-3.5 h-3.5 text-ink-muted" />
                     <span className="text-xs text-gray-500">Maks høyde</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -317,9 +288,9 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
               )}
 
               {kort.raadata.maksEtasjer != null && (
-                <div className="bg-white rounded-lg p-3 border border-gray-100 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm kategori-bya-card">
+                <div className="bg-paper-soft border border-paper-edge p-3 transition-all duration-200 hover:border-fjord-200 hover:shadow-sm kategori-bya-card">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Layers className="w-3.5 h-3.5 text-fjord-500" />
+                    <Layers className="w-3.5 h-3.5 text-ink-muted" />
                     <span className="text-xs text-gray-500">Maks etasjer</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -340,7 +311,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
 
         {/* Structured kulturminner view */}
         {kort.id === "kulturminner" && kort.raadata?.minner && (
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div className="bg-paper border border-paper-edge p-5 space-y-3">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
               Registrerte kulturminner
             </p>
@@ -357,7 +328,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
                   return (
                     <div
                       key={i}
-                      className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3"
+                      className="bg-paper-soft border border-paper-edge p-3 flex items-start gap-3"
                     >
                       <MapPin className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -389,7 +360,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
                             href={m.lenke}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 mt-1 text-xs text-fjord-500 hover:text-fjord-700 transition-colors"
+                            className="inline-flex items-center gap-1 mt-1 text-xs text-ink-muted hover:text-ink transition-colors"
                           >
                             <ExternalLink className="w-3 h-3" />
                             Se i Kulturminnesøk
@@ -406,7 +377,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
 
         {/* Structured solforhold view */}
         {kort.id === "solforhold" && kort.raadata?.sommer && kort.raadata?.vinter && (
-          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+          <div className="bg-paper border border-paper-edge p-5 space-y-4">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
               Solforhold sommer vs. vinter
             </p>
@@ -414,7 +385,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
               {/* Sommer */}
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-amber-700">Sommer (21. juni)</p>
-                <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-1.5">
+                <div className="bg-paper-soft border border-paper-edge p-3 space-y-1.5">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Soloppgang</span>
                     <span className="font-semibold text-gray-900">
@@ -449,7 +420,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
               {/* Vinter */}
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-blue-700">Vinter (21. des)</p>
-                <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-1.5">
+                <div className="bg-paper-soft border border-paper-edge p-3 space-y-1.5">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Soloppgang</span>
                     <span className="font-semibold text-gray-900">
@@ -509,7 +480,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
           !(kort.id === "regulering" && kort.raadata.utnyttingsgrad != null) &&
           kort.id !== "kulturminner" &&
           kort.id !== "solforhold" && (
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-paper border border-paper-edge p-5">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
               Rådata
             </p>
@@ -523,12 +494,12 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
         {forklaring && (
           <div className="bg-fjord-50 rounded-lg p-4 border border-fjord-200 border-l-4 border-l-fjord-500">
             <div className="flex items-center gap-2.5 mb-2">
-              <Info className="w-5 h-5 text-fjord-500" />
-              <span className="text-sm font-bold text-fjord-700">
+              <Info className="w-5 h-5 text-ink-muted" />
+              <span className="text-sm font-bold text-ink">
                 Hva betyr dette?
               </span>
             </div>
-            <p className="text-sm text-fjord-700/80 leading-relaxed">
+            <p className="text-sm text-ink/80 leading-relaxed">
               {forklaring}
             </p>
           </div>
@@ -540,7 +511,7 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
             href={kort.kildeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-fjord-500 hover:text-fjord-700 transition-colors print:hidden"
+            className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink transition-colors print:hidden"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Kilde: {kort.kilde}

@@ -158,10 +158,10 @@ export function solforholdStatus(data: SolforholdResultat): { status: Trafikklys
 
 export function statusFarge(status: TrafikklysStatus): string {
   switch (status) {
-    case "gronn": return "#2ECC71";
-    case "gul": return "#F39C12";
-    case "rod": return "#E74C3C";
-    case "gra": return "#9CA3AF";
+    case "gronn": return "#4A7C59"; // data-green
+    case "gul": return "#C18A2F";   // data-amber
+    case "rod": return "#B8412C";   // data-red
+    case "gra": return "#8E8473";   // data-gray
   }
 }
 

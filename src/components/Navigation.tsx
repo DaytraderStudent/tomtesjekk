@@ -2,51 +2,49 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MapPin, Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="sticky top-0 z-50 bg-paper/85 backdrop-blur-md border-b border-paper-edge">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-lg bg-fjord-500 flex items-center justify-center group-hover:bg-fjord-600 transition-colors">
-              <MapPin className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-display text-xl font-bold text-fjord-500">
+          {/* Brand — typographic mark, no icon */}
+          <Link href="/" className="group flex items-baseline gap-3">
+            <span className="font-display text-2xl tracking-tight text-ink font-medium">
               Tomtesjekk
+            </span>
+            <span className="hidden sm:inline-block text-[10px] font-mono uppercase tracking-[0.14em] text-ink-muted translate-y-[-2px]">
+              Volum 01
             </span>
           </Link>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-6">
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-10">
             <Link
               href="/"
-              className="text-gray-600 hover:text-fjord-500 transition-colors font-medium"
+              className="text-[13px] font-mono uppercase tracking-wider text-ink-soft hover:text-ink transition-colors"
             >
               Hjem
             </Link>
             <Link
               href="/tomtefinner"
-              className="text-gray-600 hover:text-fjord-500 transition-colors font-medium"
+              className="text-[13px] font-mono uppercase tracking-wider text-ink-soft hover:text-ink transition-colors"
             >
-              AI Tomtefinner
+              AI-tomtefinner
             </Link>
-            <Link
-              href="/analyser"
-              className="px-5 py-2.5 bg-fjord-500 text-white rounded-lg hover:bg-fjord-600 transition-colors font-medium"
-            >
-              Analyser tomt
-            </Link>
+            <Button asChild variant="primary" size="sm">
+              <Link href="/analyser">Analyser tomt</Link>
+            </Button>
           </div>
 
           {/* Mobile toggle */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 text-gray-600 hover:text-fjord-500"
+            className="md:hidden p-2 text-ink hover:text-clay-500 transition-colors"
             aria-label={isOpen ? "Lukk meny" : "Åpne meny"}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -54,36 +52,29 @@ export function Navigation() {
         </div>
 
         {/* Mobile menu */}
-        <div
-          className={cn(
-            "md:hidden overflow-hidden transition-all duration-200",
-            isOpen ? "max-h-40 pb-4" : "max-h-0"
-          )}
-        >
-          <div className="flex flex-col gap-3">
+        {isOpen && (
+          <div className="md:hidden border-t border-paper-edge py-5 flex flex-col gap-4">
             <Link
               href="/"
               onClick={() => setIsOpen(false)}
-              className="text-gray-600 hover:text-fjord-500 transition-colors font-medium"
+              className="text-sm font-mono uppercase tracking-wider text-ink-soft hover:text-ink transition-colors"
             >
               Hjem
             </Link>
             <Link
               href="/tomtefinner"
               onClick={() => setIsOpen(false)}
-              className="text-gray-600 hover:text-fjord-500 transition-colors font-medium"
+              className="text-sm font-mono uppercase tracking-wider text-ink-soft hover:text-ink transition-colors"
             >
-              AI Tomtefinner
+              AI-tomtefinner
             </Link>
-            <Link
-              href="/analyser"
-              onClick={() => setIsOpen(false)}
-              className="px-5 py-2.5 bg-fjord-500 text-white rounded-lg hover:bg-fjord-600 transition-colors font-medium text-center"
-            >
-              Analyser tomt
-            </Link>
+            <Button asChild variant="primary" size="md" className="self-start">
+              <Link href="/analyser" onClick={() => setIsOpen(false)}>
+                Analyser tomt
+              </Link>
+            </Button>
           </div>
-        </div>
+        )}
       </div>
     </nav>
   );
