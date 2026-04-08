@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Three parallel Gemini image generations can take up to ~45s total
+export const maxDuration = 60;
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // Fetch aerial photo of the plot from Kartverket "Norge i bilder"
@@ -109,9 +112,7 @@ export async function POST(request: NextRequest) {
       aerialBase64 = await hentLuftfoto(lat, lon);
     }
 
-    const basePrompt = `Create a photorealistic architectural visualization of a ${bygningsBeskrivelse} built on this specific Norwegian property.
-
-Location: ${adresse}
+    const baseContext = `Location: ${adresse}
 ${tomtebeskrivelse}
 
 ${aerialBase64 ? `IMPORTANT: The reference image shows the ACTUAL aerial/satellite view of this exact plot. Use it to understand:
@@ -127,11 +128,30 @@ Design requirements:
 - The house must fit the plot constraints (size, height, floor limits above)
 - Respect the actual terrain and landscape — don't add fictional mountains, sea or features that aren't there
 - Include authentic Norwegian elements: wood siding (often dark or natural), stone accents, flat or low-pitch roof
-- Vegetation and surroundings should match what's actually visible in the reference image (pine, birch, spruce, grass, rocks — whatever is there)
-- Realistic soft daylight and natural shadows
-- Slightly elevated camera angle showing both the house and the surrounding plot context
+- Vegetation and surroundings should match what's actually visible in the reference image
+- Realistic soft daylight and natural shadows`;
 
-Style: Photorealistic architectural rendering. Must look like it belongs in THIS specific Norwegian location.`;
+    // Three camera angles generated in parallel
+    const vinkler = [
+      {
+        id: "aerial",
+        label: "Ovenfra",
+        vinkelPrompt:
+          "Camera angle: high aerial perspective (drone view from above), looking straight down at a ~30 degree tilt. Show the house and the entire plot context with surrounding vegetation and neighboring structures.",
+      },
+      {
+        id: "southeast",
+        label: "Sørøst 45°",
+        vinkelPrompt:
+          "Camera angle: eye-level / slight bird's eye view from the southeast (the sunny side), at ~45 degrees above horizon. Warm natural afternoon daylight highlighting the house façade. Show garden and entry.",
+      },
+      {
+        id: "streetlevel",
+        label: "Gateplan",
+        vinkelPrompt:
+          "Camera angle: standing at street level / entrance, looking at the house from the approach (driveway or access road). Typical Norwegian suburban perspective. Show the entry façade and immediate landscaping.",
+      },
+    ];
 
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-image",
@@ -141,43 +161,67 @@ Style: Photorealistic architectural rendering. Must look like it belongs in THIS
       },
     });
 
-    // Build content parts: text + optional reference image
-    const parts: any[] = [{ text: basePrompt }];
-    if (aerialBase64) {
-      parts.push({
-        inlineData: {
-          mimeType: "image/jpeg",
-          data: aerialBase64,
-        },
-      });
-    }
+    // Generate all three angles in parallel
+    const resultater = await Promise.allSettled(
+      vinkler.map(async (vinkel) => {
+        const prompt = `Create a photorealistic architectural visualization of a ${bygningsBeskrivelse} built on this specific Norwegian property.
 
-    const result = await model.generateContent(parts);
-    const response = result.response;
-    const responseParts = response.candidates?.[0]?.content?.parts || [];
+${vinkel.vinkelPrompt}
 
-    let imageBase64: string | null = null;
-    let beskrivelse: string | null = null;
+${baseContext}
 
-    for (const part of responseParts) {
-      if (part.inlineData) {
-        imageBase64 = part.inlineData.data;
-      }
-      if (part.text) {
-        beskrivelse = part.text;
-      }
-    }
+Style: Photorealistic architectural rendering. Must look like it belongs in THIS specific Norwegian location.`;
 
-    if (!imageBase64) {
+        const parts: any[] = [{ text: prompt }];
+        if (aerialBase64) {
+          parts.push({
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: aerialBase64,
+            },
+          });
+        }
+
+        const result = await model.generateContent(parts);
+        const response = result.response;
+        const responseParts = response.candidates?.[0]?.content?.parts || [];
+
+        let imageBase64: string | null = null;
+        let beskrivelse: string | null = null;
+
+        for (const part of responseParts) {
+          if (part.inlineData) imageBase64 = part.inlineData.data;
+          if (part.text) beskrivelse = part.text;
+        }
+
+        if (!imageBase64) throw new Error(`No image for angle ${vinkel.id}`);
+
+        return {
+          id: vinkel.id,
+          label: vinkel.label,
+          bilde: `data:image/png;base64,${imageBase64}`,
+          beskrivelse,
+        };
+      })
+    );
+
+    const bilder = resultater
+      .filter((r): r is PromiseFulfilledResult<{ id: string; label: string; bilde: string; beskrivelse: string | null }> => r.status === "fulfilled")
+      .map((r) => r.value);
+
+    if (bilder.length === 0) {
       return NextResponse.json(
-        { error: "Kunne ikke generere bilde — prøv igjen" },
+        { error: "Kunne ikke generere noen bilder — prøv igjen" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
-      bilde: `data:image/png;base64,${imageBase64}`,
-      beskrivelse,
+      bilder,
+      // Backward-compat: primary image + description as first angle
+      bilde: bilder[0].bilde,
+      beskrivelse: bilder[0].beskrivelse,
+      referansebildeBase64: aerialBase64 ? `data:image/jpeg;base64,${aerialBase64}` : null,
       brukteReferansebilde: !!aerialBase64,
       generert: new Date().toISOString(),
     });

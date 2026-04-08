@@ -4,6 +4,9 @@ import { Sparkles, AlertTriangle, Shield } from "lucide-react";
 import { Rapportkort } from "./Rapportkort";
 import { Bildegenerering } from "./Bildegenerering";
 import { StrukturertRapport } from "./StrukturertRapport";
+import { KlimaVisning } from "./KlimaVisning";
+import { FotoAnalyse } from "./FotoAnalyse";
+import { SdgSeksjon } from "./SdgSeksjon";
 import { PDFEksport } from "./PDFEksport";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 import { statusFarge, statusLabel } from "@/lib/trafikklys";
@@ -159,6 +162,12 @@ export function Rapport({ rapport }: Props) {
         </div>
       ) : null}
 
+      {/* Climate projection 2100 */}
+      <KlimaVisning adresse={rapport.adresse} />
+
+      {/* AI photo analysis of aerial image */}
+      <FotoAnalyse rapport={rapport} />
+
       {/* AI House Image */}
       <Bildegenerering rapport={rapport} />
 
@@ -168,6 +177,9 @@ export function Rapport({ rapport }: Props) {
           <Rapportkort key={kort.id} kort={kort} index={i} />
         ))}
       </div>
+
+      {/* FNs bærekraftsmål */}
+      <SdgSeksjon />
 
       {/* Disclaimer */}
       <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">

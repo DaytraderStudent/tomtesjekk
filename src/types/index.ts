@@ -191,6 +191,31 @@ export interface SolforholdResultat {
   detaljer?: string;
 }
 
+// --- Klimaprojeksjon ---
+
+export interface KlimaProjeksjonResultat {
+  fylke: string;
+  scenario: string;
+  tidshorisont: string;
+  havstigning: {
+    verdiCm: number;
+    risikoNiva: "ingen" | "lav" | "moderat" | "hoy";
+    kommentar: string;
+    hoydeOverHavet: number | null;
+  } | null;
+  nedbor: {
+    arligEndringProsent: number;
+    ekstremEndringProsent: number;
+    kommentar: string;
+  };
+  flom: {
+    okningProsent: number;
+    kommentar: string;
+  };
+  kilde: string;
+  ansvarligInstansLenker: Array<{ navn: string; url: string }>;
+}
+
 // --- VA-tilknytning ---
 
 export interface VaTilknytningResultat {
