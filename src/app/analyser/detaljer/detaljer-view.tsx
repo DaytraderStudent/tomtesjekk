@@ -10,6 +10,10 @@ import { DetaljerHero } from "@/components/DetaljerHero";
 import { DetaljerKategori } from "@/components/DetaljerKategori";
 import { DetaljerNav } from "@/components/DetaljerNav";
 import { Bildegenerering } from "@/components/Bildegenerering";
+import { StrukturertRapport } from "@/components/StrukturertRapport";
+import { KlimaVisning } from "@/components/KlimaVisning";
+import { FotoAnalyse } from "@/components/FotoAnalyse";
+import { SdgSeksjon } from "@/components/SdgSeksjon";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 import type { Rapport } from "@/types";
 
@@ -85,7 +89,21 @@ export default function DetaljerView() {
 
           {/* Categories */}
           <div className="flex-1 space-y-6 min-w-0">
-            {/* AI House Image */}
+            {/* Structured AI report (tool use output) */}
+            {rapport.aiOppsummering?.strukturert && (
+              <StrukturertRapport
+                data={rapport.aiOppsummering.strukturert}
+                generert={rapport.aiOppsummering.generert}
+              />
+            )}
+
+            {/* Climate projection 2100 */}
+            <KlimaVisning adresse={rapport.adresse} />
+
+            {/* AI photo analysis of aerial image */}
+            <FotoAnalyse rapport={rapport} />
+
+            {/* AI House Image (multi-angle) */}
             <Bildegenerering rapport={rapport} />
 
             {rapport.kort.map((kort) => (
@@ -95,6 +113,9 @@ export default function DetaljerView() {
                 kartBilde={rapport.kartBilder?.[kort.id]}
               />
             ))}
+
+            {/* UN SDG section */}
+            <SdgSeksjon />
 
             {/* Disclaimer (screen) */}
             <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 print:hidden">
