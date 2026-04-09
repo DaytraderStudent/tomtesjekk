@@ -17,38 +17,81 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
  * er langt mer utsatt for hallusinasjon.
  */
 
-async function hentOrtofoto(lat: number, lon: number): Promise<string | null> {
+async function hentOrtofoto(lat: number, lon: number): Promise<{ base64: string; kilde: "ortofoto" | "kart" } | null> {
+  // Try 1: Kartverket Norge i bilder (high-quality aerial)
   try {
-    // Convert to EPSG:3857 (Web Mercator)
     const x = (lon * 20037508.34) / 180;
     const latRad = (lat * Math.PI) / 180;
     const y = (Math.log(Math.tan(Math.PI / 4 + latRad / 2)) * 20037508.34) / Math.PI;
-    const delta = 150; // ~300m wide view — bigger than the one used for bildegenerering
+    const delta = 150;
 
     const params = new URLSearchParams({
-      SERVICE: "WMS",
-      VERSION: "1.3.0",
-      REQUEST: "GetMap",
-      LAYERS: "ortofoto",
-      STYLES: "",
-      CRS: "EPSG:3857",
+      SERVICE: "WMS", VERSION: "1.3.0", REQUEST: "GetMap",
+      LAYERS: "ortofoto", STYLES: "", CRS: "EPSG:3857",
       BBOX: `${x - delta},${y - delta},${x + delta},${y + delta}`,
-      WIDTH: "1024",
-      HEIGHT: "1024",
-      FORMAT: "image/jpeg",
+      WIDTH: "1024", HEIGHT: "1024", FORMAT: "image/jpeg",
     });
 
     const url = `https://wms.geonorge.no/skwms1/wms.nib?${params.toString()}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const contentType = res.headers.get("content-type") || "";
-    if (!contentType.includes("image")) return null;
-    const buffer = await res.arrayBuffer();
-    if (buffer.byteLength < 5000) return null;
-    return Buffer.from(buffer).toString("base64");
-  } catch {
-    return null;
-  }
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const ct = res.headers.get("content-type") || "";
+      if (ct.includes("image")) {
+        const buffer = await res.arrayBuffer();
+        if (buffer.byteLength > 5000) {
+          return { base64: Buffer.from(buffer).toString("base64"), kilde: "ortofoto" };
+        }
+      }
+    }
+  } catch {}
+
+  // Try 2: Fallback to OSM map tiles (always available)
+  try {
+    // Calculate OSM tile coordinates at zoom 15 (neighborhood level)
+    const zoom = 15;
+    const n = Math.pow(2, zoom);
+    const tileX = Math.floor(((lon + 180) / 360) * n);
+    const tileY = Math.floor(
+      ((1 - Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) / 2) * n
+    );
+
+    // Fetch a 3x3 grid of tiles for wider context
+    const tiles: Buffer[] = [];
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const abc = ["a", "b", "c"][(dx + 1 + (dy + 1) * 3) % 3];
+        const tileUrl = `https://${abc}.tile.openstreetmap.org/${zoom}/${tileX + dx}/${tileY + dy}.png`;
+        const res = await fetch(tileUrl, {
+          headers: { "User-Agent": "Tomtesjekk/1.0 (tomtesjekk.vercel.app)" },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (res.ok) {
+          tiles.push(Buffer.from(await res.arrayBuffer()));
+        }
+      }
+    }
+
+    if (tiles.length >= 5) {
+      // Use sharp to composite tiles into one image
+      const sharp = (await import("sharp")).default;
+      const composite = sharp({
+        create: { width: 768, height: 768, channels: 3, background: { r: 245, g: 242, b: 235 } },
+      });
+      const composed = await composite
+        .composite(
+          tiles.slice(0, 9).map((buf, i) => ({
+            input: buf,
+            top: Math.floor(i / 3) * 256,
+            left: (i % 3) * 256,
+          }))
+        )
+        .jpeg({ quality: 80 })
+        .toBuffer();
+      return { base64: composed.toString("base64"), kilde: "kart" };
+    }
+  } catch {}
+
+  return null;
 }
 
 export async function POST(request: NextRequest) {
@@ -70,17 +113,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ortofotoBase64 = await hentOrtofoto(lat, lon);
-    if (!ortofotoBase64) {
+    const bildeData = await hentOrtofoto(lat, lon);
+    if (!bildeData) {
       return NextResponse.json(
-        { error: "Ortofoto utilgjengelig — Kartverkets bildetjeneste svarer ikke fra denne serveren. Prøv igjen senere." },
+        { error: "Kunne ikke hente bilde av tomten. Prøv igjen senere." },
         { status: 503 }
       );
     }
 
-    const prompt = `Du ser på et ortofoto (luftfoto) av en norsk tomt${adresse ? ` ved ${adresse}` : ""}. Koordinater: ${lat.toFixed(5)}, ${lon.toFixed(5)}.
+    const bildeType = bildeData.kilde === "ortofoto"
+      ? "et ortofoto (luftfoto)"
+      : "et detaljert kart (OpenStreetMap)";
 
-Gi en kort, faktabasert analyse av hva som er synlig i bildet. Svar BARE med JSON (ingen markdown, ingen kodeblokk), med dette skjemaet:
+    const bildeInstruks = bildeData.kilde === "ortofoto"
+      ? "Identifiser fysiske forhold som er SYNLIGE i bildet — vegetasjon, bygninger, terreng, veier, vassdrag."
+      : "Identifiser infrastruktur, bebyggelsesmønster, veier, grøntområder og terrengforhold som er synlige i kartet. Beskriv hva kartet forteller om området.";
+
+    const prompt = `Du ser på ${bildeType} av en norsk tomt${adresse ? ` ved ${adresse}` : ""}. Koordinater: ${lat.toFixed(5)}, ${lon.toFixed(5)}.
+
+${bildeInstruks}
+
+Gi en kort, faktabasert analyse. Svar BARE med JSON (ingen markdown, ingen kodeblokk), med dette skjemaet:
 
 {
   "sammendrag": "Én setning som beskriver det samlede inntrykket av tomten og nærmiljøet.",
@@ -113,7 +166,7 @@ Regler:
       {
         inlineData: {
           mimeType: "image/jpeg",
-          data: ortofotoBase64,
+          data: bildeData.base64,
         },
       },
     ]);
@@ -135,7 +188,8 @@ Regler:
     return NextResponse.json({
       sammendrag: parsed.sammendrag || "",
       observasjoner: parsed.observasjoner || [],
-      ortofotoBase64: `data:image/jpeg;base64,${ortofotoBase64}`,
+      ortofotoBase64: `data:image/jpeg;base64,${bildeData.base64}`,
+      bildeKilde: bildeData.kilde,
       generert: new Date().toISOString(),
     });
   } catch (error: any) {
