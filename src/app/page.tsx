@@ -207,7 +207,7 @@ export default function Home() {
                 <div className="mb-8 border border-paper-edge overflow-hidden">
                   <div className="bg-paper-deep p-4 flex items-center justify-between border-b border-paper-edge">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted">
-                      Eksempel — kartvisning
+                      Ortofoto — norsk boligområde
                     </span>
                     <div className="flex gap-1">
                       <div className="w-2 h-2 rounded-full bg-data-green" />
@@ -215,21 +215,14 @@ export default function Home() {
                       <div className="w-2 h-2 rounded-full bg-data-red" />
                     </div>
                   </div>
-                  {/* Composite map tiles — Sør-Norge overview */}
-                  <div className="relative w-full h-48 lg:h-64 overflow-hidden bg-[#f2efe9]">
-                    <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 gap-0">
-                      <img src="https://a.tile.openstreetmap.org/6/32/17.png" alt="" className="w-full h-full object-cover" loading="lazy" />
-                      <img src="https://b.tile.openstreetmap.org/6/33/17.png" alt="" className="w-full h-full object-cover" loading="lazy" />
-                      <img src="https://c.tile.openstreetmap.org/6/34/17.png" alt="" className="w-full h-full object-cover" loading="lazy" />
-                      <img src="https://a.tile.openstreetmap.org/6/35/17.png" alt="" className="w-full h-full object-cover" loading="lazy" />
-                      <img src="https://b.tile.openstreetmap.org/6/32/18.png" alt="" className="w-full h-full object-cover" loading="lazy" />
-                      <img src="https://c.tile.openstreetmap.org/6/33/18.png" alt="" className="w-full h-full object-cover" loading="lazy" />
-                      <img src="https://a.tile.openstreetmap.org/6/34/18.png" alt="" className="w-full h-full object-cover" loading="lazy" />
-                      <img src="https://b.tile.openstreetmap.org/6/35/18.png" alt="" className="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                    {/* Subtle vignette overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-paper/30 pointer-events-none" />
-                  </div>
+                  {/* Aerial photo of a real Norwegian residential area (Asker) via Kartverket NiB */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="https://wms.geonorge.no/skwms1/wms.nib?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=ortofoto&CRS=EPSG:3857&BBOX=1160500,8368200,1162500,8369200&WIDTH=1600&HEIGHT=640&FORMAT=image/jpeg"
+                    alt="Luftfoto av norsk boligområde med tomter — Asker kommune, Kartverket Norge i bilder"
+                    className="w-full h-48 lg:h-64 object-cover"
+                    loading="lazy"
+                  />
                 </div>
 
                 <p className="font-display text-2xl lg:text-3xl leading-[1.4] tracking-tight text-ink">
