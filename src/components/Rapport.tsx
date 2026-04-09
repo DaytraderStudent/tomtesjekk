@@ -1,34 +1,24 @@
 "use client";
 
-import { Rapportkort } from "./Rapportkort";
-import { Bildegenerering } from "./Bildegenerering";
 import { StrukturertRapport } from "./StrukturertRapport";
-import { KlimaVisning } from "./KlimaVisning";
-import { FotoAnalyse } from "./FotoAnalyse";
-import { SdgSeksjon } from "./SdgSeksjon";
 import { PDFEksport } from "./PDFEksport";
 import { Badge } from "./ui/badge";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 import { statusFarge } from "@/lib/trafikklys";
 import type { Rapport as RapportType, TrafikklysStatus } from "@/types";
 
+/* -------------------------------------------------------------------------
+   Rapport — compact sidebar version
+   Shows summary + risk dots + AI report + compact analysis list.
+   Heavy sections (klima, foto, bilde, SDG) live only on detaljer-siden.
+   ------------------------------------------------------------------------- */
+
 function kortLabel(id: string): string {
   const labels: Record<string, string> = {
-    flom: "Flom",
-    skred: "Skred",
-    kvikkleire: "Kvikk",
-    radon: "Radon",
-    grunn: "Grunn",
-    eiendom: "Eiendom",
-    vei: "Vei",
-    stoy: "Støy",
-    boligpris: "Pris",
-    kulturminner: "Kultur",
-    regulering: "Plan",
-    sol: "Sol",
-    va: "VA",
-    solforhold: "Sol",
-    nvdb: "Vei",
+    flom: "Flom", skred: "Skred", kvikkleire: "Kvikk", radon: "Radon",
+    grunn: "Grunn", eiendom: "Eiendom", vei: "Vei", stoy: "Støy",
+    boligpris: "Pris", kulturminner: "Kultur", regulering: "Plan",
+    sol: "Sol", va: "VA", solforhold: "Sol", nvdb: "Vei", ssb: "Bygg",
   };
   return labels[id] || id.slice(0, 5);
 }
@@ -40,19 +30,12 @@ function beregnSamletRisiko(kort: RapportType["kort"]): TrafikklysStatus {
   return "gronn";
 }
 
-function samletRisikoVariant(status: TrafikklysStatus): {
-  label: string;
-  variant: "green" | "amber" | "red" | "default";
-} {
+function samletRisikoVariant(status: TrafikklysStatus) {
   switch (status) {
-    case "gronn":
-      return { label: "Lav samlet risiko", variant: "green" };
-    case "gul":
-      return { label: "Moderat samlet risiko", variant: "amber" };
-    case "rod":
-      return { label: "Høy samlet risiko", variant: "red" };
-    default:
-      return { label: "Ukjent", variant: "default" };
+    case "gronn": return { label: "Lav samlet risiko", variant: "green" as const };
+    case "gul": return { label: "Moderat samlet risiko", variant: "amber" as const };
+    case "rod": return { label: "Høy samlet risiko", variant: "red" as const };
+    default: return { label: "Ukjent", variant: "default" as const };
   }
 }
 
@@ -65,50 +48,43 @@ export function Rapport({ rapport }: Props) {
   const risiko = samletRisikoVariant(samletRisiko);
 
   return (
-    <div className="space-y-8 fade-up">
-      {/* Editorial masthead */}
-      <header className="pb-6 border-b border-paper-edge">
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <span className="label-editorial">Analyserapport</span>
-          <PDFEksport rapport={rapport} />
-        </div>
-        <h2 className="font-display text-display-sm text-ink leading-tight">
+    <div className="space-y-6 fade-up">
+      {/* Masthead + address */}
+      <header className="pb-4 border-b border-paper-edge">
+        <span className="label-editorial block mb-2">Analyserapport</span>
+        <h2 className="font-display text-2xl text-ink leading-tight tracking-tight">
           {rapport.adresse.adressetekst}
         </h2>
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-mono uppercase tracking-wider text-ink-muted">
-          {(rapport.adresse.postnummer || rapport.adresse.poststed) && (
-            <span>
-              {rapport.adresse.postnummer} {rapport.adresse.poststed}
-            </span>
-          )}
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono uppercase tracking-wider text-ink-muted">
           {rapport.adresse.kommunenavn && <span>{rapport.adresse.kommunenavn}</span>}
           {rapport.hoydeOverHavet !== null && (
-            <span>{rapport.hoydeOverHavet} moh.</span>
+            <>
+              <span className="text-ink-faint">·</span>
+              <span>{rapport.hoydeOverHavet} moh.</span>
+            </>
           )}
         </div>
       </header>
 
-      {/* Overall verdict + risk dots — editorial summary bar */}
+      {/* Risk summary — compact with vivid dots */}
       {rapport.kort.length > 0 && (
-        <div className="bg-paper-soft border border-paper-edge p-5 lg:p-6">
-          <div className="flex items-center justify-between mb-5">
-            <span className="label-editorial">Samlet vurdering</span>
+        <div className="bg-paper-soft border border-paper-edge p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="label-editorial">Vurdering</span>
             <Badge variant={risiko.variant}>{risiko.label}</Badge>
           </div>
-
-          {/* Dot grid */}
-          <div className="flex flex-wrap gap-x-5 gap-y-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
             {rapport.kort.map((kort) => (
               <div
                 key={kort.id}
-                className="group flex items-center gap-2"
+                className="flex items-center gap-1.5"
                 title={`${kort.tittel}: ${kort.statusTekst}`}
               >
                 <div
-                  className="w-2 h-2 rounded-full"
+                  className="w-2.5 h-2.5 rounded-full"
                   style={{ backgroundColor: statusFarge(kort.status) }}
                 />
-                <span className="text-[11px] font-mono uppercase tracking-wider text-ink-muted">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted">
                   {kortLabel(kort.id)}
                 </span>
               </div>
@@ -117,48 +93,49 @@ export function Rapport({ rapport }: Props) {
         </div>
       )}
 
-      {/* AI structured report */}
+      {/* AI structured report — compact mode */}
       {rapport.aiOppsummering?.strukturert ? (
         <StrukturertRapport
           data={rapport.aiOppsummering.strukturert}
           generert={rapport.aiOppsummering.generert}
         />
       ) : rapport.aiOppsummering ? (
-        <div className="bg-paper-soft border border-paper-edge border-l-[3px] border-l-ink p-6">
-          <span className="label-editorial block mb-3">AI-oppsummering</span>
-          <p className="font-display text-lg text-ink leading-relaxed whitespace-pre-line">
+        <div className="bg-paper-soft border border-paper-edge border-l-[3px] border-l-ink p-5">
+          <span className="label-editorial block mb-2">AI-oppsummering</span>
+          <p className="text-sm text-ink leading-relaxed whitespace-pre-line">
             {rapport.aiOppsummering.tekst}
           </p>
         </div>
       ) : null}
 
-      {/* Climate projection */}
-      <KlimaVisning adresse={rapport.adresse} />
-
-      {/* AI photo analysis */}
-      <FotoAnalyse rapport={rapport} />
-
-      {/* AI house concept */}
-      <Bildegenerering rapport={rapport} />
-
-      {/* Analysis cards grid */}
-      <div className="space-y-3">
-        <span className="label-editorial block mb-2">Detaljerte funn</span>
-        {rapport.kort.map((kort, i) => (
-          <Rapportkort key={kort.id} kort={kort} index={i} />
-        ))}
+      {/* Compact analysis list — no expanding, just status per dimension */}
+      <div>
+        <span className="label-editorial block mb-3">Analysefunn</span>
+        <div className="border border-paper-edge divide-y divide-paper-edge">
+          {rapport.kort.map((kort) => (
+            <div
+              key={kort.id}
+              className="flex items-center gap-3 px-4 py-3 bg-paper-soft"
+            >
+              <div
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: statusFarge(kort.status) }}
+              />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-ink font-medium">{kort.tittel}</span>
+              </div>
+              <span className="text-[11px] text-ink-muted truncate max-w-[180px] text-right">
+                {kort.statusTekst}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* UN SDG */}
-      <SdgSeksjon />
-
-      {/* Disclaimer */}
-      <div className="border-t border-paper-edge pt-6 mt-6">
-        <span className="label-editorial block mb-2">Ansvarsfraskrivelse</span>
-        <p className="text-xs text-ink-muted leading-relaxed max-w-2xl">
-          {DISCLAIMER_TEXT}
-        </p>
-      </div>
+      {/* Disclaimer — one liner */}
+      <p className="text-[10px] text-ink-faint leading-relaxed">
+        {DISCLAIMER_TEXT}
+      </p>
     </div>
   );
 }

@@ -762,8 +762,8 @@ export default function AnalyserView() {
                 )}
                 {rapport && !erAktiv && (
                   <>
-                    <Rapport rapport={rapport} />
-                    <div className="mt-6 flex gap-2">
+                    {/* CTA buttons FIRST — always visible at top */}
+                    <div className="flex gap-2 mb-6 pb-6 border-b border-paper-edge">
                       <Link
                         href="/analyser/detaljer"
                         className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-ink text-paper border border-ink hover:bg-ink-soft transition-colors text-sm font-medium tracking-tight"
@@ -773,6 +773,7 @@ export default function AnalyserView() {
                       </Link>
                       <PDFEksport rapport={rapport} />
                     </div>
+                    <Rapport rapport={rapport} />
                   </>
                 )}
               </div>

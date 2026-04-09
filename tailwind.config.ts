@@ -50,11 +50,11 @@ const config: Config = {
           800: "#1C281D",
           900: "#10150F",
         },
-        // Data traffic-light colors — editorial, muted versions
+        // Data traffic-light colors — vivid enough to be clearly readable
         data: {
-          green: "#4A7C59",
-          amber: "#C18A2F",
-          red: "#B8412C",
+          green: "#22A355",
+          amber: "#E5970F",
+          red: "#DC3B2A",
           gray: "#8E8473",
         },
         // Legacy fjord (kept for backward compat during transition)

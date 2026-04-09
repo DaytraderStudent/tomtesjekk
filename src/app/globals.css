@@ -25,10 +25,10 @@
   --moss-500: #4a624a;
   --moss-600: #3b4f3b;
 
-  /* Data colors */
-  --data-green: #4a7c59;
-  --data-amber: #c18a2f;
-  --data-red: #b8412c;
+  /* Data colors — vivid for clear traffic-light visibility */
+  --data-green: #22A355;
+  --data-amber: #E5970F;
+  --data-red: #DC3B2A;
   --data-gray: #8e8473;
 
   /* Legacy */
