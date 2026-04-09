@@ -136,28 +136,6 @@ Design requirements:
 - Vegetation and surroundings should match what's actually visible in the reference image
 - Realistic soft daylight and natural shadows`;
 
-    // Three camera angles generated in parallel
-    const vinkler = [
-      {
-        id: "aerial",
-        label: "Ovenfra",
-        vinkelPrompt:
-          "Camera angle: high aerial perspective (drone view from above), looking straight down at a ~30 degree tilt. Show the house and the entire plot context with surrounding vegetation and neighboring structures.",
-      },
-      {
-        id: "southeast",
-        label: "Sørøst 45°",
-        vinkelPrompt:
-          "Camera angle: eye-level / slight bird's eye view from the southeast (the sunny side), at ~45 degrees above horizon. Warm natural afternoon daylight highlighting the house façade. Show garden and entry.",
-      },
-      {
-        id: "streetlevel",
-        label: "Gateplan",
-        vinkelPrompt:
-          "Camera angle: standing at street level / entrance, looking at the house from the approach (driveway or access road). Typical Norwegian suburban perspective. Show the entry façade and immediate landscaping.",
-      },
-    ];
-
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-image",
       generationConfig: {
@@ -166,53 +144,88 @@ Design requirements:
       },
     });
 
-    // Generate all three angles in parallel
-    const resultater = await Promise.allSettled(
-      vinkler.map(async (vinkel) => {
-        const prompt = `Create a photorealistic architectural visualization of a ${bygningsBeskrivelse} built on this specific Norwegian property.
+    // Helper to call Gemini and extract image
+    async function genererBilde(prompt: string, referansebilder: string[]): Promise<{ base64: string; beskrivelse: string | null }> {
+      const parts: any[] = [{ text: prompt }];
+      for (const ref of referansebilder) {
+        parts.push({ inlineData: { mimeType: "image/png", data: ref } });
+      }
+      const result = await model.generateContent(parts);
+      const responseParts = result.response.candidates?.[0]?.content?.parts || [];
+      let imageBase64: string | null = null;
+      let beskrivelse: string | null = null;
+      for (const part of responseParts) {
+        if (part.inlineData) imageBase64 = part.inlineData.data;
+        if (part.text) beskrivelse = part.text;
+      }
+      if (!imageBase64) throw new Error("No image generated");
+      return { base64: imageBase64, beskrivelse };
+    }
 
-${vinkel.vinkelPrompt}
+    const bilder: Array<{ id: string; label: string; bilde: string; beskrivelse: string | null }> = [];
+
+    // STEP 1: Generate the PRIMARY view (aerial/drone) — this establishes the house design
+    const mainPrompt = `Create a photorealistic architectural visualization of a ${bygningsBeskrivelse} built on a Norwegian property.
+
+Camera angle: high aerial perspective (drone view from above), looking down at a ~30 degree tilt. Show the house and the entire plot with surrounding vegetation.
 
 ${baseContext}
 
-Style: Photorealistic architectural rendering. Must look like it belongs in THIS specific Norwegian location.`;
+IMPORTANT: Design ONE specific house with distinctive features (roof shape, cladding color, window placement, terrace) that make it identifiable from any angle.
 
-        const parts: any[] = [{ text: prompt }];
-        if (aerialBase64) {
-          parts.push({
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: aerialBase64,
-            },
-          });
-        }
+Style: Photorealistic architectural rendering, warm natural Scandinavian light.`;
 
-        const result = await model.generateContent(parts);
-        const response = result.response;
-        const responseParts = response.candidates?.[0]?.content?.parts || [];
+    const referanser: string[] = [];
+    if (aerialBase64) referanser.push(aerialBase64);
 
-        let imageBase64: string | null = null;
-        let beskrivelse: string | null = null;
+    try {
+      const main = await genererBilde(mainPrompt, referanser);
+      bilder.push({ id: "aerial", label: "Ovenfra", bilde: `data:image/png;base64,${main.base64}`, beskrivelse: main.beskrivelse });
 
-        for (const part of responseParts) {
-          if (part.inlineData) imageBase64 = part.inlineData.data;
-          if (part.text) beskrivelse = part.text;
-        }
+      // STEP 2: Generate secondary views using the FIRST image as reference — ensures same house
+      const sekundaerVinkler = [
+        {
+          id: "southeast",
+          label: "Sørøst 45°",
+          prompt: `Show the EXACT SAME HOUSE from the reference image, but from a different camera angle:
 
-        if (!imageBase64) throw new Error(`No image for angle ${vinkel.id}`);
+Camera: eye-level view from the southeast (sunny side), at ~45 degrees above horizon. Warm afternoon light on the façade. Show garden and entry.
 
-        return {
-          id: vinkel.id,
-          label: vinkel.label,
-          bilde: `data:image/png;base64,${imageBase64}`,
-          beskrivelse,
-        };
-      })
-    );
+The house MUST have the same roof shape, cladding, windows, and terrace as in the reference image. Do NOT change the design — only the viewing angle.
 
-    const bilder = resultater
-      .filter((r): r is PromiseFulfilledResult<{ id: string; label: string; bilde: string; beskrivelse: string | null }> => r.status === "fulfilled")
-      .map((r) => r.value);
+${baseContext}
+
+Style: Photorealistic, same house design as reference.`,
+        },
+        {
+          id: "streetlevel",
+          label: "Gateplan",
+          prompt: `Show the EXACT SAME HOUSE from the reference image, but from street level:
+
+Camera: standing at the entrance/driveway, looking at the house from the approach road. Eye-level Norwegian suburban perspective.
+
+The house MUST have the same roof shape, cladding, windows, and design as in the reference image. Do NOT redesign the house — only change the camera position.
+
+${baseContext}
+
+Style: Photorealistic, same house design as reference.`,
+        },
+      ];
+
+      // Generate both secondary views in parallel, using the main image as reference
+      const sekundaerRes = await Promise.allSettled(
+        sekundaerVinkler.map(async (v) => {
+          const res = await genererBilde(v.prompt, [main.base64]);
+          return { id: v.id, label: v.label, bilde: `data:image/png;base64,${res.base64}`, beskrivelse: res.beskrivelse };
+        })
+      );
+
+      for (const r of sekundaerRes) {
+        if (r.status === "fulfilled") bilder.push(r.value);
+      }
+    } catch {
+      // If main generation fails, bilder stays empty — handled below
+    }
 
     if (bilder.length === 0) {
       return NextResponse.json(
