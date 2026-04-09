@@ -113,6 +113,8 @@ export default function AnalyserView() {
     setSteg(lagInitielleSteg());
     setProsent(0);
 
+    try {
+
     const { lat, lon } = adresse.representasjonspunkt;
     const kort: AnalyseKort[] = [];
     let eiendomArealKvm: number | null = null;
@@ -572,6 +574,14 @@ export default function AnalyserView() {
 
     setErAktiv(false);
     toast.success("Analyse ferdig!");
+
+    } catch (error: any) {
+      // Don't show error for aborted requests
+      if (signal.aborted) return;
+      console.error("Analyse feilet:", error);
+      toast.error("Det oppsto en feil under analysen. Prøv igjen.");
+      setErAktiv(false);
+    }
   }, []);
 
   const handleVelgAdresse = (adresse: KartverketAdresse) => {
