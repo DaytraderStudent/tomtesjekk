@@ -15,37 +15,50 @@ const dimensjoner = [
     nummer: "01",
     tittel: "Naturfare",
     tema: ["Flom", "Skred", "Kvikkleire", "Radon"],
-    kilder: "NVE · NGU",
+    kilder: [
+      { navn: "NVE", url: "https://nve.no" },
+      { navn: "NGU", url: "https://ngu.no" },
+    ],
   },
   {
     nummer: "02",
     tittel: "Grunnforhold",
     tema: ["Løsmasser", "Fjellgrunn", "Jordart"],
-    kilder: "NGU",
+    kilder: [{ navn: "NGU", url: "https://ngu.no" }],
   },
   {
     nummer: "03",
     tittel: "Reguleringsplan",
     tema: ["Arealformål", "BYA", "Byggehøyde", "Etasjer"],
-    kilder: "DiBK · Geonorge",
+    kilder: [
+      { navn: "DiBK", url: "https://dibk.no" },
+      { navn: "Geonorge", url: "https://geonorge.no" },
+    ],
   },
   {
     nummer: "04",
     tittel: "Infrastruktur",
     tema: ["Veitilgang", "VA-tilknytning", "Støy"],
-    kilder: "NVDB · Statens vegvesen",
+    kilder: [
+      { navn: "NVDB", url: "https://nvdbapiles-v3.atlas.vegvesen.no" },
+      { navn: "Statens vegvesen", url: "https://vegvesen.no" },
+    ],
   },
   {
     nummer: "05",
     tittel: "Marked og økonomi",
     tema: ["Boligpriser", "Byggekostnader"],
-    kilder: "SSB",
+    kilder: [{ navn: "SSB", url: "https://ssb.no" }],
   },
   {
     nummer: "06",
     tittel: "Mikroklima og SDG",
     tema: ["Solforhold", "Havstigning", "Klimaprognose 2100"],
-    kilder: "SunCalc · Kartverket · IPCC",
+    kilder: [
+      { navn: "SunCalc", url: "https://github.com/mourner/suncalc" },
+      { navn: "Kartverket", url: "https://kartverket.no" },
+      { navn: "IPCC", url: "https://www.ipcc.ch" },
+    ],
   },
 ];
 
@@ -311,10 +324,22 @@ export default function Home() {
                     ))}
                   </ul>
 
-                  <div className="pt-4 border-t border-paper-edge">
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-ink-muted">
-                      {d.kilder}
-                    </span>
+                  <div className="pt-4 border-t border-paper-edge flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {d.kilder.map((kilde, ki) => (
+                      <span key={kilde.navn} className="inline-flex items-center">
+                        <a
+                          href={kilde.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-mono uppercase tracking-wider text-ink-muted hover:text-clay-500 transition-colors"
+                        >
+                          {kilde.navn}
+                        </a>
+                        {ki < d.kilder.length - 1 && (
+                          <span className="text-ink-faint ml-3">·</span>
+                        )}
+                      </span>
+                    ))}
                   </div>
                 </article>
               ))}
