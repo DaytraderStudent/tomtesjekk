@@ -174,16 +174,34 @@ Regler:
     const response = result.response;
     const text = response.text();
 
-    // Parse JSON — Gemini may wrap in markdown code fence despite instructions
+    // Parse JSON — Gemini may wrap in markdown code fence or produce malformed JSON
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return NextResponse.json(
-        { error: "AI returnerte ikke gyldig JSON", raw: text },
+        { error: "AI returnerte ikke gyldig JSON", raw: text.substring(0, 300) },
         { status: 500 }
       );
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      // Try to fix common Gemini JSON issues: trailing commas, unescaped quotes
+      const cleaned = jsonMatch[0]
+        .replace(/,\s*([}\]])/g, "$1") // trailing commas
+        .replace(/[\u201C\u201D]/g, '"') // smart quotes
+        .replace(/[\u2018\u2019]/g, "'"); // smart apostrophes
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch {
+        // Last resort: extract what we can
+        parsed = {
+          sammendrag: text.substring(0, 200),
+          observasjoner: [],
+        };
+      }
+    }
 
     return NextResponse.json({
       sammendrag: parsed.sammendrag || "",
