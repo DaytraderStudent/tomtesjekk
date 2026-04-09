@@ -10,6 +10,7 @@ import type { AnalyseKort } from "@/types";
 interface Props {
   kort: AnalyseKort[];
   onPrint?: () => void;
+  pdfKnapp?: React.ReactNode;
 }
 
 /* -------------------------------------------------------------------------
@@ -17,7 +18,7 @@ interface Props {
    Numbered list with status dot, no icons, minimal chrome
    ------------------------------------------------------------------------- */
 
-export function DetaljerNav({ kort, onPrint }: Props) {
+export function DetaljerNav({ kort, onPrint, pdfKnapp }: Props) {
   const [aktivId, setAktivId] = useState<string>(kort[0]?.id || "");
   const observerRef = useRef<IntersectionObserver | null>(null);
   const mobilRef = useRef<HTMLDivElement>(null);
@@ -100,7 +101,10 @@ export function DetaljerNav({ kort, onPrint }: Props) {
           })}
         </ol>
 
-        {onPrint && (
+        {pdfKnapp && (
+          <div className="mt-6">{pdfKnapp}</div>
+        )}
+        {!pdfKnapp && onPrint && (
           <Button
             onClick={onPrint}
             variant="primary"

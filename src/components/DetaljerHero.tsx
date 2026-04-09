@@ -1,8 +1,7 @@
 "use client";
 
-import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
+import { PDFEksport } from "./PDFEksport";
 import type { Rapport, TrafikklysStatus } from "@/types";
 
 /* -------------------------------------------------------------------------
@@ -67,15 +66,7 @@ export function DetaljerHero({ rapport }: Props) {
           <span className="text-ink-faint">·</span>
           <span>Rapport {dato}</span>
         </div>
-        <Button
-          onClick={() => window.print()}
-          variant="outline"
-          size="sm"
-          className="print:hidden"
-        >
-          <Download className="w-3.5 h-3.5" />
-          Last ned PDF
-        </Button>
+        <PDFEksport rapport={rapport} />
       </div>
 
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pb-12 lg:pb-20">

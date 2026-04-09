@@ -475,24 +475,11 @@ export function DetaljerKategori({ kort, kartBilde }: Props) {
           </div>
         )}
 
-        {/* Raw data — hide for regulering when structured BYA data is shown, and hide for kulturminner */}
-        {kort.raadata && Object.keys(kort.raadata).length > 0 &&
-          !(kort.id === "regulering" && kort.raadata.utnyttingsgrad != null) &&
-          kort.id !== "kulturminner" &&
-          kort.id !== "solforhold" && (
-          <div className="bg-paper border border-paper-edge p-5">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-              Rådata
-            </p>
-            <pre className="text-xs font-mono text-gray-600 whitespace-pre-wrap break-words">
-              {JSON.stringify(kort.raadata, null, 2)}
-            </pre>
-          </div>
-        )}
+        {/* Raw data removed — not user-facing */}
 
         {/* Explanation — visible colored left border and darker background */}
         {forklaring && (
-          <div className="bg-fjord-50 rounded-lg p-4 border border-fjord-200 border-l-4 border-l-fjord-500">
+          <div className="bg-paper-deep border border-paper-edge border-l-[3px] border-l-ink p-4">
             <div className="flex items-center gap-2.5 mb-2">
               <Info className="w-5 h-5 text-ink-muted" />
               <span className="text-sm font-bold text-ink">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Printer, AlertTriangle, MapPin, Download } from "lucide-react";
+import { ArrowLeft, Download, AlertTriangle, MapPin } from "lucide-react";
 import { hentRapport } from "@/lib/rapport-storage";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -14,6 +14,7 @@ import { StrukturertRapport } from "@/components/StrukturertRapport";
 import { KlimaVisning } from "@/components/KlimaVisning";
 import { FotoAnalyse } from "@/components/FotoAnalyse";
 import { SdgSeksjon } from "@/components/SdgSeksjon";
+import { PDFEksport } from "@/components/PDFEksport";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 import type { Rapport } from "@/types";
 
@@ -84,7 +85,7 @@ export default function DetaljerView() {
         <div className="flex gap-8">
           {/* Desktop sidebar nav (hidden on mobile) */}
           <div className="hidden lg:block">
-            <DetaljerNav kort={rapport.kort} onPrint={() => window.print()} />
+            <DetaljerNav kort={rapport.kort} pdfKnapp={<PDFEksport rapport={rapport} />} />
           </div>
 
           {/* Categories */}
@@ -143,18 +144,12 @@ export default function DetaljerView() {
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50 print:hidden">
         <button
           onClick={() => router.push("/analyser")}
-          className="w-12 h-12 bg-white border border-gray-200 rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:text-fjord-500 hover:border-fjord-200 transition-colors"
+          className="w-12 h-12 bg-paper border border-paper-edge shadow-editorial-lg flex items-center justify-center text-ink-muted hover:text-ink transition-colors"
           title="Tilbake til analyser"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <button
-          onClick={() => window.print()}
-          className="w-12 h-12 bg-fjord-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fjord-600 transition-colors"
-          title="Last ned PDF"
-        >
-          <Printer className="w-5 h-5" />
-        </button>
+        <PDFEksport rapport={rapport} />
       </div>
     </div>
   );
