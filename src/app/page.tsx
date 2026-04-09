@@ -50,14 +50,15 @@ const dimensjoner = [
 ];
 
 const datakilder = [
-  "Kartverket",
-  "NVE",
-  "NGU",
-  "SSB",
-  "Statens vegvesen",
-  "DiBK",
-  "Riksantikvaren",
-  "Geonorge",
+  { navn: "Kartverket", url: "https://kartverket.no" },
+  { navn: "NVE", url: "https://nve.no" },
+  { navn: "NGU", url: "https://ngu.no" },
+  { navn: "SSB", url: "https://ssb.no" },
+  { navn: "Statens vegvesen", url: "https://vegvesen.no" },
+  { navn: "DiBK", url: "https://dibk.no" },
+  { navn: "Riksantikvaren", url: "https://riksantikvaren.no" },
+  { navn: "Geonorge", url: "https://geonorge.no" },
+  { navn: "SunCalc", url: "https://github.com/mourner/suncalc" },
 ];
 
 export default function Home() {
@@ -166,22 +167,35 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Running footer — data source ribbon */}
-          <div className="border-t border-paper-edge bg-paper-deep/40">
-            <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-4">
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          {/* Marquee — infinite scrolling data source ribbon */}
+          <div className="border-t border-paper-edge bg-paper-deep/40 overflow-hidden">
+            <div className="flex items-center">
+              {/* Fixed label */}
+              <div className="shrink-0 px-6 lg:px-12 py-4 border-r border-paper-edge bg-paper-deep/60 z-10">
                 <span className="label-editorial">Datakilder</span>
-                {datakilder.map((kilde, i) => (
-                  <span
-                    key={kilde}
-                    className="text-[11px] font-mono text-ink-soft tracking-wide"
-                  >
-                    {kilde}
-                    {i < datakilder.length - 1 && (
-                      <span className="text-ink-faint ml-6">·</span>
-                    )}
-                  </span>
-                ))}
+              </div>
+
+              {/* Scrolling track */}
+              <div className="relative flex-1 overflow-hidden py-4">
+                {/* Fade edges */}
+                <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-paper-deep/40 to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-paper-deep/40 to-transparent z-10 pointer-events-none" />
+
+                {/* Marquee track: duplicate content for seamless loop */}
+                <div className="marquee-track flex items-center gap-10 whitespace-nowrap">
+                  {[...datakilder, ...datakilder].map((kilde, i) => (
+                    <a
+                      key={`${kilde.navn}-${i}`}
+                      href={kilde.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-[12px] font-mono text-ink-soft tracking-wide hover:text-clay-500 transition-colors shrink-0"
+                    >
+                      {kilde.navn}
+                      <span className="text-ink-faint">↗</span>
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

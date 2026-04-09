@@ -109,6 +109,34 @@ body::before {
 }
 
 /* ============================================================
+   Marquee / infinite scroll — CSS-only, pauses on hover
+   ============================================================ */
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee-scroll 40s linear infinite;
+  width: max-content;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* ============================================================
    Leaflet z-index fix
    ============================================================ */
 
