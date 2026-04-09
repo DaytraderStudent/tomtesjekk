@@ -242,13 +242,12 @@ export default function Home() {
                       <div className="w-2 h-2 rounded-full bg-data-red" />
                     </div>
                   </div>
-                  {/* Aerial photo of a real Norwegian residential area (Asker) via Kartverket NiB */}
+                  {/* Map of Norwegian residential area — static composite */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="https://wms.geonorge.no/skwms1/wms.nib?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=ortofoto&CRS=EPSG:3857&BBOX=1160500,8368200,1162500,8369200&WIDTH=1600&HEIGHT=640&FORMAT=image/jpeg"
-                    alt="Luftfoto av norsk boligområde med tomter — Asker kommune, Kartverket Norge i bilder"
+                    src="/hero-kart.jpg"
+                    alt="Kart over norsk boligområde — detalj fra OpenStreetMap"
                     className="w-full h-48 lg:h-64 object-cover"
-                    loading="lazy"
                   />
                 </div>
 
