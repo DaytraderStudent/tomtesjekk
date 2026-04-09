@@ -76,6 +76,13 @@ export default function AnalyserView() {
   });
   const kartMapRef = useRef<L.Map | null>(null);
   const kartContainerRef = useRef<HTMLDivElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const avbrytAnalyse = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setErAktiv(false);
+  }, []);
 
   const handleKartlagToggle = useCallback((id: KartlagId) => {
     setSynligeKartlag((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -93,6 +100,12 @@ export default function AnalyserView() {
   };
 
   const startAnalyse = useCallback(async (adresse: KartverketAdresse) => {
+    // Abort any previous run
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const signal = controller.signal;
+
     setErAktiv(true);
     setRapport(null);
     setPanelApen(true);
@@ -107,6 +120,7 @@ export default function AnalyserView() {
     oppdaterSteg("adresse", "aktiv");
     setProsent(3);
     await new Promise((r) => setTimeout(r, 300));
+    if (signal.aborted) return;
     oppdaterSteg("adresse", "ferdig");
     setProsent(5);
 
@@ -143,6 +157,7 @@ export default function AnalyserView() {
       oppdaterSteg("eiendom", "feil", "Kunne ikke hente eiendomsdata");
     }
     setProsent(12);
+    if (signal.aborted) return;
 
     // Reguleringsplan step
     oppdaterSteg("regulering", "aktiv");
@@ -314,6 +329,7 @@ export default function AnalyserView() {
       oppdaterSteg("nve", "feil", "Kunne ikke hente NVE-data");
     }
     setProsent(28);
+    if (signal.aborted) return;
 
     oppdaterSteg("radon", "aktiv");
     oppdaterSteg("grunn", "aktiv");
@@ -489,6 +505,7 @@ export default function AnalyserView() {
     }
 
     setProsent(75);
+    if (signal.aborted) return;
 
     oppdaterSteg("ai", "aktiv");
     let aiOppsummering = null;
@@ -756,7 +773,15 @@ export default function AnalyserView() {
               <div className="bg-paper/98 backdrop-blur-md border border-paper-edge shadow-editorial-xl overflow-y-auto lg:border-r-0 p-6 lg:p-8">
                 {erAktiv && (
                   <div>
-                    <span className="label-editorial block mb-4">Analyse pågår</span>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="label-editorial">Analyse pågår</span>
+                      <button
+                        onClick={avbrytAnalyse}
+                        className="text-[11px] font-mono uppercase tracking-wider text-clay-500 hover:text-clay-700 transition-colors"
+                      >
+                        Avbryt
+                      </button>
+                    </div>
                     <Fremdriftslinje steg={steg} prosent={prosent} />
                   </div>
                 )}
