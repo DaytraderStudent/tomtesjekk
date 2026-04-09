@@ -76,7 +76,7 @@ export function KlimaVisning({ adresse }: Props) {
         </span>
       </div>
 
-      <div className="px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-px bg-paper-edge border border-paper-edge">
+      <div className="px-6 lg:px-8 py-8 grid grid-cols-1 md:grid-cols-3 gap-px bg-paper-edge border border-paper-edge">
         {/* Havstigning */}
         {data.havstigning && (
           <div className="bg-paper-soft p-6">

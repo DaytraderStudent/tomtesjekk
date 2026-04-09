@@ -41,7 +41,7 @@ export function SdgSeksjon() {
         </a>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-paper-edge border border-paper-edge">
+      <div className="grid grid-cols-1 gap-px bg-paper-edge border border-paper-edge">
         {SDG_MAAL.map((maal) => (
           <article key={maal.nummer} className="bg-paper-soft p-6 lg:p-8">
             <div className="flex items-baseline gap-3 mb-4">

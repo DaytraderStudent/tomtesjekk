@@ -721,7 +721,7 @@ export default function AnalyserView() {
             // Mobile: bottom sheet
             "bottom-0 left-0 right-0",
             // Desktop: right sidebar
-            "lg:top-0 lg:right-0 lg:left-auto lg:bottom-0 lg:w-[440px]"
+            "lg:top-0 lg:right-0 lg:left-auto lg:bottom-0 lg:w-[520px] xl:w-[560px]"
           )}
         >
           <div
