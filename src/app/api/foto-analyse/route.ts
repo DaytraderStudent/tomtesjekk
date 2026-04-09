@@ -41,7 +41,10 @@ async function hentOrtofoto(lat: number, lon: number): Promise<string | null> {
     const url = `https://wms.geonorge.no/skwms1/wms.nib?${params.toString()}`;
     const res = await fetch(url);
     if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("image")) return null;
     const buffer = await res.arrayBuffer();
+    if (buffer.byteLength < 5000) return null;
     return Buffer.from(buffer).toString("base64");
   } catch {
     return null;
@@ -70,8 +73,8 @@ export async function POST(request: NextRequest) {
     const ortofotoBase64 = await hentOrtofoto(lat, lon);
     if (!ortofotoBase64) {
       return NextResponse.json(
-        { error: "Kunne ikke hente ortofoto fra Kartverket" },
-        { status: 500 }
+        { error: "Ortofoto utilgjengelig — Kartverkets bildetjeneste svarer ikke fra denne serveren. Prøv igjen senere." },
+        { status: 503 }
       );
     }
 

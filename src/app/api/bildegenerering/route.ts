@@ -31,7 +31,12 @@ async function hentLuftfoto(lat: number, lon: number): Promise<string | null> {
     const url = `https://wms.geonorge.no/skwms1/wms.nib?${params.toString()}`;
     const res = await fetch(url);
     if (!res.ok) return null;
+    // NiB returns XML error (not image) when it blocks the request (IPv6, auth)
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("image")) return null;
     const buffer = await res.arrayBuffer();
+    // Also reject suspiciously small responses (< 5KB = likely error/blank)
+    if (buffer.byteLength < 5000) return null;
     const base64 = Buffer.from(buffer).toString("base64");
     return base64;
   } catch {
