@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { HeroAnalyseDemo } from "@/components/HeroAnalyseDemo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
@@ -129,55 +130,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Editorial preview — a taste of the report output */}
-          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pb-14 lg:pb-20">
-            <div className="border border-paper-edge bg-paper-soft shadow-editorial-lg p-8 lg:p-10 mt-10 fade-up fade-up-4">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-paper-edge">
-                <span className="label-editorial">Eksempel — screeningsrapport</span>
-                <span className="text-[11px] font-mono uppercase tracking-wider text-ink-faint">
-                  Buerjordet 17, Skien
-                </span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-10">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-data-green" />
-                    <span className="label-editorial">Flom</span>
-                  </div>
-                  <p className="font-display text-3xl text-ink tracking-tight">Lav</p>
-                  <p className="text-xs text-ink-muted mt-1">Ikke i flomsone</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-data-amber" />
-                    <span className="label-editorial">Radon</span>
-                  </div>
-                  <p className="font-display text-3xl text-ink tracking-tight">Moderat</p>
-                  <p className="text-xs text-ink-muted mt-1">TEK17 §13-5</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-data-green" />
-                    <span className="label-editorial">BYA</span>
-                  </div>
-                  <p className="font-display text-3xl text-ink tracking-tight">25%</p>
-                  <p className="text-xs text-ink-muted mt-1">180 m² tillatt</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-data-red" />
-                    <span className="label-editorial">Grunn</span>
-                  </div>
-                  <p className="font-display text-3xl text-ink tracking-tight">Leire</p>
-                  <p className="text-xs text-ink-muted mt-1">Peling kan krevast</p>
-                </div>
-              </div>
-              <p className="mt-6 pt-4 border-t border-paper-edge text-sm text-ink-soft italic max-w-2xl">
-                &ldquo;Tomten ligger i et etablert boligområde med stabile grunnforhold i overflaten,
-                men marin leire i dypet kan kreve peling — typisk mellom 100 000 og 500 000 kr
-                avhengig av dybde. Innhent geoteknisk vurdering.&rdquo;
-              </p>
-            </div>
+          {/* Animated report preview — simulates a live analysis */}
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pb-14 lg:pb-20 mt-10 fade-up fade-up-4">
+            <HeroAnalyseDemo />
           </div>
 
           {/* Marquee — infinite scrolling data source ribbon */}
