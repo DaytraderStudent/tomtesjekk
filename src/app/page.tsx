@@ -215,13 +215,21 @@ export default function Home() {
                       <div className="w-2 h-2 rounded-full bg-data-red" />
                     </div>
                   </div>
-                  {/* Static map tile as illustration */}
-                  <img
-                    src="https://a.tile.openstreetmap.org/13/4269/2365.png"
-                    alt="Karteksempel — tomteanalyse i Oslo-regionen"
-                    className="w-full h-48 lg:h-64 object-cover"
-                    loading="lazy"
-                  />
+                  {/* Composite map tiles — Sør-Norge overview */}
+                  <div className="relative w-full h-48 lg:h-64 overflow-hidden bg-[#f2efe9]">
+                    <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 gap-0">
+                      <img src="https://a.tile.openstreetmap.org/6/32/17.png" alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src="https://b.tile.openstreetmap.org/6/33/17.png" alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src="https://c.tile.openstreetmap.org/6/34/17.png" alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src="https://a.tile.openstreetmap.org/6/35/17.png" alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src="https://b.tile.openstreetmap.org/6/32/18.png" alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src="https://c.tile.openstreetmap.org/6/33/18.png" alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src="https://a.tile.openstreetmap.org/6/34/18.png" alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src="https://b.tile.openstreetmap.org/6/35/18.png" alt="" className="w-full h-full object-cover" loading="lazy" />
+                    </div>
+                    {/* Subtle vignette overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-paper/30 pointer-events-none" />
+                  </div>
                 </div>
 
                 <p className="font-display text-2xl lg:text-3xl leading-[1.4] tracking-tight text-ink">
