@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { adresse, lat, lon, tomteareal, regulering, grunnforhold, solforhold, hoydeOverHavet, bygningstype } = body;
+    const { adresse, lat, lon, tomteareal, regulering, grunnforhold, solforhold, hoydeOverHavet, bygningstype, brukerValg } = body;
 
     if (!adresse) {
       return NextResponse.json(
@@ -102,14 +102,28 @@ export async function POST(request: NextRequest) {
       detaljer.push(`Terrain: ${beskrivTerreng(hoydeOverHavet)}`);
     }
 
-    // Determine building type description
+    // Determine building type from user's choice
     const bygningsBeskrivelse = bygningstype === "naering" ? "commercial building"
       : bygningstype === "hytte" ? "Norwegian mountain/forest cabin (hytte)"
       : bygningstype === "blokk" ? "small apartment building"
       : bygningstype === "rekkehus" ? "townhouse / row house"
       : "modern Scandinavian detached house (enebolig)";
 
+    // User's specific building preferences
+    const brukerSpecs: string[] = [];
+    if (brukerValg?.takform) {
+      const takMap: Record<string, string> = {
+        flatt: "flat roof", saltak: "gable/pitched roof (saltak)",
+        pulttak: "shed/mono-pitch roof (pulttak)", valmtak: "hip roof (valmtak)",
+        torvtak: "green/turf roof (torvtak)",
+      };
+      brukerSpecs.push(`Roof type: ${takMap[brukerValg.takform] || brukerValg.takform}`);
+    }
+    if (brukerValg?.etasjer) brukerSpecs.push(`${brukerValg.etasjer} floors/stories`);
+    if (brukerValg?.bruksareal) brukerSpecs.push(`~${brukerValg.bruksareal} m² total floor area`);
+
     const tomtebeskrivelse = detaljer.length > 0 ? detaljer.join(". ") + "." : "";
+    const brukerSpecsTekst = brukerSpecs.length > 0 ? `\n\nUser's building specification: ${brukerSpecs.join(", ")}.` : "";
 
     // Try to fetch aerial photo of the actual location
     let aerialBase64: string | null = null;
@@ -118,23 +132,21 @@ export async function POST(request: NextRequest) {
     }
 
     const baseContext = `Location: ${adresse}
-${tomtebeskrivelse}
+${tomtebeskrivelse}${brukerSpecsTekst}
 
-${aerialBase64 ? `IMPORTANT: The reference image shows the ACTUAL aerial/satellite view of this exact plot. Use it to understand:
-- The real terrain, vegetation, and surrounding landscape
-- Existing roads, neighboring buildings, forest/water nearby
-- The actual orientation and shape of the plot
-- The authentic character of this specific location
+${aerialBase64 ? `IMPORTANT: The reference image shows the ACTUAL aerial/satellite view of this exact plot.
+Place the building ON this specific plot. Match the real terrain, vegetation, roads, and neighboring structures visible in the reference.` : ""}
 
-Generate the house so it fits naturally into THIS exact environment — match the vegetation, terrain, surrounding architecture style, and landscape character visible in the reference image.` : ""}
-
-Design requirements:
-- Modern Scandinavian architecture with clean lines, natural wood cladding, large windows
-- The house must fit the plot constraints (size, height, floor limits above)
-- Respect the actual terrain and landscape — don't add fictional mountains, sea or features that aren't there
-- Include authentic Norwegian elements: wood siding (often dark or natural), stone accents, flat or low-pitch roof
-- Vegetation and surroundings should match what's actually visible in the reference image
-- Realistic soft daylight and natural shadows`;
+MANDATORY design constraints (these are regulatory requirements, not suggestions):
+- Building type: ${bygningsBeskrivelse}
+${brukerValg?.takform ? `- Roof: MUST be ${brukerSpecs[0]?.split(": ")[1] || brukerValg.takform}` : "- Roof: Modern Scandinavian (flat or low-pitch)"}
+${brukerValg?.etasjer ? `- EXACTLY ${brukerValg.etasjer} floors — no more, no less` : ""}
+${brukerValg?.bruksareal ? `- Approximately ${brukerValg.bruksareal} m² — the building should look like this size` : ""}
+${regulering?.maksHoyde ? `- Maximum building height: ${regulering.maksHoyde} meters (regulatory limit)` : ""}
+- Natural wood cladding (dark or natural tones), large windows
+- Norwegian architectural style — clean lines, stone accents
+- Realistic soft daylight and natural shadows
+- The building must look BUILDABLE — not a fantasy rendering`;
 
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-image",
