@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { MapPin, Search, Sparkles, ArrowLeft, ExternalLink } from "lucide-react";
+import { MapPin, Search, ArrowLeft, ExternalLink, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -49,6 +49,143 @@ function poengBg(poeng: number): string {
   if (poeng >= 75) return "bg-emerald-100 ring-emerald-400";
   if (poeng >= 50) return "bg-amber-100 ring-amber-400";
   return "bg-red-100 ring-red-400";
+}
+
+/* -------------------------------------------------------------------------
+   Resultat-kort med utfoldbare detaljer per analyse-dimensjon
+   ------------------------------------------------------------------------- */
+
+function statusDotColor(status: string): string {
+  const s = status.toLowerCase();
+  if (s.includes("lav") || s.includes("gronn") || s.includes("regulert") || s.includes("lavt") || s.includes("ingen")) return "#4A7C59";
+  if (s.includes("moderat") || s.includes("gul") || s.includes("usikker") || s.includes("merkbar")) return "#C18A2F";
+  if (s.includes("høy") || s.includes("rod") || s.includes("risiko") || s.includes("krevende")) return "#B8412C";
+  return "#8E8473";
+}
+
+function TomtefinnerResultatKort({
+  resultat: r,
+  nummer,
+  onFlyTo,
+}: {
+  resultat: Resultat;
+  nummer: number;
+  onFlyTo: () => void;
+}) {
+  const [utvidet, setUtvidet] = useState(false);
+
+  return (
+    <article className="bg-paper-soft border border-paper-edge fade-up">
+      {/* Header — clickable to fly to on map */}
+      <button
+        onClick={onFlyTo}
+        className="w-full text-left p-5 lg:p-6 focus-visible:outline-none"
+      >
+        <div className="flex items-start gap-4">
+          {/* Score circle */}
+          <div className="shrink-0 w-14 h-14 flex flex-col items-center justify-center">
+            <span className={cn(
+              "font-display text-3xl tracking-tight leading-none",
+              r.poeng >= 75 ? "text-data-green" : r.poeng >= 50 ? "text-[#C18A2F]" : "text-data-red"
+            )}>
+              {r.poeng}
+            </span>
+            <span className="text-[9px] font-mono uppercase tracking-wider text-ink-muted">/100</span>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted">
+                  #{String(nummer).padStart(2, "0")}
+                </span>
+                <h4 className="font-display text-xl text-ink tracking-tight mt-0.5">
+                  {r.adresse}
+                </h4>
+              </div>
+            </div>
+
+            <p className="text-xs text-ink-muted mt-1">
+              {r.arealformaal}
+              {r.planNavn && <span className="text-ink-faint"> — {r.planNavn}</span>}
+            </p>
+
+            <p className="text-sm text-ink-soft mt-3 leading-relaxed italic font-display">
+              &ldquo;{r.begrunnelse}&rdquo;
+            </p>
+          </div>
+        </div>
+      </button>
+
+      {/* Analysis summary dots */}
+      <div className="px-5 lg:px-6 pb-2 flex flex-wrap items-center gap-3">
+        {r.analyseKort.map((k, j) => (
+          <div key={j} className="flex items-center gap-1.5">
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: statusDotColor(k.status) }}
+            />
+            <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted">
+              {k.kategori}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Expand/collapse toggle */}
+      <button
+        onClick={() => setUtvidet(!utvidet)}
+        className="w-full flex items-center justify-center gap-2 py-3 border-t border-paper-edge text-[11px] font-mono uppercase tracking-wider text-ink-muted hover:text-ink hover:bg-paper-deep transition-colors"
+      >
+        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", utvidet && "rotate-180")} />
+        {utvidet ? "Skjul detaljer" : "Vis analysedetaljer"}
+      </button>
+
+      {/* Expandable detail section */}
+      {utvidet && (
+        <div className="border-t border-paper-edge">
+          <div className="divide-y divide-paper-edge">
+            {r.analyseKort.map((k, j) => (
+              <div key={j} className="px-5 lg:px-6 py-4">
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                    style={{ backgroundColor: statusDotColor(k.status) }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <h5 className="font-display text-base text-ink tracking-tight">
+                        {k.kategori}
+                      </h5>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted shrink-0">
+                        {k.status}
+                      </span>
+                    </div>
+                    {k.detaljer && (
+                      <p className="mt-1.5 text-sm text-ink-soft leading-relaxed">
+                        {k.detaljer}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Full analysis link */}
+          <div className="px-5 lg:px-6 py-4 bg-paper-deep/40 border-t border-paper-edge">
+            <Link
+              href={`/analyser?lat=${r.lat}&lon=${r.lon}`}
+              className="inline-flex items-center gap-2 text-[12px] font-mono uppercase tracking-wider text-ink hover:text-clay-500 transition-colors"
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+              Kjør full tomteanalyse med alle 16 datakilder
+            </Link>
+          </div>
+        </div>
+      )}
+    </article>
+  );
 }
 
 export default function TomtefinnerView() {
@@ -587,78 +724,25 @@ export default function TomtefinnerView() {
                 </div>
               )}
 
-              {/* Result cards */}
+              {/* Result cards — editorial with expandable details */}
               {ferdig && resultater.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="font-display font-bold text-lg text-ink">
-                    {resultater.length} tomteområder funnet
-                  </h3>
+                <div className="space-y-4">
+                  <div className="flex items-end justify-between">
+                    <h3 className="font-display text-2xl text-ink tracking-tight">
+                      {resultater.length} tomteområder funnet
+                    </h3>
+                    <span className="label-editorial">Rangert av AI</span>
+                  </div>
                   {resultater.map((r, i) => (
-                    <div
+                    <TomtefinnerResultatKort
                       key={r.id}
-                      className="bg-paper-soft border border-paper-edge shadow-editorial p-4 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => {
+                      resultat={r}
+                      nummer={i + 1}
+                      onFlyTo={() => {
                         mapRef.current?.flyTo([r.lat, r.lon], 15, { duration: 1 });
                         markersRef.current[i]?.openPopup();
                       }}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Number badge */}
-                        <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ring-2 shrink-0",
-                          poengBg(r.poeng),
-                          poengFarge(r.poeng)
-                        )}>
-                          {i + 1}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <h4 className="font-semibold text-sm text-gray-900 truncate">
-                              {r.adresse}
-                            </h4>
-                            <span className={cn(
-                              "text-sm font-bold shrink-0",
-                              poengFarge(r.poeng)
-                            )}>
-                              {r.poeng}/100
-                            </span>
-                          </div>
-
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {r.arealformaal}
-                            {r.planNavn && ` — ${r.planNavn}`}
-                          </p>
-
-                          <p className="text-sm text-gray-700 mt-2">
-                            {r.begrunnelse}
-                          </p>
-
-                          {/* Mini analysis summary */}
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {r.analyseKort.map((k, j) => (
-                              <span
-                                key={j}
-                                className="inline-block px-2 py-0.5 bg-gray-100 text-xs text-gray-600 rounded-full"
-                                title={k.detaljer}
-                              >
-                                {k.kategori}: {k.status}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Link to full analysis */}
-                          <Link
-                            href={`/analyser?lat=${r.lat}&lon=${r.lon}`}
-                            className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink-soft mt-2 font-medium"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            Full tomteanalyse
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
+                    />
                   ))}
                 </div>
               )}

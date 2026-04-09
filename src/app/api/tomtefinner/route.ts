@@ -59,7 +59,7 @@ async function sjekkNveRisiko(lat: number, lon: number) {
 async function analyserPunkt(lat: number, lon: number, baseUrl: string) {
   const kort: Array<{ kategori: string; status: string; detaljer: string }> = [];
 
-  const [regRes, nveRes, radonRes, grunnRes, nvdbRes, stoyRes, solRes] = await Promise.allSettled([
+  const [regRes, nveRes, radonRes, grunnRes, nvdbRes, stoyRes, solRes, eiendomRes, vaRes] = await Promise.allSettled([
     fetchWithTimeout(`${baseUrl}/api/reguleringsplan?lat=${lat}&lon=${lon}`, {}, 8000).then(r => r.json()),
     fetchWithTimeout(`${baseUrl}/api/nve?lat=${lat}&lon=${lon}`, {}, 8000).then(r => r.json()),
     fetchWithTimeout(`${baseUrl}/api/ngu-radon?lat=${lat}&lon=${lon}`, {}, 8000).then(r => r.json()),
@@ -67,6 +67,8 @@ async function analyserPunkt(lat: number, lon: number, baseUrl: string) {
     fetchWithTimeout(`${baseUrl}/api/nvdb?lat=${lat}&lon=${lon}`, {}, 8000).then(r => r.json()),
     fetchWithTimeout(`${baseUrl}/api/stoy?lat=${lat}&lon=${lon}`, {}, 8000).then(r => r.json()),
     fetchWithTimeout(`${baseUrl}/api/solforhold?lat=${lat}&lon=${lon}`, {}, 8000).then(r => r.json()),
+    fetchWithTimeout(`${baseUrl}/api/eiendom?lat=${lat}&lon=${lon}`, {}, 8000).then(r => r.json()),
+    fetchWithTimeout(`${baseUrl}/api/va-tilknytning?lat=${lat}&lon=${lon}`, {}, 8000).then(r => r.json()),
   ]);
 
   if (regRes.status === "fulfilled" && !regRes.value.error) {
@@ -133,6 +135,24 @@ async function analyserPunkt(lat: number, lon: number, baseUrl: string) {
     });
   }
 
+  if (eiendomRes.status === "fulfilled" && !eiendomRes.value.error && eiendomRes.value.matrikkelnummertekst) {
+    const e = eiendomRes.value;
+    kort.push({
+      kategori: "Eiendom",
+      status: e.arealKvm ? `${Math.round(e.arealKvm)} m²` : "Areal ukjent",
+      detaljer: `Matrikkel: ${e.matrikkelnummertekst}${e.arealKvm ? `. Beregnet areal: ${Math.round(e.arealKvm)} m².` : ""}`,
+    });
+  }
+
+  if (vaRes.status === "fulfilled" && !vaRes.value.error) {
+    const v = vaRes.value;
+    kort.push({
+      kategori: "VA-tilknytning",
+      status: v.status === "gronn" ? "Sannsynlig kommunalt VA" : v.status === "gul" ? "VA mulig men usikker" : v.status === "rod" ? "Sannsynlig privat løsning" : "Ukjent",
+      detaljer: `${v.forklaring} Kostnad: ${v.kostnadIndikasjon}`,
+    });
+  }
+
   return kort;
 }
 
@@ -175,8 +195,8 @@ export async function POST(request: NextRequest) {
         melding: `Søker etter ${bygningstype === "naering" ? "nærings" : bygningstype}områder i ${kommunenavn}...`,
       });
 
-      // Step 2: Generate sample grid points across the municipality (denser grid)
-      const rutenett = genererRutenett(bbox, 64);
+      // Step 2: Generate denser sample grid (12x12 = 144 points)
+      const rutenett = genererRutenett(bbox, 144);
 
       jsonLine(writer, {
         type: "status",
