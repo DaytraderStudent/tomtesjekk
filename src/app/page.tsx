@@ -373,7 +373,7 @@ export default function Home() {
                     <span className="label-editorial">Innhenting</span>
                   </div>
                   <p className="text-base text-ink-soft leading-relaxed">
-                    Vi kaller 16 offentlige API-endepunkter parallelt — alle
+                    Vi kaller 8 offentlige datakilder parallelt — alle
                     åpne, alle autoritative. Ingen proprietære kilder,
                     ingen påstander vi ikke kan bakke opp.
                   </p>

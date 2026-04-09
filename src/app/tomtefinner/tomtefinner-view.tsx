@@ -179,7 +179,7 @@ function TomtefinnerResultatKort({
               className="inline-flex items-center gap-2 text-[12px] font-mono uppercase tracking-wider text-ink hover:text-clay-500 transition-colors"
             >
               <ArrowRight className="w-3.5 h-3.5" />
-              Kjør full tomteanalyse med alle 16 datakilder
+              Kjør full tomteanalyse
             </Link>
           </div>
         </div>
