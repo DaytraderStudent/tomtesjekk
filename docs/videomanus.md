@@ -11,7 +11,7 @@
 
 > "Hei, vi er [NAVN], og dette er Tomtesjekk — et verktøy vi har utviklet for BYG509. Tomtesjekk er et webbasert analyseverktøy som lar hvem som helst gjøre en screening av en norsk tomt — på under ett minutt."
 
-> "Problemet vi løser er enkelt å forstå: hvis du vurderer å kjøpe en tomt i Norge i dag, må du inn på NVE for å sjekke flomfare, NGU for radon og grunnforhold, DiBK for reguleringsplan, Statens vegvesen for veitilgang og støy, SSB for byggekostnader, Riksantikvaren for kulturminner, og kommunens planinnsyn. Det er 8 forskjellige portaler. I praksis tar dette 1-2 timer per tomt, og det forutsetter at du vet hva du leter etter."
+> "Problemet vi løser er enkelt å forstå: hvis du vurderer å kjøpe en tomt i Norge i dag, må du inn på Kartverket for eiendomsdata, NVE for flomfare, NGU for radon og grunnforhold, DiBK for reguleringsplan, Statens vegvesen for veitilgang og støy, SSB for byggekostnader og Riksantikvaren for kulturminner. Det er sju forskjellige portaler. I praksis tar dette 1-2 timer per tomt, og det forutsetter at du vet hva du leter etter."
 
 > "Tomtesjekk samler alt dette i ett verktøy. La meg vise."
 
@@ -71,7 +71,7 @@
 
 > "Kurset definerer digitalisering som prosessen med å bruke digitale verktøy på måter som skaper merverdi sammenlignet med situasjonen før disse verktøyene ble introdusert."
 
-> "Tomtesjekk oppfyller dette på to nivåer. Første nivå: det effektiviserer — 8 portaler og 2 timer blir 1 klikk og 60 sekunder, en faktor 100-200 i tidsbesparelse. Andre nivå: det muliggjør noe nytt — AI Tomtefinner gjør en handling som var praktisk umulig før. Du kan ikke manuelt sjekke 144 punkter i en kommune mot 9 datadimensjoner. Det er transformativ digitalisering, ikke bare effektivisering."
+> "Tomtesjekk oppfyller dette på to nivåer. Første nivå: det effektiviserer — sju portaler og 2 timer blir 1 klikk og 60 sekunder, en faktor 100-200 i tidsbesparelse. Andre nivå: det muliggjør noe nytt — AI Tomtefinner gjør en handling som var praktisk umulig før. Du kan ikke manuelt sjekke 144 punkter i en kommune mot 9 datadimensjoner. Det er transformativ digitalisering, ikke bare effektivisering."
 
 ### Teknisk arkitektur (2 min)
 

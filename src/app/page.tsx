@@ -180,7 +180,7 @@ export default function Home() {
                 <h2 className="font-display text-display-sm text-ink">
                   Én beslutning.
                   <br />
-                  Åtte portaler.
+                  Sju portaler.
                 </h2>
               </div>
 
@@ -211,9 +211,9 @@ export default function Home() {
                     Å
                   </span>
                   kjøpe en tomt i Norge krever at du samler informasjon fra
-                  Kartverket, NVE, NGU, SSB, Statens vegvesen, DiBK,
-                  Riksantikvaren og kommunens planinnsyn. I praksis tar det to
-                  timer per tomt. For en lekmann er det uoverkommelig.
+                  Kartverket, NVE, NGU, SSB, Statens vegvesen, DiBK og
+                  Riksantikvaren. I praksis tar det to timer per tomt. For en
+                  lekmann er det uoverkommelig.
                 </p>
 
                 <p className="mt-8 text-base text-ink-soft leading-relaxed max-w-2xl">
@@ -328,7 +328,7 @@ export default function Home() {
                     <span className="label-editorial">Innhenting</span>
                   </div>
                   <p className="text-base text-ink-soft leading-relaxed">
-                    Vi kaller 8 offentlige datakilder parallelt — alle
+                    Vi kaller sju offentlige datakilder parallelt — alle
                     åpne, alle autoritative. Ingen proprietære kilder,
                     ingen påstander vi ikke kan bakke opp.
                   </p>

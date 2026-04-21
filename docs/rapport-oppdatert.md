@@ -4,7 +4,7 @@
 
 Digitalisering i bygg- og anleggsbransjen handler om å bruke digitale verktøy på en måte som skaper merverdi sammenlignet med tidligere praksis. I tidlig fase av byggeprosjekter er analyse av tomter en sentral, men ofte fragmentert og tidkrevende prosess.
 
-I dag må en tomtekjøper navigere minst åtte separate offentlige portaler for å vurdere en bygbar tomt: Kartverket for eiendomsdata, NVE Atlas for flom-, skred- og kvikkleirerisiko, NGU for radon og grunnforhold, DiBK for reguleringsplan og arealformål, SSB for byggekostnader og boligpriser, Statens vegvesen for veitilgang og støy, Riksantikvaren for kulturminner, og kommunens planinnsyn. I praksis tar denne prosessen 1-2 timer per tomt og forutsetter fagkunnskap for å tolke resultatene.
+I dag må en tomtekjøper navigere minst sju separate offentlige portaler for å vurdere en bygbar tomt: Kartverket for eiendomsdata, NVE Atlas for flom-, skred- og kvikkleirerisiko, NGU for radon og grunnforhold, DiBK for reguleringsplan og arealformål, SSB for byggekostnader og boligpriser, Statens vegvesen for veitilgang og støy, og Riksantikvaren for kulturminner. I praksis tar denne prosessen 1-2 timer per tomt og forutsetter fagkunnskap for å tolke resultatene.
 
 Denne oppgaven presenterer utviklingen av **Tomtesjekk** — et webbasert analyseverktøy som automatisk henter data fra 16 offentlige API-endepunkter, tolker dem ved hjelp av AI, og presenterer en samlet analyserapport på under 60 sekunder.
 
@@ -18,7 +18,7 @@ Oppgaven tar utgangspunkt i følgende problemstilling:
 
 **Identifiserte utfordringer:**
 
-- Data er **spredt på 8+ separate offentlige portaler** (Kartverket, NVE, NGU, SSB, Statens vegvesen, DiBK, Riksantikvaren, kommunale planinnsyn)
+- Data er **spredt på sju separate offentlige portaler** (Kartverket, NVE, NGU, SSB, Statens vegvesen, DiBK, Riksantikvaren)
 - Prosessen er **manuell og tidkrevende** (1-2 timer per tomt)
 - Vanskelig å **forstå tekniske funn** uten fagbakgrunn (SOSI-koder, kvartærgeologi, TEK17-paragrafer)
 - Mangel på **klimaperspektiv** — havstigning og endret flomrisiko mot 2100 er sjelden del av en tomtevurdering
@@ -167,7 +167,7 @@ Konkret gir verktøyet brukeren:
 
 Verktøyet oppfyller kursets definisjon av digitalisering på to nivåer:
 
-**Nivå 1 — Effektivisering:** Automatisering av en eksisterende prosess. 8 portaler og 2 timer manuelt arbeid erstattes av 1 klikk og 60 sekunder. Dette er verdifullt, men ikke transformativt i seg selv.
+**Nivå 1 — Effektivisering:** Automatisering av en eksisterende prosess. Sju portaler og 2 timer manuelt arbeid erstattes av 1 klikk og 60 sekunder. Dette er verdifullt, men ikke transformativt i seg selv.
 
 **Nivå 2 — Muliggjøring av nye handlinger:** AI Tomtefinner gjør noe som var praktisk umulig uten digitalisering. Å manuelt sjekke 144 punkter i en kommune mot 9 analysedimensjoner og rangere dem er uoverkommelig. Dette er transformativ digitalisering — verktøyet skaper en ny handling, ikke bare en raskere versjon av en gammel.
 

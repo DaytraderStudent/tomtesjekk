@@ -306,7 +306,7 @@ Dette er ikke kode, men punkter videoen MÅ dekke for at alle sensorene skal gi 
 
 ### Videostruktur (7–10 min)
 
-1. **Intro (30s)** — Hvem, hva, hvorfor. Problemet: 8–10 portaler, 1–2 timer per tomt, utilgjengelig for privatpersoner.
+1. **Intro (30s)** — Hvem, hva, hvorfor. Problemet: sju offentlige portaler, 1–2 timer per tomt, utilgjengelig for privatpersoner.
 
 2. **Kursets digitaliseringsdefinisjon (1 min)** — Sitér ordrett:  *"Digitalisation is the process of using digital tools in ways that create added value, compared to the situation before these tools were introduced."* Kvantifiser: 1–2 timer → 60 sek = faktor 100–200 i tidsbesparelse. Demokratisering fra "umulig for privatpersoner" til "tre klikk".
 
