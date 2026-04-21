@@ -189,7 +189,7 @@ export default function Home() {
                 <div className="mb-8 border border-paper-edge overflow-hidden">
                   <div className="bg-paper-deep p-4 flex items-center justify-between border-b border-paper-edge">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted">
-                      Ortofoto — norsk boligområde
+                      Kartverket topo — Grimstad, Agder
                     </span>
                     <div className="flex gap-1">
                       <div className="w-2 h-2 rounded-full bg-data-green" />
