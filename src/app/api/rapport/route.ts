@@ -138,7 +138,7 @@ Generer strukturert rapport via verktøyet.`;
 
     const message = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: systemPrompt,
       tools: [rapportTool],
       tool_choice: { type: "tool", name: "generer_tomterapport" },
@@ -154,7 +154,9 @@ Generer strukturert rapport via verktøyet.`;
       );
     }
 
-    const structured = toolUse.input as {
+    // Defensive: Claude may truncate tool_use output if max_tokens runs out.
+    // Default each field so partial responses still render gracefully.
+    const raw = (toolUse.input || {}) as Partial<{
       oppsummering: string;
       rode_flagg: Array<{ tema: string; beskrivelse: string; paragraf?: string; anbefaling: string }>;
       positive_funn: string[];
@@ -166,6 +168,17 @@ Generer strukturert rapport via verktøyet.`;
       }>;
       neste_steg: string[];
       disclaimer: string;
+    }>;
+
+    const structured = {
+      oppsummering: raw.oppsummering || "Rapporten kunne ikke genereres fullstendig — prøv igjen.",
+      rode_flagg: raw.rode_flagg || [],
+      positive_funn: raw.positive_funn || [],
+      kostnadsfordyrende: raw.kostnadsfordyrende || [],
+      neste_steg: raw.neste_steg || [],
+      disclaimer:
+        raw.disclaimer ||
+        "Estimatene over er indikative og basert på offentlige data. Innhent profesjonelle tilbud og fagkyndig rådgivning før kjøpsbeslutning.",
     };
 
     // Enrich flagg with paragraph links from lookup
