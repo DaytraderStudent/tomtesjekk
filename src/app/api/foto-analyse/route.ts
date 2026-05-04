@@ -180,10 +180,10 @@ Regler:
         firstErr?.message || ""
       );
       if (!overbelastet) throw firstErr;
-      console.warn("gemini-2.5-flash overbelastet — faller tilbake til 2.0-flash");
+      console.warn("gemini-2.5-flash overbelastet — faller tilbake til flash-lite");
       await new Promise((r) => setTimeout(r, 1500));
       result = await genAI
-        .getGenerativeModel({ model: "gemini-2.0-flash" })
+        .getGenerativeModel({ model: "gemini-2.5-flash-lite" })
         .generateContent(innhold);
     }
 
