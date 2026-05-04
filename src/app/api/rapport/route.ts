@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { finnRelevanteTek17, TEK17_LOOKUP } from "@/lib/tek17-lookup";
 
+export const maxDuration = 60;
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
