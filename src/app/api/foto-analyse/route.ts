@@ -159,11 +159,7 @@ Regler:
 8. For "Vann": elver, bekker, våtmarker, tjern.
 9. Ikke spekuler i eiendomsgrenser, plandata eller juridiske forhold — bare hva som er visuelt tydelig.`;
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-    });
-
-    const result = await model.generateContent([
+    const innhold = [
       { text: prompt },
       {
         inlineData: {
@@ -171,7 +167,25 @@ Regler:
           data: bildeData.base64,
         },
       },
-    ]);
+    ];
+
+    // Prøv gemini-2.5-flash først, fall tilbake til 2.0-flash om den er overbelastet (503/429)
+    let result;
+    try {
+      result = await genAI
+        .getGenerativeModel({ model: "gemini-2.5-flash" })
+        .generateContent(innhold);
+    } catch (firstErr: any) {
+      const overbelastet = /503|429|overloaded|high demand|UNAVAILABLE/i.test(
+        firstErr?.message || ""
+      );
+      if (!overbelastet) throw firstErr;
+      console.warn("gemini-2.5-flash overbelastet — faller tilbake til 2.0-flash");
+      await new Promise((r) => setTimeout(r, 1500));
+      result = await genAI
+        .getGenerativeModel({ model: "gemini-2.0-flash" })
+        .generateContent(innhold);
+    }
 
     const response = result.response;
     const text = response.text();
